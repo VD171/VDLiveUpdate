@@ -72,7 +72,7 @@ toybox `gunzip` (항상 존재함)으로 압축 해제하므로, zstd는 번들�
 
 ## 정규화 (수렴 지점)
 
-`vdlu-sign`과 `engine/vdlu-verify`는 두 개의 서로 다른 런타임 (PC openssl 대 기기 toybox + openssl)에서,
+`vdlu-sign`과 `engine/vdlu-verify`는 두 개의 서로 다른 런타임 (PC openssl 대 기기 toybox)에서,
 manifest로부터 **같은 바이트**를 도출해야 한다. 이 규칙은 의도적으로 JSON 재직렬화가 아니라
 바이트 변환이며, 기기에 JSON 라이브러리를 필요로 하지 않는다:
 

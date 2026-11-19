@@ -74,7 +74,7 @@ afwezig: het toestel begint gewoon vanaf from:0 bij de eerste update, nooit kapo
 ## Canonicalisatie (het convergentiepunt)
 
 `vdlu-sign` en `engine/vdlu-verify` moeten **dezelfde bytes** afleiden uit een manifest, op twee
-verschillende runtimes (PC openssl vs toestel toybox + openssl). De regel is bewust een byte-
+verschillende runtimes (PC openssl vs toestel toybox). De regel is bewust een byte-
 transformatie, geen JSON-herserialisatie, zodat het geen JSON-bibliotheek op het toestel nodig heeft:
 
 1. `vdlu-pack` schrijft `manifest.json` **compact, sleutels gesorteerd, UTF-8**

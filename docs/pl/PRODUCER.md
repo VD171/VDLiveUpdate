@@ -74,7 +74,7 @@ nieobecny: urządzenie po prostu startuje od from:0 przy pierwszej aktualizacji,
 ## Kanonikalizacja (punkt zbieżności)
 
 `vdlu-sign` i `engine/vdlu-verify` muszą wyprowadzić **te same bajty** z manifestu, na dwóch
-różnych runtime'ach (openssl na PC vs toybox + openssl na urządzeniu). Reguła jest celowo transformacją
+różnych runtime'ach (openssl na PC vs toybox na urządzeniu). Reguła jest celowo transformacją
 bajtów, a nie re-serializacją JSON, więc nie potrzebuje biblioteki JSON na urządzeniu:
 
 1. `vdlu-pack` zapisuje `manifest.json` **kompaktowy, klucze posortowane, UTF-8**

@@ -74,7 +74,7 @@ frånvarande: enheten börjar bara från:0 vid den första uppdateringen, aldrig
 ## Kanonikalisering (konvergenspunkten)
 
 `vdlu-sign` och `engine/vdlu-verify` måste härleda **samma byte** från ett manifest, på två
-olika körtider (PC openssl vs enhet toybox + openssl). Regeln är avsiktligt en byte-
+olika körtider (PC openssl vs enhet toybox). Regeln är avsiktligt en byte-
 transformation, inte en JSON-omserialisering, så den behöver inget JSON-bibliotek på enheten:
 
 1. `vdlu-pack` skriver `manifest.json` **kompakt, nycklar sorterade, UTF-8**

@@ -164,12 +164,13 @@ skips the download.
 - Toast: bar + `phase done/total · current`; on finish with `reboot_pending` ⇒ a persistent banner "reboot to activate the .so".
 - Auto-open (`auto_on_webui_open=1`): does a QUIET `check()` first (no progress toast); only fires the `run`+persistent toast if `update && fetch>0`. Up-to-date/ahead/nothing-new = an inline result in the panel, zero leftover toast. Non-intrusive like the manual button (the toast only appears when there is a real download). The curl bootstrap is one-time.
 
-## 10. Integration into the demo (INTEGRATION component) - SNIPPETS, do not edit the live files
+## 10. Adoption into a host module (ADOPTION) - the wiring an adopter applies
 
-Produces, in `integration/demo/`, snippets + an `INTEGRATION.md` saying where each one goes (without applying):
+Vendoring VDLU into a module is a set of copy-paste snippets, not a running component.
+[`docs/QUICKSTART.md`](QUICKSTART.md) is the step-by-step checklist, and it covers:
 - the `auto_on_reboot` hook in `post-fs-data`/`service.sh` (pre-zygote → `update.sh boot`) and `auto_on_webui_open`.
-- the `config` defaults + the embedded keyring + the vendoring (`modules/<mod>/vdlu/`).
-- the PARTIAL variant (merge into the mounted dir).
+- the `config` defaults + the embedded keyring + the vendoring (`<module>/vdlu/`).
+- the WebUI panel wiring and the release-side `vdlu-pack` + `vdlu-sign` + `baseline.json` steps.
 
 ## 11. Fetched toolchain + baseline (SLIM, Approach B)
 

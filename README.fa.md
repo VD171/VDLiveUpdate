@@ -47,7 +47,7 @@
 
 ## در ماژول خود به‌کارش بگیرید
 
-`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` را در `<module>/vdlu/` وندور کنید، **کلید عمومی خام ۳۲ بایتی** خود را به‌عنوان `vdlu/keyring/<id>.pub` جاسازی کنید، یک `config` (پروفایل + منبع) بیفزایید، تریگرها را سیم‌کشی کنید (`post-fs-data.sh` پیش از zygote برای خودبه‌روزرسانی هنگام بوت؛ یک تریگر باز شدن WebUI)، و `vdlu-pack` + `vdlu-sign` را به فرایند انتشار خود اضافه کنید. برای یک قالب کامل به [`integration/`](integration/) مراجعه کنید.
+`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` را در `<module>/vdlu/` وندور کنید، **کلید عمومی خام ۳۲ بایتی** خود را به‌عنوان `vdlu/keyring/<id>.pub` جاسازی کنید، یک `config` (پروفایل + منبع) بیفزایید، تریگرها را سیم‌کشی کنید (`post-fs-data.sh` پیش از zygote برای خودبه‌روزرسانی هنگام بوت؛ یک تریگر باز شدن WebUI)، و `vdlu-pack` + `vdlu-sign` را به فرایند انتشار خود اضافه کنید. برای یک قالب کامل به [`docs/QUICKSTART.md`](docs/QUICKSTART.md) مراجعه کنید.
 
 ## امنیت
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## مستندات
 
 - [`INTERFACES.md`](docs/INTERFACES.md): قرارداد درز میان مؤلفه‌ها (قانون هم‌گرایی؛ آن را تغییرناپذیر در نظر بگیرید).
-- `integration/`: یک راهنمای به‌کارگیری گام‌به‌گام و قطعه‌های سیم‌کشی.
+- [`ENGINE.md`](docs/ENGINE.md): موتور سمت دستگاه (`update.sh`): تراکنش قابل‌ازسرگیری DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md): سمت رایانه/انتشار: ساخت و امضای فید نشانی‌دهی‌شده با محتوا (`vdlu-pack`، `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): ویجت آمادهٔ پنل به‌روزرسانی‌ها (نوتیف پیشرفت، لغو، نوار راه‌اندازی مجدد).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): یک راهنمای به‌کارگیری گام‌به‌گام و قطعه‌های سیم‌کشی.
 
 ## همچنین ببینید
 

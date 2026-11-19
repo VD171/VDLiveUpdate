@@ -47,7 +47,7 @@
 
 ## इसे अपने मॉड्यूल में अपनाएँ
 
-`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` को `<module>/vdlu/` में vendor करें, अपनी **raw 32-byte public key** को `vdlu/keyring/<id>.pub` के रूप में embark करें, एक `config` जोड़ें (profile + source), ट्रिगर वायर करें (बूट पर ऑटो-अपडेट के लिए `post-fs-data.sh` pre-zygote; एक WebUI-open ट्रिगर), और अपने रिलीज़ में `vdlu-pack` + `vdlu-sign` जोड़ें। एक तैयार टेम्पलेट के लिए [`integration/`](integration/) देखें।
+`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` को `<module>/vdlu/` में vendor करें, अपनी **raw 32-byte public key** को `vdlu/keyring/<id>.pub` के रूप में embark करें, एक `config` जोड़ें (profile + source), ट्रिगर वायर करें (बूट पर ऑटो-अपडेट के लिए `post-fs-data.sh` pre-zygote; एक WebUI-open ट्रिगर), और अपने रिलीज़ में `vdlu-pack` + `vdlu-sign` जोड़ें। एक तैयार टेम्पलेट के लिए [`docs/QUICKSTART.md`](docs/QUICKSTART.md) देखें।
 
 ## सुरक्षा
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## दस्तावेज़ीकरण
 
 - [`INTERFACES.md`](docs/INTERFACES.md): घटकों के बीच सीवन-अनुबंध (seam contract) (अभिसरण का नियम; इसे अपरिवर्तनीय मानें)।
-- `integration/`: एक चरण-दर-चरण अपनाने की मार्गदर्शिका और वायरिंग स्निपेट्स।
+- [`ENGINE.md`](docs/ENGINE.md): डिवाइस-साइड engine (`update.sh`): पुनः आरंभ करने योग्य DIFF -> FETCH -> APPLY -> COMMIT ट्रांज़ैक्शन।
+- [`PRODUCER.md`](docs/PRODUCER.md): PC/release साइड: content-addressed feed को बनाना और साइन करना (`vdlu-pack`, `vdlu-sign`)।
+- [`WEBUI.md`](docs/WEBUI.md): ड्रॉप-इन Updates पैनल विजेट (प्रोग्रेस टोस्ट, रद्द करें, रीबूट बैनर)।
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): एक चरण-दर-चरण अपनाने की मार्गदर्शिका और वायरिंग स्निपेट्स।
 
 ## यह भी देखें
 

@@ -75,7 +75,7 @@ primera actualización, nunca roto.
 ## Canonicalización (el punto de convergencia)
 
 `vdlu-sign` y `engine/vdlu-verify` deben derivar los **mismos bytes** de un manifiesto, en dos
-runtimes distintos (openssl del PC vs toybox + openssl del dispositivo). La regla es deliberadamente una
+runtimes distintos (openssl del PC vs toybox del dispositivo). La regla es deliberadamente una
 transformación de bytes, no una re-serialización JSON, así que no necesita librería JSON en el dispositivo:
 
 1. `vdlu-pack` escribe `manifest.json` **compacto, claves ordenadas, UTF-8**

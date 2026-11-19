@@ -47,7 +47,7 @@
 
 ## اعتمدْه في وحدتك
 
-احتوِ `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` داخل `<module>/vdlu/`، واضمِّن **مفتاحك العام الخام 32 بايت** بوصفه `vdlu/keyring/<id>.pub`، وأضِف ملف `config` (الملف التعريفي + المصدر)، وصِل المُطلِقات (`post-fs-data.sh` قبل zygote للتحديث التلقائي عند الإقلاع؛ ومُطلِق فتح WebUI)، وأضِف `vdlu-pack` + `vdlu-sign` إلى إصدارك. انظر [`integration/`](integration/) للاطّلاع على قالب مُنجَز.
+احتوِ `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` داخل `<module>/vdlu/`، واضمِّن **مفتاحك العام الخام 32 بايت** بوصفه `vdlu/keyring/<id>.pub`، وأضِف ملف `config` (الملف التعريفي + المصدر)، وصِل المُطلِقات (`post-fs-data.sh` قبل zygote للتحديث التلقائي عند الإقلاع؛ ومُطلِق فتح WebUI)، وأضِف `vdlu-pack` + `vdlu-sign` إلى إصدارك. انظر [`docs/QUICKSTART.md`](docs/QUICKSTART.md) للاطّلاع على قالب مُنجَز.
 
 ## الأمان
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## التوثيق
 
 - [`INTERFACES.md`](docs/INTERFACES.md): عقد الوصل بين المكوّنات (قانون التقارب؛ عامِله كأنه غير قابل للتغيير).
-- `integration/`: دليل اعتماد خطوة بخطوة ومقتطفات التوصيل.
+- [`ENGINE.md`](docs/ENGINE.md): محرّك جهة الجهاز (`update.sh`): معاملة DIFF -> FETCH -> APPLY -> COMMIT القابلة للاستئناف.
+- [`PRODUCER.md`](docs/PRODUCER.md): جهة الحاسوب/الإصدار: بناء وتوقيع الخلاصة المعنونة بالمحتوى (`vdlu-pack`، `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): أداة لوحة التحديثات الجاهزة (إشعار التقدّم، الإلغاء، شريط إعادة التشغيل).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): دليل اعتماد خطوة بخطوة ومقتطفات التوصيل.
 
 ## انظر أيضًا
 

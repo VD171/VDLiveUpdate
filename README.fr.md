@@ -47,7 +47,7 @@ Une mise à jour de module classique renvoie le `.zip` entier. Pour un gros modu
 
 ## Adoptez-le dans votre module
 
-Intégrez `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` dans `<module>/vdlu/`, embarquez votre **clé publique brute de 32 octets** en tant que `vdlu/keyring/<id>.pub`, ajoutez un `config` (profil + source), câblez les déclencheurs (`post-fs-data.sh` pre-zygote pour l'automise à jour au démarrage ; un déclencheur à l'ouverture de la WebUI), et ajoutez `vdlu-pack` + `vdlu-sign` à votre release. Voir [`integration/`](integration/) pour un modèle complet.
+Intégrez `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` dans `<module>/vdlu/`, embarquez votre **clé publique brute de 32 octets** en tant que `vdlu/keyring/<id>.pub`, ajoutez un `config` (profil + source), câblez les déclencheurs (`post-fs-data.sh` pre-zygote pour l'automise à jour au démarrage ; un déclencheur à l'ouverture de la WebUI), et ajoutez `vdlu-pack` + `vdlu-sign` à votre release. Voir [`docs/QUICKSTART.md`](docs/QUICKSTART.md) pour un modèle complet.
 
 ## Sécurité
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Documentation
 
 - [`INTERFACES.md`](docs/INTERFACES.md) : le contrat de couture entre les composants (la loi de convergence ; à considérer comme immuable).
-- `integration/` : un guide d'adoption pas à pas et des extraits de câblage.
+- [`ENGINE.md`](docs/ENGINE.md) : le moteur côté appareil (`update.sh`) : la transaction reprenable DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md) : le côté PC/release : construire et signer le feed adressé par contenu (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md) : le widget intégrable du panneau Updates (toast de progression, annulation, bannière de redémarrage).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md) : un guide d'adoption pas à pas et des extraits de câblage.
 
 ## Voir aussi
 

@@ -74,7 +74,7 @@ abwesend: das Geraet startet einfach from:0 beim ersten Update, nie kaputt.
 ## Kanonisierung (der Konvergenzpunkt)
 
 `vdlu-sign` und `engine/vdlu-verify` muessen **dieselben Bytes** aus einem Manifest ableiten, auf zwei
-verschiedenen Laufzeitumgebungen (PC openssl vs Geraet toybox + openssl). Die Regel ist bewusst eine Byte-
+verschiedenen Laufzeitumgebungen (PC openssl vs Geraet toybox). Die Regel ist bewusst eine Byte-
 Transformation, keine JSON-Reserialisierung, sodass sie keine JSON-Bibliothek auf dem Geraet braucht:
 
 1. `vdlu-pack` schreibt `manifest.json` **kompakt, Schluessel sortiert, UTF-8**

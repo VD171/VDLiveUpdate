@@ -74,7 +74,7 @@ chybí: zařízení prostě začne from:0 při prvním updatu, nikdy rozbité.
 ## Kanonizace (bod konvergence)
 
 `vdlu-sign` a `engine/vdlu-verify` musí odvodit **stejné bajty** z manifestu, na dvou
-různých runtimech (PC openssl vs zařízení toybox + openssl). Pravidlo je záměrně bajtová
+různých runtimech (PC openssl vs zařízení toybox). Pravidlo je záměrně bajtová
 transformace, ne JSON reserializace, takže nepotřebuje žádnou JSON knihovnu na zařízení:
 
 1. `vdlu-pack` zapisuje `manifest.json` **kompaktně, klíče seřazené, UTF-8**

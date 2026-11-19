@@ -47,7 +47,7 @@ Một bản cập nhật mô-đun thông thường gửi lại toàn bộ `.zip`
 
 ## Áp dụng vào mô-đun của bạn
 
-Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` vào `<module>/vdlu/`, nhúng **khóa công khai 32-byte thô** của bạn thành `vdlu/keyring/<id>.pub`, thêm một `config` (profile + nguồn), nối dây các trigger (`post-fs-data.sh` pre-zygote để tự cập nhật khi khởi động; một trigger khi mở WebUI), và thêm `vdlu-pack` + `vdlu-sign` vào quy trình phát hành của bạn. Xem [`integration/`](integration/) để có một mẫu hoàn chỉnh.
+Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` vào `<module>/vdlu/`, nhúng **khóa công khai 32-byte thô** của bạn thành `vdlu/keyring/<id>.pub`, thêm một `config` (profile + nguồn), nối dây các trigger (`post-fs-data.sh` pre-zygote để tự cập nhật khi khởi động; một trigger khi mở WebUI), và thêm `vdlu-pack` + `vdlu-sign` vào quy trình phát hành của bạn. Xem [`docs/QUICKSTART.md`](docs/QUICKSTART.md) để có một mẫu hoàn chỉnh.
 
 ## Bảo mật
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Tài liệu
 
 - [`INTERFACES.md`](docs/INTERFACES.md): hợp đồng đường nối giữa các thành phần (luật hội tụ; hãy coi nó là bất biến).
-- `integration/`: một hướng dẫn áp dụng từng bước và các đoạn mã nối dây.
+- [`ENGINE.md`](docs/ENGINE.md): engine phía thiết bị (`update.sh`): giao dịch DIFF -> FETCH -> APPLY -> COMMIT có thể tiếp tục.
+- [`PRODUCER.md`](docs/PRODUCER.md): phía PC/phát hành: xây dựng và ký feed địa chỉ hóa theo nội dung (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): widget bảng Updates cắm-là-chạy (toast tiến trình, hủy, banner khởi động lại).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): một hướng dẫn áp dụng từng bước và các đoạn mã nối dây.
 
 ## Xem thêm
 

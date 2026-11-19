@@ -21,6 +21,14 @@ https://curl.se/docs/copyright.html.
 The bundled curl is statically linked against Mbed TLS 3.6.7
 (https://github.com/Mbed-TLS/mbedtls), used under the Apache License 2.0.
 
+## `.github/scripts/gen-doc-nav.py` - AGPL-3.0-or-later
+
+One repository tooling file, `.github/scripts/gen-doc-nav.py` (the shared documentation
+nav + footer generator), is licensed under **AGPL-3.0-or-later**, not Apache-2.0. It is a
+build-time developer utility and is not shipped to any device or vendored into a module;
+the rest of VDLiveUpdate's own code remains Apache-2.0. This entry discloses the split so
+the licensing is transparent.
+
 ---
 
 Build provenance (sources, versions, SHA-256 of the tarballs and binaries, and the toolchain) is

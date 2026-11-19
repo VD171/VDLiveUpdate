@@ -47,7 +47,7 @@ Eine normale Modulaktualisierung liefert die gesamte `.zip` erneut aus. Bei eine
 
 ## In dein Modul übernehmen
 
-Bette `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` in `<module>/vdlu/` ein, lege deinen **rohen 32-Byte-Public-Key** als `vdlu/keyring/<id>.pub` bei, füge eine `config` hinzu (Profil + Quelle), verdrahte die Trigger (`post-fs-data.sh` vor Zygote für die automatische Aktualisierung beim Boot; einen Trigger beim Öffnen der WebUI) und nimm `vdlu-pack` + `vdlu-sign` in deinen Release auf. Eine ausgearbeitete Vorlage findest du unter [`integration/`](integration/).
+Bette `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` in `<module>/vdlu/` ein, lege deinen **rohen 32-Byte-Public-Key** als `vdlu/keyring/<id>.pub` bei, füge eine `config` hinzu (Profil + Quelle), verdrahte die Trigger (`post-fs-data.sh` vor Zygote für die automatische Aktualisierung beim Boot; einen Trigger beim Öffnen der WebUI) und nimm `vdlu-pack` + `vdlu-sign` in deinen Release auf. Eine ausgearbeitete Vorlage findest du unter [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
 
 ## Sicherheit
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Dokumentation
 
 - [`INTERFACES.md`](docs/INTERFACES.md): der Nahtvertrag zwischen den Komponenten (das Gesetz der Konvergenz; behandle ihn als unveränderlich).
-- `integration/`: eine Schritt-für-Schritt-Anleitung zur Übernahme und Verdrahtungs-Snippets.
+- [`ENGINE.md`](docs/ENGINE.md): die geräteseitige Engine (`update.sh`): die fortsetzbare Transaktion DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md): die PC-/Release-Seite: Bau und Signierung des inhaltsadressierten Feeds (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): das einbindbare Updates-Panel-Widget (Fortschritts-Toast, Abbrechen, Neustart-Banner).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): eine Schritt-für-Schritt-Anleitung zur Übernahme und Verdrahtungs-Snippets.
 
 ## Siehe auch
 

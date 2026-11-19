@@ -47,7 +47,7 @@ Běžná aktualizace modulu posílá znovu celý `.zip`. U velkého modulu to zn
 
 ## Zaveďte jej do svého modulu
 
-Vendorujte `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` do `<module>/vdlu/`, vložte svůj **surový 32bajtový veřejný klíč** jako `vdlu/keyring/<id>.pub`, přidejte `config` (profil + zdroj), zapojte spouštěče (`post-fs-data.sh` před zygote pro automatickou aktualizaci při bootu; spouštěč při otevření WebUI) a do svého vydání přidejte `vdlu-pack` + `vdlu-sign`. Hotovou šablonu najdete v [`integration/`](integration/).
+Vendorujte `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` do `<module>/vdlu/`, vložte svůj **surový 32bajtový veřejný klíč** jako `vdlu/keyring/<id>.pub`, přidejte `config` (profil + zdroj), zapojte spouštěče (`post-fs-data.sh` před zygote pro automatickou aktualizaci při bootu; spouštěč při otevření WebUI) a do svého vydání přidejte `vdlu-pack` + `vdlu-sign`. Hotovou šablonu najdete v [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
 
 ## Bezpečnost
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Dokumentace
 
 - [`INTERFACES.md`](docs/INTERFACES.md): kontrakt švu mezi komponentami (zákon konvergence; ber ho jako neměnný).
-- `integration/`: průvodce zavedením krok za krokem a úryvky zapojení.
+- [`ENGINE.md`](docs/ENGINE.md): engine na straně zařízení (`update.sh`): obnovitelná transakce DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md): strana PC/vydání: sestavení a podepsání obsahově adresovaného feedu (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): zasouvací widget panelu Updates (ukazatel průběhu, zrušení, banner restartu).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): průvodce zavedením krok za krokem a úryvky zapojení.
 
 ## Viz také
 

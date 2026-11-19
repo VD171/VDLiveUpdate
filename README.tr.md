@@ -47,7 +47,7 @@ Normal bir modül güncellemesi tüm `.zip`'i yeniden gönderir. Büyük bir mod
 
 ## Kendi modülünde benimse
 
-`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini`'yi `<module>/vdlu/` içine vendor et, **ham 32 baytlık açık anahtarını** `vdlu/keyring/<id>.pub` olarak göm, bir `config` (profil + kaynak) ekle, tetikleyicileri bağla (açılışta otomatik güncelleme için pre-zygote `post-fs-data.sh`; WebUI açılışında bir tetikleyici) ve release'ine `vdlu-pack` + `vdlu-sign` ekle. İşlenmiş bir şablon için [`integration/`](integration/)'a bak.
+`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini`'yi `<module>/vdlu/` içine vendor et, **ham 32 baytlık açık anahtarını** `vdlu/keyring/<id>.pub` olarak göm, bir `config` (profil + kaynak) ekle, tetikleyicileri bağla (açılışta otomatik güncelleme için pre-zygote `post-fs-data.sh`; WebUI açılışında bir tetikleyici) ve release'ine `vdlu-pack` + `vdlu-sign` ekle. İşlenmiş bir şablon için [`docs/QUICKSTART.md`](docs/QUICKSTART.md)'a bak.
 
 ## Güvenlik
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Belgeler
 
 - [`INTERFACES.md`](docs/INTERFACES.md): bileşenler arasındaki ek yeri (seam) sözleşmesi (yakınsama yasası; değişmez olarak ele al).
-- `integration/`: adım adım bir benimseme kılavuzu ve bağlama parçacıkları.
+- [`ENGINE.md`](docs/ENGINE.md): cihaz tarafı motor (`update.sh`): sürdürülebilir DIFF -> FETCH -> APPLY -> COMMIT işlemi.
+- [`PRODUCER.md`](docs/PRODUCER.md): PC/sürüm tarafı: içerik adresli beslemeyi oluşturma ve imzalama (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): hazır Updates paneli widget'ı (ilerleme toast'ı, iptal, yeniden başlatma afişi).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): adım adım bir benimseme kılavuzu ve bağlama parçacıkları.
 
 ## Ayrıca bakınız
 

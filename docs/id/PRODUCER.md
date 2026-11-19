@@ -74,7 +74,7 @@ tidak ada: perangkat cukup mulai dari from:0 pada pembaruan pertama, tidak perna
 ## Kanonikalisasi (titik konvergensi)
 
 `vdlu-sign` dan `engine/vdlu-verify` harus menurunkan **byte yang sama** dari sebuah manifest, pada dua
-runtime yang berbeda (openssl PC vs toybox + openssl perangkat). Aturannya secara sengaja merupakan transformasi
+runtime yang berbeda (openssl PC vs toybox perangkat). Aturannya secara sengaja merupakan transformasi
 byte, bukan re-serialisasi JSON, sehingga tidak membutuhkan library JSON di perangkat:
 
 1. `vdlu-pack` menulis `manifest.json` **ringkas, kunci terurut, UTF-8**

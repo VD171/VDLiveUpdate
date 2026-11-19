@@ -75,7 +75,7 @@ jour, jamais cassé.
 ## Canonicalisation (le point de convergence)
 
 `vdlu-sign` et `engine/vdlu-verify` doivent dériver les **mêmes octets** d'un manifeste, sur deux
-runtimes différents (openssl du PC vs toybox + openssl de l'appareil). La règle est délibérément une
+runtimes différents (openssl du PC vs toybox de l'appareil). La règle est délibérément une
 transformation d'octets, pas une re-sérialisation JSON, donc elle n'a besoin d'aucune librairie JSON sur
 l'appareil :
 

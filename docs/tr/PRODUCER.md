@@ -73,7 +73,7 @@ cihaz ilk güncellemede sadece from:0'dan başlar, asla bozulmaz.
 ## Kanonikleştirme (yakınsama noktası)
 
 `vdlu-sign` ve `engine/vdlu-verify` bir manifestten **aynı baytları** türetmelidir, iki
-farklı çalışma zamanında (PC openssl vs cihaz toybox + openssl). Kural bilinçli olarak bir bayt
+farklı çalışma zamanında (PC openssl vs cihaz toybox). Kural bilinçli olarak bir bayt
 dönüşümüdür, bir JSON yeniden-serileştirmesi değil, böylece cihazda bir JSON kütüphanesine ihtiyaç duymaz:
 
 1. `vdlu-pack`, `manifest.json`'u **kompakt, anahtarlar sıralı, UTF-8** yazar

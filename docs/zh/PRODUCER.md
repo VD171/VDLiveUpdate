@@ -74,7 +74,7 @@ producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 ## 规范化（收敛点）
 
 `vdlu-sign` 和 `engine/vdlu-verify` 必须从一个清单在两个
-不同的运行时（PC openssl 对 device toybox + openssl）上派生出**相同的字节**。该规则刻意是一个
+不同的运行时（PC openssl 对 device toybox）上派生出**相同的字节**。该规则刻意是一个
 字节变换，而非一次 JSON 重新序列化，因此它在设备上不需要 JSON 库：
 
 1. `vdlu-pack` 以**紧凑、键已排序、UTF-8** 写入 `manifest.json`

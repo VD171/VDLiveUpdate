@@ -72,7 +72,7 @@ toybox `gunzip` (常に存在する) で展開するため、zstd は同梱さ�
 
 ## 正規化 (収束点)
 
-`vdlu-sign` と `engine/vdlu-verify` は、2 つの異なるランタイム (PC の openssl 対デバイスの toybox + openssl) で、
+`vdlu-sign` と `engine/vdlu-verify` は、2 つの異なるランタイム (PC の openssl 対デバイスの toybox) で、
 manifest から**同じバイト列**を導出しなければならない。このルールは意図的に JSON の再シリアライズではなく
 バイト変換であり、デバイス上に JSON ライブラリを必要としない:
 

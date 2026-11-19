@@ -47,7 +47,7 @@
 
 ## 在你的模块中采用它
 
-将 `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` vendor 进 `<module>/vdlu/`，把你的**原始 32 字节公钥**嵌入为 `vdlu/keyring/<id>.pub`，添加一份 `config`（profile + 源），接好触发器（`post-fs-data.sh` pre-zygote 以便开机自动更新；一个 WebUI 打开时的触发器），并把 `vdlu-pack` + `vdlu-sign` 加入你的发布流程。可运行的模板见 [`integration/`](integration/)。
+将 `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` vendor 进 `<module>/vdlu/`，把你的**原始 32 字节公钥**嵌入为 `vdlu/keyring/<id>.pub`，添加一份 `config`（profile + 源），接好触发器（`post-fs-data.sh` pre-zygote 以便开机自动更新；一个 WebUI 打开时的触发器），并把 `vdlu-pack` + `vdlu-sign` 加入你的发布流程。可运行的模板见 [`docs/QUICKSTART.md`](docs/QUICKSTART.md)。
 
 ## 安全
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## 文档
 
 - [`INTERFACES.md`](docs/INTERFACES.md): 各组件之间的接缝契约（收敛之法；请将其视为不可变）。
-- `integration/`: 一份逐步的采用指南和接线片段。
+- [`ENGINE.md`](docs/ENGINE.md): 设备端引擎（`update.sh`）：可恢复的 DIFF -> FETCH -> APPLY -> COMMIT 事务。
+- [`PRODUCER.md`](docs/PRODUCER.md): PC/发布端：构建并签名内容寻址的 feed（`vdlu-pack`、`vdlu-sign`）。
+- [`WEBUI.md`](docs/WEBUI.md): 可嵌入的 Updates 面板小部件（进度提示、取消、重启横幅）。
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): 一份逐步的采用指南和接线片段。
 
 ## 另见
 

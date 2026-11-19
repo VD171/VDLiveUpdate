@@ -47,7 +47,7 @@ Una actualización de módulo normal vuelve a enviar el `.zip` completo. Para un
 
 ## Adóptalo en tu módulo
 
-Vendoriza `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` en `<module>/vdlu/`, embarca tu **clave pública cruda de 32 bytes** como `vdlu/keyring/<id>.pub`, añade un `config` (perfil + fuente), conecta los disparadores (`post-fs-data.sh` pre-zygote para autoactualización en el arranque; un disparador al abrir la WebUI), y añade `vdlu-pack` + `vdlu-sign` a tu release. Consulta [`integration/`](integration/) para una plantilla trabajada.
+Vendoriza `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` en `<module>/vdlu/`, embarca tu **clave pública cruda de 32 bytes** como `vdlu/keyring/<id>.pub`, añade un `config` (perfil + fuente), conecta los disparadores (`post-fs-data.sh` pre-zygote para autoactualización en el arranque; un disparador al abrir la WebUI), y añade `vdlu-pack` + `vdlu-sign` a tu release. Consulta [`docs/QUICKSTART.md`](docs/QUICKSTART.md) para una plantilla trabajada.
 
 ## Seguridad
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Documentación
 
 - [`INTERFACES.md`](docs/INTERFACES.md): el contrato de costura entre los componentes (la ley de convergencia; trátalo como inmutable).
-- `integration/`: una guía de adopción paso a paso y fragmentos de cableado.
+- [`ENGINE.md`](docs/ENGINE.md): el motor del lado del dispositivo (`update.sh`): la transacción reanudable DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md): el lado de PC/release: construir y firmar el feed direccionado por contenido (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): el widget integrable del panel de actualizaciones (toast de progreso, cancelar, banner de reinicio).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): una guía de adopción paso a paso y fragmentos de cableado.
 
 ## Véase también
 

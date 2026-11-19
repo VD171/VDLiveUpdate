@@ -47,7 +47,7 @@ Un normale aggiornamento di modulo rispedisce di nuovo l'intero `.zip`. Per un m
 
 ## Adottalo nel tuo modulo
 
-Incorpora (vendor) `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` in `<module>/vdlu/`, imbarca la tua **chiave pubblica grezza da 32 byte** come `vdlu/keyring/<id>.pub`, aggiungi un `config` (profilo + sorgente), collega i trigger (`post-fs-data.sh` pre-zygote per l'auto-update all'avvio; un trigger di apertura della WebUI), e aggiungi `vdlu-pack` + `vdlu-sign` al tuo rilascio. Vedi [`integration/`](integration/) per un modello già pronto.
+Incorpora (vendor) `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` in `<module>/vdlu/`, imbarca la tua **chiave pubblica grezza da 32 byte** come `vdlu/keyring/<id>.pub`, aggiungi un `config` (profilo + sorgente), collega i trigger (`post-fs-data.sh` pre-zygote per l'auto-update all'avvio; un trigger di apertura della WebUI), e aggiungi `vdlu-pack` + `vdlu-sign` al tuo rilascio. Vedi [`docs/QUICKSTART.md`](docs/QUICKSTART.md) per un modello già pronto.
 
 ## Sicurezza
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Documentazione
 
 - [`INTERFACES.md`](docs/INTERFACES.md): il contratto di giunzione (seam contract) tra i componenti (la legge della convergenza; trattalo come immutabile).
-- `integration/`: una guida all'adozione passo-passo e snippet di wiring.
+- [`ENGINE.md`](docs/ENGINE.md): il motore lato dispositivo (`update.sh`): la transazione ripristinabile DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md): il lato PC/rilascio: costruire e firmare il feed indirizzato per contenuto (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): il widget integrabile del pannello Updates (toast di avanzamento, annulla, banner di riavvio).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): una guida all'adozione passo-passo e snippet di wiring.
 
 ## Vedi anche
 

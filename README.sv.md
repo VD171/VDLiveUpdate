@@ -47,7 +47,7 @@ En vanlig moduluppdatering levererar hela `.zip`-filen igen. För en stor modul 
 
 ## Anamma den i din modul
 
-Vendorisera `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` i `<module>/vdlu/`, bädda in din **råa 32-byte publika nyckel** som `vdlu/keyring/<id>.pub`, lägg till en `config` (profil + källa), koppla in triggrarna (`post-fs-data.sh` pre-zygote för automatisk uppdatering vid start; en trigger när WebUI öppnas), och lägg till `vdlu-pack` + `vdlu-sign` i din release. Se [`integration/`](integration/) för en genomarbetad mall.
+Vendorisera `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` i `<module>/vdlu/`, bädda in din **råa 32-byte publika nyckel** som `vdlu/keyring/<id>.pub`, lägg till en `config` (profil + källa), koppla in triggrarna (`post-fs-data.sh` pre-zygote för automatisk uppdatering vid start; en trigger när WebUI öppnas), och lägg till `vdlu-pack` + `vdlu-sign` i din release. Se [`docs/QUICKSTART.md`](docs/QUICKSTART.md) för en genomarbetad mall.
 
 ## Säkerhet
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Dokumentation
 
 - [`INTERFACES.md`](docs/INTERFACES.md): sömkontraktet mellan komponenterna (konvergensens lag; behandla det som oföränderligt).
-- `integration/`: en steg-för-steg-guide för anammande och kopplingssnuttar.
+- [`ENGINE.md`](docs/ENGINE.md): motorn på enhetssidan (`update.sh`): den återupptagbara transaktionen DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md): PC-/releasesidan: bygga och signera det innehållsadresserade flödet (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): den inbäddningsbara Updates-panelwidgeten (förloppstoast, avbryt, omstartsbanner).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): en steg-för-steg-guide för anammande och kopplingssnuttar.
 
 ## Se även
 

@@ -47,7 +47,7 @@ A normal module update ships the whole `.zip` again. For a large module that mea
 
 ## Adopt it in your module
 
-Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` into `<module>/vdlu/`, embark your **raw 32-byte public key** as `vdlu/keyring/<id>.pub`, add a `config` (profile + source), wire the triggers (`post-fs-data.sh` pre-zygote for auto-update on boot; a WebUI-open trigger), and add `vdlu-pack` + `vdlu-sign` to your release. See [`integration/`](integration/) for a worked template.
+Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` into `<module>/vdlu/`, embark your **raw 32-byte public key** as `vdlu/keyring/<id>.pub`, add a `config` (profile + source), wire the triggers (`post-fs-data.sh` pre-zygote for auto-update on boot; a WebUI-open trigger), and add `vdlu-pack` + `vdlu-sign` to your release. See [`docs/QUICKSTART.md`](docs/QUICKSTART.md) for a worked template.
 
 ## Security
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Documentation
 
 - [`INTERFACES.md`](docs/INTERFACES.md): the seam contract between the components (the law of convergence; treat it as immutable).
-- `integration/`: a step-by-step adoption guide and wiring snippets.
+- [`ENGINE.md`](docs/ENGINE.md): the device-side engine (`update.sh`): the resumable DIFF -> FETCH -> APPLY -> COMMIT transaction.
+- [`PRODUCER.md`](docs/PRODUCER.md): the PC / release side: building and signing the content-addressed feed (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): the drop-in Updates panel widget (progress toast, cancel, reboot banner).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): a step-by-step adoption guide and wiring snippets.
 
 ## See also
 

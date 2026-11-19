@@ -74,7 +74,7 @@ producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 ## التقنين (نقطة التقارب)
 
 يجب على `vdlu-sign` و`engine/vdlu-verify` اشتقاق **البايتات نفسها** من مانيفست، على بيئتَي
-تشغيل مختلفتين (حاسوب openssl مقابل جهاز toybox + openssl). القاعدة عمدًا تحويلٌ على البايتات،
+تشغيل مختلفتين (حاسوب openssl مقابل جهاز toybox). القاعدة عمدًا تحويلٌ على البايتات،
 لا إعادة تسلسل لـ JSON، كيلا تحتاج مكتبة JSON على الجهاز:
 
 1. `vdlu-pack` يكتب `manifest.json` **مضغوطًا، المفاتيح مرتّبة، UTF-8**

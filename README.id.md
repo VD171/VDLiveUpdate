@@ -47,7 +47,7 @@ Pembaruan modul biasa mengirim ulang seluruh `.zip`. Untuk modul besar, itu bera
 
 ## Adopsi di modul Anda
 
-Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` ke dalam `<module>/vdlu/`, sertakan **public key mentah 32-byte** Anda sebagai `vdlu/keyring/<id>.pub`, tambahkan sebuah `config` (profil + sumber), sambungkan pemicu-pemicunya (`post-fs-data.sh` pre-zygote untuk auto-update saat boot; sebuah pemicu WebUI-open), dan tambahkan `vdlu-pack` + `vdlu-sign` ke rilis Anda. Lihat [`integration/`](integration/) untuk templat yang sudah jadi.
+Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` ke dalam `<module>/vdlu/`, sertakan **public key mentah 32-byte** Anda sebagai `vdlu/keyring/<id>.pub`, tambahkan sebuah `config` (profil + sumber), sambungkan pemicu-pemicunya (`post-fs-data.sh` pre-zygote untuk auto-update saat boot; sebuah pemicu WebUI-open), dan tambahkan `vdlu-pack` + `vdlu-sign` ke rilis Anda. Lihat [`docs/QUICKSTART.md`](docs/QUICKSTART.md) untuk templat yang sudah jadi.
 
 ## Keamanan
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Dokumentasi
 
 - [`INTERFACES.md`](docs/INTERFACES.md): kontrak sambungan (seam contract) antar komponen (hukum konvergensi; perlakukan sebagai tak-berubah).
-- `integration/`: panduan adopsi langkah-demi-langkah dan potongan kode wiring.
+- [`ENGINE.md`](docs/ENGINE.md): engine sisi perangkat (`update.sh`): transaksi DIFF -> FETCH -> APPLY -> COMMIT yang dapat dilanjutkan.
+- [`PRODUCER.md`](docs/PRODUCER.md): sisi PC/rilis: membangun dan menandatangani feed ber-alamat konten (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): widget panel Updates siap pakai (toast progres, batal, banner reboot).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): panduan adopsi langkah-demi-langkah dan potongan kode wiring.
 
 ## Lihat juga
 

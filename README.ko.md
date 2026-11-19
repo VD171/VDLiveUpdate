@@ -47,7 +47,7 @@ VDLU 는 모듈 자체로 실행되는 것이 아니라, 모듈 안에 **벤더�
 
 ## 자신의 모듈에 도입하기
 
-`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` 를 `<module>/vdlu/` 에 벤더링하고, **원시 32바이트 공개 키** 를 `vdlu/keyring/<id>.pub` 로 탑재하며, `config` (프로파일 + 소스) 를 추가하고, 트리거를 연결하고 (부팅 시 자동 업데이트를 위한 `post-fs-data.sh` pre-zygote, WebUI 열림 트리거), 릴리스에 `vdlu-pack` + `vdlu-sign` 을 추가합니다. 실제 적용 템플릿은 [`integration/`](integration/) 을 참조하세요.
+`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` 를 `<module>/vdlu/` 에 벤더링하고, **원시 32바이트 공개 키** 를 `vdlu/keyring/<id>.pub` 로 탑재하며, `config` (프로파일 + 소스) 를 추가하고, 트리거를 연결하고 (부팅 시 자동 업데이트를 위한 `post-fs-data.sh` pre-zygote, WebUI 열림 트리거), 릴리스에 `vdlu-pack` + `vdlu-sign` 을 추가합니다. 실제 적용 템플릿은 [`docs/QUICKSTART.md`](docs/QUICKSTART.md) 을 참조하세요.
 
 ## 보안
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## 문서
 
 - [`INTERFACES.md`](docs/INTERFACES.md): 컴포넌트 간 접합부 계약 (수렴의 법칙. 불변의 것으로 취급하세요).
-- `integration/`: 단계별 도입 가이드와 연결 스니펫.
+- [`ENGINE.md`](docs/ENGINE.md): 기기 측 엔진 (`update.sh`): 재개 가능한 DIFF -> FETCH -> APPLY -> COMMIT 트랜잭션.
+- [`PRODUCER.md`](docs/PRODUCER.md): PC/릴리스 측: 콘텐츠 주소 지정 피드를 빌드하고 서명 (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): 드롭인 Updates 패널 위젯 (진행 토스트, 취소, 재부팅 배너).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): 단계별 도입 가이드와 연결 스니펫.
 
 ## 함께 보기
 

@@ -47,7 +47,7 @@
 
 ## Впровадження у вашому модулі
 
-Укладіть `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` у `<module>/vdlu/`, вбудуйте ваш **сирий 32-байтовий публічний ключ** як `vdlu/keyring/<id>.pub`, додайте `config` (профіль + джерело), пов'яжіть тригери (`post-fs-data.sh` pre-zygote для автооновлення під час завантаження; тригер відкриття WebUI) і додайте `vdlu-pack` + `vdlu-sign` до вашого релізу. Робочий шаблон див. у [`integration/`](integration/).
+Укладіть `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` у `<module>/vdlu/`, вбудуйте ваш **сирий 32-байтовий публічний ключ** як `vdlu/keyring/<id>.pub`, додайте `config` (профіль + джерело), пов'яжіть тригери (`post-fs-data.sh` pre-zygote для автооновлення під час завантаження; тригер відкриття WebUI) і додайте `vdlu-pack` + `vdlu-sign` до вашого релізу. Робочий шаблон див. у [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
 
 ## Безпека
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Документація
 
 - [`INTERFACES.md`](docs/INTERFACES.md): контракт стику між компонентами (закон конвергенції; трактуйте його як незмінний).
-- `integration/`: покроковий посібник з впровадження та фрагменти для пов'язування.
+- [`ENGINE.md`](docs/ENGINE.md): рушій на боці пристрою (`update.sh`): відновлювана транзакція DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md): бік ПК/релізу: збирання та підписання адресованого за вмістом фіду (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): вбудовуваний віджет панелі Updates (сповіщення про прогрес, скасування, банер перезавантаження).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): покроковий посібник з впровадження та фрагменти для пов'язування.
 
 ## Дивіться також
 

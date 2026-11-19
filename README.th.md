@@ -47,7 +47,7 @@
 
 ## นำไปใช้ในโมดูลของคุณ
 
-Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` เข้าไปใน `<module>/vdlu/`, ฝัง **กุญแจสาธารณะแบบ raw 32 ไบต์** ของคุณเป็น `vdlu/keyring/<id>.pub`, เพิ่ม `config` (profile + source), ต่อสาย triggers (`post-fs-data.sh` แบบ pre-zygote สำหรับการอัปเดตอัตโนมัติตอนบูต; trigger เมื่อเปิด WebUI) และเพิ่ม `vdlu-pack` + `vdlu-sign` เข้าไปในขั้นตอน release ของคุณ ดูเทมเพลตที่ทำไว้ให้แล้วได้ที่ [`integration/`](integration/)
+Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` เข้าไปใน `<module>/vdlu/`, ฝัง **กุญแจสาธารณะแบบ raw 32 ไบต์** ของคุณเป็น `vdlu/keyring/<id>.pub`, เพิ่ม `config` (profile + source), ต่อสาย triggers (`post-fs-data.sh` แบบ pre-zygote สำหรับการอัปเดตอัตโนมัติตอนบูต; trigger เมื่อเปิด WebUI) และเพิ่ม `vdlu-pack` + `vdlu-sign` เข้าไปในขั้นตอน release ของคุณ ดูเทมเพลตที่ทำไว้ให้แล้วได้ที่ [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
 
 ## ความปลอดภัย
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## เอกสาร
 
 - [`INTERFACES.md`](docs/INTERFACES.md): สัญญารอยต่อ (seam contract) ระหว่างคอมโพเนนต์ (กฎแห่งการบรรจบ; ให้ถือว่าเปลี่ยนแปลงไม่ได้)
-- `integration/`: คู่มือการนำไปใช้แบบทีละขั้นตอนและสคริปต์การต่อสาย
+- [`ENGINE.md`](docs/ENGINE.md): engine ฝั่งอุปกรณ์ (`update.sh`): ทรานแซกชัน DIFF -> FETCH -> APPLY -> COMMIT ที่กลับมาทำต่อได้
+- [`PRODUCER.md`](docs/PRODUCER.md): ฝั่ง PC/release: การสร้างและเซ็นฟีดแบบระบุที่อยู่ด้วยเนื้อหา (`vdlu-pack`, `vdlu-sign`)
+- [`WEBUI.md`](docs/WEBUI.md): วิดเจ็ตแผง Updates แบบพร้อมใช้ (toast ความคืบหน้า, ยกเลิก, แบนเนอร์รีบูต)
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): คู่มือการนำไปใช้แบบทีละขั้นตอนและสคริปต์การต่อสาย
 
 ## ดูเพิ่มเติม
 

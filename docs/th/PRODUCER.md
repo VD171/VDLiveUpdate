@@ -74,7 +74,7 @@ locally) `vdlu-pack` กัน `baseline.json` ออกจาก manifest ข�
 ## Canonicalization (จุดบรรจบ)
 
 `vdlu-sign` และ `engine/vdlu-verify` ต้อง derive **ไบต์เดียวกัน** จาก manifest, บน runtime สอง
-ตัวที่ต่างกัน (PC openssl vs device toybox + openssl) กฎนี้จงใจให้เป็น byte
+ตัวที่ต่างกัน (PC openssl vs device toybox) กฎนี้จงใจให้เป็น byte
 transform, ไม่ใช่การ re-serialize JSON, เพื่อให้ไม่ต้องใช้ JSON library บนอุปกรณ์:
 
 1. `vdlu-pack` เขียน `manifest.json` แบบ **compact, คีย์เรียงลำดับ, UTF-8**

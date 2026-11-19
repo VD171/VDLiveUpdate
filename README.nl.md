@@ -47,7 +47,7 @@ Een normale module-update levert de hele `.zip` opnieuw. Voor een grote module b
 
 ## Neem het op in je module
 
-Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` in `<module>/vdlu/`, neem je **ruwe 32-byte publieke sleutel** mee als `vdlu/keyring/<id>.pub`, voeg een `config` toe (profiel + bron), bedraad de triggers (`post-fs-data.sh` pre-zygote voor automatische update bij het opstarten; een WebUI-open-trigger), en voeg `vdlu-pack` + `vdlu-sign` toe aan je release. Zie [`integration/`](integration/) voor een uitgewerkte sjabloon.
+Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` in `<module>/vdlu/`, neem je **ruwe 32-byte publieke sleutel** mee als `vdlu/keyring/<id>.pub`, voeg een `config` toe (profiel + bron), bedraad de triggers (`post-fs-data.sh` pre-zygote voor automatische update bij het opstarten; een WebUI-open-trigger), en voeg `vdlu-pack` + `vdlu-sign` toe aan je release. Zie [`docs/QUICKSTART.md`](docs/QUICKSTART.md) voor een uitgewerkte sjabloon.
 
 ## Beveiliging
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Documentatie
 
 - [`INTERFACES.md`](docs/INTERFACES.md): het naadcontract tussen de componenten (de wet van convergentie; behandel het als onveranderlijk).
-- `integration/`: een stapsgewijze adoptiegids en bedradingssnippets.
+- [`ENGINE.md`](docs/ENGINE.md): de engine aan de apparaatzijde (`update.sh`): de hervatbare transactie DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md): de PC-/releasekant: het content-geadresseerde feed bouwen en ondertekenen (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): de kant-en-klare Updates-paneelwidget (voortgangstoast, annuleren, herstartbanner).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): een stapsgewijze adoptiegids en bedradingssnippets.
 
 ## Zie ook
 

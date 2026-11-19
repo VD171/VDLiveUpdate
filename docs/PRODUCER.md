@@ -74,7 +74,7 @@ absent: the device just starts from:0 on the first update, never broken.
 ## Canonicalization (the convergence point)
 
 `vdlu-sign` and `engine/vdlu-verify` must derive the **same bytes** from a manifest, on two
-different runtimes (PC openssl vs device toybox + openssl). The rule is deliberately a byte
+different runtimes (PC openssl vs device toybox). The rule is deliberately a byte
 transform, not a JSON re-serialization, so it needs no JSON library on the device:
 
 1. `vdlu-pack` writes `manifest.json` **compact, keys sorted, UTF-8**

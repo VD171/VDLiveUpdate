@@ -74,7 +74,7 @@ vắng mặt: thiết bị chỉ bắt đầu from:0 ở lần cập nhật đ�
 ## Chuẩn hóa (điểm hội tụ)
 
 `vdlu-sign` và `engine/vdlu-verify` phải suy ra **cùng các byte** từ một manifest, trên hai
-runtime khác nhau (PC openssl so với device toybox + openssl). Quy tắc cố ý là một phép biến đổi byte,
+runtime khác nhau (PC openssl so với device toybox). Quy tắc cố ý là một phép biến đổi byte,
 chứ không phải một lần tái-serialize JSON, nên nó không cần thư viện JSON trên thiết bị:
 
 1. `vdlu-pack` ghi `manifest.json` **gọn, khóa được sắp xếp, UTF-8**

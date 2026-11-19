@@ -47,7 +47,7 @@ Zwykła aktualizacja modułu dostarcza cały `.zip` jeszcze raz. Dla dużego mod
 
 ## Wdróż go w swoim module
 
-Wbuduj `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` do `<module>/vdlu/`, osadź swój **surowy 32-bajtowy klucz publiczny** jako `vdlu/keyring/<id>.pub`, dodaj `config` (profil + źródło), podepnij wyzwalacze (`post-fs-data.sh` przed zygote dla autoaktualizacji przy starcie; wyzwalacz otwarcia WebUI) i dodaj `vdlu-pack` + `vdlu-sign` do swojego wydania. Zobacz [`integration/`](integration/) dla gotowego szablonu.
+Wbuduj `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` do `<module>/vdlu/`, osadź swój **surowy 32-bajtowy klucz publiczny** jako `vdlu/keyring/<id>.pub`, dodaj `config` (profil + źródło), podepnij wyzwalacze (`post-fs-data.sh` przed zygote dla autoaktualizacji przy starcie; wyzwalacz otwarcia WebUI) i dodaj `vdlu-pack` + `vdlu-sign` do swojego wydania. Zobacz [`docs/QUICKSTART.md`](docs/QUICKSTART.md) dla gotowego szablonu.
 
 ## Bezpieczeństwo
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # potem run /
 ## Dokumentacja
 
 - [`INTERFACES.md`](docs/INTERFACES.md): kontrakt szwu między komponentami (prawo konwergencji; traktuj je jako niezmienne).
-- `integration/`: przewodnik wdrożenia krok po kroku i fragmenty podpięć.
+- [`ENGINE.md`](docs/ENGINE.md): silnik po stronie urządzenia (`update.sh`): wznawialna transakcja DIFF -> FETCH -> APPLY -> COMMIT.
+- [`PRODUCER.md`](docs/PRODUCER.md): strona PC/wydania: budowanie i podpisywanie adresowanego treścią feedu (`vdlu-pack`, `vdlu-sign`).
+- [`WEBUI.md`](docs/WEBUI.md): gotowy widget panelu Updates (toast postępu, anulowanie, baner restartu).
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): przewodnik wdrożenia krok po kroku i fragmenty podpięć.
 
 ## Zobacz również
 

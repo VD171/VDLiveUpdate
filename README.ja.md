@@ -47,7 +47,7 @@ VDLU は、モジュール自体として動かすのではなく、モジュー
 
 ## 自分のモジュールへ導入する
 
-`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` を `<module>/vdlu/` にベンダリングし、**生の 32 バイト公開鍵** を `vdlu/keyring/<id>.pub` として同梱し、`config` (プロファイル + ソース) を追加し、トリガーを配線し (起動時の自動更新のための `post-fs-data.sh` pre-zygote、WebUI オープン時のトリガー)、リリースに `vdlu-pack` + `vdlu-sign` を追加します。実践的なテンプレートは [`integration/`](integration/) を参照してください。
+`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` を `<module>/vdlu/` にベンダリングし、**生の 32 バイト公開鍵** を `vdlu/keyring/<id>.pub` として同梱し、`config` (プロファイル + ソース) を追加し、トリガーを配線し (起動時の自動更新のための `post-fs-data.sh` pre-zygote、WebUI オープン時のトリガー)、リリースに `vdlu-pack` + `vdlu-sign` を追加します。実践的なテンプレートは [`docs/QUICKSTART.md`](docs/QUICKSTART.md) を参照してください。
 
 ## セキュリティ
 
@@ -72,7 +72,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## ドキュメント
 
 - [`INTERFACES.md`](docs/INTERFACES.md): コンポーネント間の接合部の契約 (収束の法則。不変のものとして扱ってください)。
-- `integration/`: ステップバイステップの導入ガイドと配線スニペット。
+- [`ENGINE.md`](docs/ENGINE.md): デバイス側エンジン (`update.sh`): 再開可能な DIFF -> FETCH -> APPLY -> COMMIT トランザクション。
+- [`PRODUCER.md`](docs/PRODUCER.md): PC/リリース側: コンテンツアドレス指定フィードのビルドと署名 (`vdlu-pack`、`vdlu-sign`)。
+- [`WEBUI.md`](docs/WEBUI.md): 組み込み型の Updates パネルウィジェット (進捗トースト、キャンセル、再起動バナー)。
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md): ステップバイステップの導入ガイドと配線スニペット。
 
 ## 関連項目
 
