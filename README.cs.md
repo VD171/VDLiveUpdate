@@ -1,0 +1,116 @@
+<!--
+  ======================================================================
+   VDLiveUpdate (VDLU)  ::  flashless, incremental module updates
+   A self-update engine for KernelSU/APatch/Magisk modules: fetch only the
+   files that changed, apply the live ones with no reboot, verified by ed25519.
+
+   Copyright (C) 2026  VD171
+   SPDX-License-Identifier: Apache-2.0
+
+   Licensed under the Apache License, Version 2.0; you may obtain a copy at
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Site           : https://vd171.ru
+   Site           : https://vd.priv8.ru
+   Source         : https://github.com/VD171/VDLiveUpdate
+   GitHub         : @VD171 https://github.com/VD171
+   XDA-Developers : @VD171 https://xdaforums.com/m/vd171.4699873/
+   Telegram       : @VD_Priv8 https://t.me/VD_Priv8
+   Channel        : @Priv8_VD https://t.me/Priv8_VD
+   Discord        : @VD.Priv8 https://discord.com/users/1296831918989639721
+   E-mail         : vd.priv8@pm.me
+  ======================================================================
+-->
+
+# VDLiveUpdate
+
+> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+
+**VDLU** je bezflashový, přírůstkový engine pro vlastní aktualizaci modulů **KernelSU / APatch / Magisk**. Nainstalovaný modul se aktualizuje sám tím, že stáhne **jen soubory, které se změnily** (bloby adresované obsahem + podepsaný manifest), aplikuje ty živé **bez restartu** a připraví a označí tu hrstku, která restart opravdu vyžaduje (soubor `.so`, překryv `/system`, `sepolicy.rule`). Žádný správce rootu, žádné opětovné stahování celého `.zip`, žádný restart kromě těch připravených souborů.
+
+Je navržen tak, aby byl **vendorován** do modulu (vložen do `<module>/vdlu/`), nikoli aby běžel jako modul sám o sobě.
+
+## Proč
+
+Běžná aktualizace modulu posílá znovu celý `.zip`. U velkého modulu to znamená velké opětovné stahování kvůli pár změněným řádkům a statický aktualizační manifest může ukázat jen na jeden `zipUrl`, takže nedokáže obsloužit variantu (ABI, full vs lite), kterou zařízení skutečně má. VDLU porovnává **nainstalovaný** strom proti podepsanému feedu a stahuje jen rozdíly, takže instalace arm64-full zůstane arm64-full, instalace lite zůstane lite a většina aktualizací se aplikuje živě.
+
+## Jak to funguje
+
+- **Producent (PC / vydání):** `vdlu-pack` promění strom modulu na feed adresovaný obsahem (`manifest.json` + `blobs/<sha256>`, gzip, deduplikace, `delete[]`); `vdlu-keygen` / `vdlu-sign` (ed25519); `vdlu-gc` prořezává osiřelé bloby podle odkazů z posledních N manifestů (bezpečné při selhání, ve výchozím stavu zkušební běh).
+- **Engine (zařízení):** POSIX sh, bez `jq`. `update.sh` (`check | run | resume | boot | status | cancel`) spouští DIFF -> FETCH -> APPLY -> COMMIT jako **obnovitelnou transakci** (journal), s rollbackem a zámkem `mkdir`. Podpis se ověřuje vestavěným `ed25519-mini` (na zařízení žádné `openssl`).
+- **WebUI:** zásuvný panel Updates (toast průběhu, zrušit, banner restartu), čisté JS.
+
+## Profily
+
+- `trusted`: soukromé použití, zdroj `file://` nebo SSH, ověření s nejlepší snahou (hash vždy).
+- `hardened`: veřejné použití, **podpis povinný**, downgrade zablokován. Manifest je **vázán na id modulu** a každé pole se ověřuje fail-closed, než se cokoli stáhne.
+
+## Zaveďte jej do svého modulu
+
+Vendorujte `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` do `<module>/vdlu/`, vložte svůj **surový 32bajtový veřejný klíč** jako `vdlu/keyring/<id>.pub`, přidejte `config` (profil + zdroj), zapojte spouštěče (`post-fs-data.sh` před zygote pro automatickou aktualizaci při bootu; spouštěč při otevření WebUI) a do svého vydání přidejte `vdlu-pack` + `vdlu-sign`. Hotovou šablonu najdete v [`integration/`](integration/).
+
+## Bezpečnost
+
+- **Každé pole manifestu je nepřátelský vstup.** `validate_plan()` odmítne celý manifest fail-closed při absolutní cestě nebo `..`, při `sha256`, které není 64 hex znaků, nebo při neplatném režimu / třídě / kódování, **dřív** než proběhne jakékoli stahování nebo aplikace.
+- **Soukromý podpisový klíč se nikdy nedotkne CI ani zařízení**; vkládá se jen surový veřejný klíč a ověřování používá `ed25519-mini`, nikoli `openssl`.
+- `hardened` je fail-closed inverzí: cokoli jiného než doslovné `trusted` se považuje za `hardened`, takže poškozená hodnota profilu nemůže nikdy potichu přijmout nepodepsaný manifest.
+- Soubory třídy restart (`.so`, překryv `/system`, `sepolicy.rule`) se **připraví, nikdy se nepíší přes živý inode**; vše ostatní se aplikuje živě. Neúspěšná aplikace raději přeruší, než aby přepsala bez zálohy.
+
+## Sestavení / test
+
+Jsou to skripty, není co kompilovat. Od začátku do konce (producent + engine dohromady):
+
+```sh
+producer/vdlu-keygen demo /tmp/k
+producer/vdlu-pack /tmp/tree /tmp/feed demo 1 --version-name v1
+producer/vdlu-sign /tmp/feed/manifest.json /tmp/k/demo.pem demo
+VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / boot
+```
+
+`sh -n engine/*.sh`, `node --check webui/vdlu.js` a otevřete `webui/demo.html` v prohlížeči (mockuje most k zařízení).
+
+## Dokumentace
+
+- [`INTERFACES.md`](INTERFACES.md): kontrakt švu mezi komponentami (zákon konvergence; ber ho jako neměnný).
+- `integration/`: průvodce zavedením krok za krokem a úryvky zapojení.
+
+## Viz také
+
+Sesterské projekty téhož autora:
+
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: úplné zálohování a obnova aplikací a dat jako root, plně ovládané z WebUI.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: nástroj na podvržení zařízení, který z čerstvého fingerprintu udělá soudržný a konzistentní profil.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: samostatný, konfigurovatelný rootový SSH démon pro KernelSU/APatch/Magisk.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: debugger metod zařízení, který čte každou položku přes každou metodu, jež ji umí přečíst.
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: čte, co o tobě Google na tvém zařízení zaznamenává, celé na zařízení a bez internetu.
+
+## Kontakty
+
+- https://vd171.ru
+- https://vd.priv8.ru
+- **Telegram:** @VD_Priv8 https://t.me/VD_Priv8
+- **Channel:** @Priv8_VD https://t.me/Priv8_VD
+- **Discord:** @VD.Priv8 https://discord.com/users/1296831918989639721
+- **E-mail:** vd.priv8@pm.me
+- **XDA-Developers:** @VD171 https://xdaforums.com/m/vd171.4699873/
+- **GitHub:** @VD171 https://github.com/VD171
+
+## Licence
+
+Vlastní kód VDLiveUpdate je **Apache-2.0**; viz [LICENSE](LICENSE). Vendoruje malý ověřovač
+`ed25519-mini` a statický `curl` pro bootstrap stahování, každý pod vlastní licencí; viz
+[NOTICE.md](NOTICE.md) a soubory `PROVENANCE.json` vedle přibalených binárek.
+
+## Ochranné známky
+
+VDLiveUpdate je nezávislý, neoficiální projekt, nijak nespojený s žádnou třetí stranou ani jí neschválený.
+"Android" je ochranná známka Google LLC; "KernelSU", "Magisk" a "APatch" jsou známky jejich
+příslušných autorů. VDLU běží výhradně na tvém zařízení a na tvém vlastním hostiteli vydání.
+
+## Tags
+
+`VDLU` `flashless-update` `incremental-update` `KernelSU` `Magisk` `APatch` `module-update` `ed25519` `content-addressed` `OTA` `self-update` `Android` `VDLiveUpdate`
+
+---
+
+📣 **Join the channel for updates:** @Priv8_VD https://t.me/Priv8_VD

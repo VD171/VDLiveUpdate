@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<!--
+  ======================================================================
+   VDLiveUpdate (VDLU)  ::  flashless, incremental module updates
+   A self-update engine for KernelSU/APatch/Magisk modules.
+
+   Copyright (C) 2026  VD171
+   SPDX-License-Identifier: Apache-2.0
+
+   Site           : https://vd171.ru
+   Site           : https://vd.priv8.ru
+   Source         : https://github.com/VD171/VDLiveUpdate
+   GitHub         : @VD171 https://github.com/VD171
+   XDA-Developers : @VD171 https://xdaforums.com/m/vd171.4699873/
+   Telegram       : @VD_Priv8 https://t.me/VD_Priv8
+   Channel        : @Priv8_VD https://t.me/Priv8_VD
+   Discord        : @VD.Priv8 https://discord.com/users/1296831918989639721
+   E-mail         : vd.priv8@pm.me
+  ======================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VDLU - widget demo</title>
+<link rel="stylesheet" href="vdlu.css">
+<style>
+:root {
+  --bg: #0f1318; --surface: #181d24; --surface2: #1f252e; --border: #2a3240;
+  --fg: #e2e8f0; --fg2: #94a3b8; --fg3: #64748b;
+  --accent: #38bdf8; --green: #22c55e; --green-dim: rgba(34,197,94,0.15);
+  --red: #ef4444; --red-dim: rgba(239,68,68,0.15); --orange: #f59e0b; --orange-dim: rgba(245,158,11,0.15);
+  --blue: #3b82f6; --blue-dim: rgba(59,130,246,0.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; background: #0a0d11; color: var(--fg); padding: 20px; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 760px; margin: 0 auto; }
+.lead { margin-bottom: 18px; }
+.lead h1 { font-size: 1.2rem; font-weight: 700; }
+.lead p { font-size: 0.8rem; color: var(--fg3); margin-top: 4px; line-height: 1.5; }
+.lead code { color: var(--accent); font-size: 0.76rem; }
+.ctl { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.ctl button {
+  padding: 9px 15px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--fg2);
+}
+.ctl button:active { transform: scale(0.96); }
+.ctl button.sel { background: var(--accent); color: #05121b; border-color: var(--accent); }
+.scen-note { font-size: 0.74rem; color: var(--fg3); margin-bottom: 18px; min-height: 1.2em; }
+.frame-ctl { font-size: 0.74rem; color: var(--fg3); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.phone {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 18px; padding: 16px;
+  position: relative; transition: max-width 0.2s; margin: 0 auto;
+}
+.phone.narrow { max-width: 390px; }
+.phone-hd { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.phone-ic { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), #818cf8); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; }
+.phone-hd h2 { font-size: 1rem; }
+.phone-hd p { font-size: 0.68rem; color: var(--fg3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lead">
+    <h1>VDLU - update widget (demo)</h1>
+    <p>Loads <code>vdlu.js</code> + <code>vdlu.css</code> with a <b>mocked</b> <code>ksu.exec</code>: it simulates
+    <code>update.sh</code> and the <code>journal.json</code> evolution (DIFF → FETCH → APPLY → DONE), plus the
+    <code>reboot_pending</code>, <code>ERROR</code> and cancellation cases. It is the same code that runs on the device.</p>
+  </div>
+
+  <div class="ctl" id="scen">
+    <button data-s="normal" class="sel">LIVE → DONE flow</button>
+    <button data-s="reboot">With reboot_pending</button>
+    <button data-s="error">Error mid-run</button>
+    <button data-s="cancel">Cancellable (click Cancel)</button>
+    <button data-s="deferred">net_policy (download deferred)</button>
+    <button data-s="ahead">Newer than the feed</button>
+  </div>
+  <div class="scen-note" id="scenNote"></div>
+
+  <div class="frame-ctl">
+    <label><input type="checkbox" id="narrow"> phone width (390px)</label>
+    <span style="margin-left:auto">speed:</span>
+    <select id="speed" style="background:var(--surface2);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:4px 8px">
+      <option value="900">slow</option>
+      <option value="550" selected>normal</option>
+      <option value="250">fast</option>
+    </select>
+  </div>
+
+  <div class="phone narrow" id="phone">
+    <div class="phone-hd">
+      <div class="phone-ic">V</div>
+      <div><h2>Module (host)</h2><p>Updates tab mounted by VDLU</p></div>
+    </div>
+    <div id="updates"></div>
+  </div>
+</div>
+
+<!-- ============================ ksu.exec MOCK ============================ -->
+<script>
+(function () {
+  'use strict';
+  var MODULE_DIR = '/data/adb/modules/vdlu', VDLU_DIR = '/data/adb/vdlu/vdlu';
+
+  var sim = {
+    scenario: 'normal',
+    stepMs: 550,
+    config: [
+      'auto_on_webui_open=0',
+      'auto_on_reboot=1',
+      'source=https://<user>.github.io/<repo>/vdlu',
+      'channel=stable',
+      'profile=trusted',
+      'net_policy=any',
+      'boot_retry_interval=30',
+      'boot_retry_minutes=0',
+      'pubkey_dir=keyring'
+    ].join('\n') + '\n',
+    journal: null, cancelFile: false,
+    frames: [], idx: 0, timer: null
+  };
+  window.__vdluSim = sim;
+
+  var FILES = [
+    { p: 'webroot/index.html', cls: 'live', b: 184320 },
+    { p: 'webroot/vdlu.js', cls: 'live', b: 20480 },
+    { p: 'bin/arm64-v8a/curl', cls: 'live', b: 1113688 },
+    { p: 'module.prop', cls: 'live', b: 640 },
+    { p: 'zygisk/arm64-v8a.so', cls: 'reboot', b: 1020952 }
+  ];
+
+  function baseJ(extra) {
+    var j = { schema: 1, module: 'vdlu', target: 107, from: 106, total: FILES.length, done: 0,
+      phase: 'diff', state: 'PLANNED', current: '', bytes: 0, reboot_pending: false, error: null,
+      updated: new Date().toISOString() };
+    for (var k in (extra || {})) j[k] = extra[k];
+    return j;
+  }
+
+  function buildFrames(scenario) {
+    var f = [], N = FILES.length, i;
+    if (scenario === 'deferred') { f.push(baseJ({ phase: 'fetch', state: 'DEFERRED', done: 0, current: 'waiting for wifi network' })); return f; }
+    f.push(baseJ({ phase: 'diff', state: 'PLANNED' }));
+    for (i = 1; i <= N; i++) f.push(baseJ({ phase: 'fetch', state: 'FETCHING', done: i, current: FILES[i - 1].p, bytes: FILES[i - 1].b }));
+    f.push(baseJ({ phase: 'fetch', state: 'FETCHED', done: N }));
+    for (i = 1; i <= N; i++) {
+      if (scenario === 'error' && i === 3) { f.push(baseJ({ phase: 'apply', state: 'ERROR', done: i - 1, current: FILES[i - 1].p, error: 'hash mismatch on ' + FILES[i - 1].p + ' (3 attempts) - phase aborted, nothing applied' })); return f; }
+      f.push(baseJ({ phase: 'apply', state: 'APPLYING', done: i, current: FILES[i - 1].p, bytes: FILES[i - 1].b }));
+    }
+    f.push(baseJ({ phase: 'commit', state: 'APPLIED_LIVE', done: N }));
+    if (scenario === 'reboot') f.push(baseJ({ phase: 'commit', state: 'PENDING_REBOOT', done: N, reboot_pending: true }));
+    else f.push(baseJ({ phase: 'commit', state: 'DONE', done: N }));
+    return f;
+  }
+
+  function run(resume) {
+    if (!resume) { sim.frames = buildFrames(sim.scenario); sim.idx = 0; }
+    if (sim.timer) clearInterval(sim.timer);
+    sim.timer = setInterval(function () {
+      if (sim.cancelFile) {                 // cancel requested: consume the flag and stop at a safe (non-terminal) point
+        sim.cancelFile = false; clearInterval(sim.timer); sim.timer = null; return;
+      }
+      if (sim.idx >= sim.frames.length) { clearInterval(sim.timer); sim.timer = null; return; }
+      sim.journal = sim.frames[sim.idx++];
+    }, sim.stepMs);
+  }
+
+  function heredocBody(cmd) {
+    var m = cmd.indexOf("<< 'VDLUEOF'"); if (m < 0) return null;
+    var rest = cmd.slice(m + "<< 'VDLUEOF'".length);
+    rest = rest.replace(/^\r?\n/, '');
+    var end = rest.indexOf('\nVDLUEOF');
+    return end >= 0 ? rest.slice(0, end) : rest;
+  }
+
+  function handle(cmd) {
+    if (cmd.indexOf('update.sh') >= 0) {
+      var tail = cmd.slice(cmd.indexOf('update.sh'));
+      if (/\brun\b/.test(tail)) { run(false); return [0, 'started', '']; }
+      if (/\bresume\b/.test(tail)) { run(true); return [0, 'resumed', '']; }
+      if (/\bcheck\b/.test(tail)) {
+        if (sim.scenario === 'ahead') return [0, JSON.stringify({ update: false, ahead: true, from: 107, to: 106 }), ''];
+        var upd = true, rb = (sim.scenario === 'reboot');
+        return [0, JSON.stringify({ update: upd, from: 106, to: 107, fetch: FILES.length, reboot: rb }), ''];
+      }
+    }
+    if (cmd.indexOf('cancel') >= 0 && cmd.indexOf('touch') >= 0) { sim.cancelFile = true; if (!sim.timer) run(true); return [0, '', '']; }
+    if (cmd.indexOf('/cancel') >= 0 && cmd.indexOf('[ -e') >= 0) { return [0, sim.cancelFile ? 'P' : 'G', '']; }
+    if (cmd.indexOf('cat >') >= 0 && cmd.indexOf('/config') >= 0) { var b = heredocBody(cmd); if (b != null) sim.config = b.replace(/\n?$/, '\n'); return [0, '', '']; }
+    if (/^cat\b/.test(cmd) && cmd.indexOf('/journal.json') >= 0) { return sim.journal ? [0, JSON.stringify(sim.journal), ''] : [1, '', '']; }
+    if (/^cat\b/.test(cmd) && cmd.indexOf('/config') >= 0) { return [0, sim.config, '']; }
+    return [0, '', ''];
+  }
+
+  window.ksu = {
+    exec: function (cmd, opts, cbName) {
+      setTimeout(function () {
+        var r = handle(cmd), cb = window[cbName];
+        if (typeof cb === 'function') cb(r[0], r[1], r[2]);
+      }, 30);
+    }
+  };
+})();
+</script>
+
+<script src="vdlu.js"></script>
+
+<!-- ============================ host wiring (real integration example) ============================ -->
+<script>
+(function () {
+  var NOTES = {
+    normal: 'Click "Update now": FETCH (5) → APPLY (5) → green toast "v107 applied". No reboot items, no banner.',
+    reboot: 'Includes zygisk/arm64-v8a.so (reboot class): staged at boot, ends in PENDING_REBOOT → persistent banner at the top.',
+    error: 'APPLY fails on the 3rd file (hash mismatch): honest red toast with the reason, nothing is marked done.',
+    cancel: 'During progress click "Cancel" in the toast: stops at the safe point, the journal stays resumable → "Resume" finishes it.',
+    deferred: 'net_policy blocked the download (e.g. Wi-Fi only on a mobile network): click "Update now" → gentle blue INFO toast "waiting for wifi network" (not an error), resumes on the next check.',
+    ahead: 'Device on a version NEWER than the feed: click "Check for updates" → "Newer than the feed" inline in the panel (benign, not a "check failure").'
+  };
+
+  function setScenario(s) {
+    window.__vdluSim.scenario = s;
+    [].forEach.call(document.querySelectorAll('#scen button'), function (b) { b.classList.toggle('sel', b.getAttribute('data-s') === s); });
+    document.getElementById('scenNote').textContent = NOTES[s] || '';
+  }
+  document.getElementById('scen').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (b) setScenario(b.getAttribute('data-s'));
+  });
+  setScenario('normal');
+
+  document.getElementById('narrow').checked = true;
+  document.getElementById('narrow').addEventListener('change', function (e) {
+    document.getElementById('phone').classList.toggle('narrow', e.target.checked);
+  });
+  document.getElementById('speed').addEventListener('change', function (e) { window.__vdluSim.stepMs = Number(e.target.value); });
+
+  VDLU.init({
+    moduleDir: '/data/adb/modules/vdlu',
+    vdluDir: '/data/adb/vdlu/vdlu',
+    modid: 'vdlu',
+    module: 'VDLU'
+  });
+  VDLU.mountUpdatesPanel(document.getElementById('updates'));
+  VDLU.onWebUIOpen();
+})();
+</script>
+</body>
+</html>

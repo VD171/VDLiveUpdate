@@ -1,0 +1,55 @@
+#!/bin/sh
+# ======================================================================
+#  VDLiveUpdate (VDLU)  ::  flashless, incremental module updates
+#  A self-update engine for KernelSU/APatch/Magisk modules.
+#
+#  Copyright (C) 2026  VD171
+#  SPDX-License-Identifier: Apache-2.0
+#
+#  Site           : https://vd171.ru
+#  Site           : https://vd.priv8.ru
+#  Source         : https://github.com/VD171/VDLiveUpdate
+#  GitHub         : @VD171 https://github.com/VD171
+#  XDA-Developers : @VD171 https://xdaforums.com/m/vd171.4699873/
+#  Telegram       : @VD_Priv8 https://t.me/VD_Priv8
+#  Channel        : @Priv8_VD https://t.me/Priv8_VD
+#  Discord        : @VD.Priv8 https://discord.com/users/1296831918989639721
+#  E-mail         : vd.priv8@pm.me
+# ======================================================================
+# vdlu-keygen <id> <out_dir> - ed25519 signing keypair for VDLU manifests.
+# Writes <out_dir>/<id>.pem (private, 0600) and <out_dir>/<id>.pub (public PEM, for the keyring).
+# POSIX sh + openssl only. See INTERFACES.md §6.
+set -eu
+
+if [ $# -ne 2 ]; then
+	echo "usage: vdlu-keygen <id> <out_dir>" >&2
+	exit 2
+fi
+
+id=$1
+out=$2
+priv="$out/$id.pem"
+pub="$out/$id.pub"
+
+mkdir -p "$out"
+
+if [ -e "$priv" ]; then
+	echo "vdlu-keygen: refusing to overwrite existing $priv" >&2
+	exit 1
+fi
+
+umask 077
+openssl genpkey -algorithm ed25519 -out "$priv"
+chmod 600 "$priv"
+openssl pkey -in "$priv" -pubout -out "$pub"
+chmod 644 "$pub"
+
+# RAW 32-byte public key for the SLIM on-device keyring (what ed25519-mini reads; no openssl
+# on the device). ed25519 SPKI DER = 12-byte prefix + the 32-byte key, so tail -c 32 is the key.
+openssl pkey -in "$priv" -pubout -outform DER | tail -c 32 > "$out/$id.pub.raw"
+chmod 644 "$out/$id.pub.raw"
+
+echo "vdlu-keygen: key_id=$id" >&2
+echo "  private : $priv (0600 - keep off any device/repo push)" >&2
+echo "  public  : $pub  (PEM, for PC-side tooling)" >&2
+echo "  pub.raw : $out/$id.pub.raw  (RAW 32B - ship as the module keyring's $id.pub in slim)" >&2

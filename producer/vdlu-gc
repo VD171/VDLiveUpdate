@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+# ======================================================================
+#  VDLiveUpdate (VDLU)  ::  flashless, incremental module updates
+#  A self-update engine for KernelSU/APatch/Magisk modules.
+#
+#  Copyright (C) 2026  VD171
+#  SPDX-License-Identifier: Apache-2.0
+#
+#  Site           : https://vd171.ru
+#  Site           : https://vd.priv8.ru
+#  Source         : https://github.com/VD171/VDLiveUpdate
+#  GitHub         : @VD171 https://github.com/VD171
+#  XDA-Developers : @VD171 https://xdaforums.com/m/vd171.4699873/
+#  Telegram       : @VD_Priv8 https://t.me/VD_Priv8
+#  Channel        : @Priv8_VD https://t.me/Priv8_VD
+#  Discord        : @VD.Priv8 https://discord.com/users/1296831918989639721
+#  E-mail         : vd.priv8@pm.me
+# ======================================================================
+"""vdlu-gc - prune orphan blobs from a VDLU feed.
+
+VDLU blobs are content-addressed and immutable: the producer only ever ADDS blobs
+(dedup by sha256), so blobs/ grows monotonically across releases. This prunes the
+blobs that NO retained manifest references, keeping the feed (and the Pages site) small.
+
+Usage:
+  vdlu-gc <feed_dir> [--keep-last N] [--keep M.json ...] [--apply]
+
+Retained manifests = the current <feed>/manifest.json PLUS the last N by version from the
+<feed>/manifests/<version>.json archive (default N=3: current + rollback margin) PLUS any
+--keep files. A blob whose sha256 is referenced by NO retained manifest is an orphan.
+
+SAFETY (hard):
+  - dry-run by DEFAULT (prints what WOULD be removed); --apply performs the deletion.
+  - a blob referenced by ANY retained manifest is NEVER removed (a device on that release
+    would break its fetch). The retained set is a UNION; GC removes only the complement.
+  - refuses to prune when it finds no retained manifest (fail-safe, never empties a feed).
+Pushing the pruned feed to Pages is a batched WRITE (space it out - rate-guard).
+See producer/README.md.
+"""
+import argparse
+import json
+import os
+import sys
+
+HEX = set("0123456789abcdef")
+
+
+def log(m):
+    sys.stderr.write("vdlu-gc: " + m + "\n")
+
+
+def load_manifest(p):
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        log("skip unreadable manifest %s: %s" % (p, e))
+        return None
+
+
+def shas_of(m):
+    out = set()
+    for f in m.get("files", []):
+        s = f.get("sha256")
+        if isinstance(s, str) and len(s) == 64 and all(c in HEX for c in s):
+            out.add(s)
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser(prog="vdlu-gc", add_help=True)
+    ap.add_argument("feed_dir")
+    ap.add_argument("--keep-last", type=int, default=3,
+                    help="retain the last N archived manifests by version (default 3)")
+    ap.add_argument("--keep", nargs="*", default=[],
+                    help="extra manifest.json files to retain explicitly")
+    ap.add_argument("--apply", action="store_true", help="actually delete (default: dry-run)")
+    a = ap.parse_args()
+
+    feed = os.path.realpath(a.feed_dir)
+    blobs = os.path.join(feed, "blobs")
+    if not os.path.isdir(blobs):
+        log("no blobs/ under " + feed)
+        return 2
+
+    retained = []
+    cur = os.path.join(feed, "manifest.json")
+    if os.path.isfile(cur):
+        m = load_manifest(cur)
+        if m:
+            retained.append(("current", m))
+
+    archive = os.path.join(feed, "manifests")
+    archived = []
+    if os.path.isdir(archive):
+        for name in sorted(os.listdir(archive)):
+            if not name.endswith(".json"):
+                continue
+            m = load_manifest(os.path.join(archive, name))
+            if m and isinstance(m.get("version"), int):
+                archived.append((m["version"], m))
+    archived.sort(key=lambda x: x[0], reverse=True)
+    for _, m in archived[:max(a.keep_last, 0)]:
+        retained.append(("archive v%d" % m["version"], m))
+
+    for kp in a.keep:
+        m = load_manifest(kp)
+        if m:
+            retained.append((kp, m))
+
+    if not retained:
+        log("no retained manifest found - refusing to prune (fail-safe)")
+        return 2
+
+    keep_shas = set()
+    for _, m in retained:
+        keep_shas |= shas_of(m)
+    log("retained manifests: %d; referenced blobs: %d" % (len(retained), len(keep_shas)))
+
+    orphans = []
+    for name in sorted(os.listdir(blobs)):
+        full = os.path.join(blobs, name)
+        if not os.path.isfile(full):
+            continue
+        sha = name[:-4] if name.endswith(".zst") else name
+        if len(sha) == 64 and all(c in HEX for c in sha):
+            if sha not in keep_shas:
+                orphans.append((name, os.path.getsize(full)))
+        else:
+            log("ignore non-blob file in blobs/: " + name)
+
+    if not orphans:
+        log("no orphan blobs - feed is tight")
+        return 0
+
+    total = 0
+    for name, sz in orphans:
+        total += sz
+        print(("REMOVE " if a.apply else "WOULD-REMOVE ") + "blobs/%s (%d bytes)" % (name, sz))
+    log("%d orphan blob(s), %d bytes%s" %
+        (len(orphans), total, "" if a.apply else " (dry-run; pass --apply to delete)"))
+
+    if a.apply:
+        n = 0
+        for name, _ in orphans:
+            try:
+                os.remove(os.path.join(blobs, name))
+                n += 1
+            except OSError as e:
+                log("failed to remove %s: %s" % (name, e))
+        log("removed %d blob(s)" % n)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

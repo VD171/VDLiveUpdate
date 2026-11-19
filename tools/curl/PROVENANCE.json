@@ -1,0 +1,43 @@
+{
+  "component": "vdlu static curl (TLS transport for the headless fetch path)",
+  "note": "runs as root after verify-before-exec: the SIGNED tools-manifest + binary sha256 are checked by ed25519-mini before first exec. TLS cert verify on-device via --capath /system/etc/security/cacerts (tested http=200).",
+  "sources": {
+    "mbedtls": {
+      "version": "3.6.7 (LTS)",
+      "url": "https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.7/mbedtls-3.6.7.tar.bz2",
+      "sha256_tarball": "a7e8bcbec0e6f761b4af24f25677626b35f762f68eef79c08677a363212d11f6"
+    },
+    "curl": {
+      "version": "8.11.1",
+      "url": "https://curl.se/download/curl-8.11.1.tar.xz",
+      "sha256_tarball": "c7ca7db48b0909743eaef34250da02c19bc61d4f1dcedd6603f109409536ab56",
+      "sha256_source": "official curl.se over HTTPS"
+    }
+  },
+  "build": {
+    "toolchain": "Android NDK r29 clang, api 28, cmake",
+    "tls": "mbedTLS 3.6.7 linked STATICALLY into curl",
+    "linkage": "DYNAMIC against bionic libc.so/libm.so/libdl.so only (no third-party .so, no closure)",
+    "curl_flags": "HTTP_ONLY, mbedTLS backend, no http2/3/ssh/ldap/psl/idn2/zlib/brotli/zstd, MinSizeRel, stripped",
+    "script": "build.sh"
+  },
+  "binaries": {
+    "arm64-v8a": {
+      "sha256": "c0b0721287ef3bd56c6b76f2f257a505434a498cccab502cf7f9ce79750486b8",
+      "bytes": 1113688
+    },
+    "armeabi-v7a": {
+      "sha256": "1f7c2c88274e8d0e09edb673fcd189fb21b844f55723ff634766161b7e20158c",
+      "bytes": 805576
+    },
+    "x86_64": {
+      "sha256": "0330fcb6c1e7dfb3f87b2ad13a7f17da1b5a57c794152bd36f45dea7497b6f1f",
+      "bytes": 1135912
+    },
+    "x86": {
+      "sha256": "c03ff24ead70e2a7d976a2fbcbc70d1ad356c28cd23433326988f224b7309765",
+      "bytes": 1125988
+    }
+  },
+  "tested_on_device": "merlin1/edge (aarch64): curl 8.11.1 mbedTLS/3.6.7, https feed http=200 with system capath"
+}
