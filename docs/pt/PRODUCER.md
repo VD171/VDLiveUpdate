@@ -129,6 +129,8 @@ escolhendo `<keyring>/<key_id>.pub` (cru) é todo o mecanismo de rotação - sem
 **estável** entre releases (só a rotação de chave o muda): um re-vendor deve **verificar-não-copiar** e nunca
 sobrescrevê-lo com o `.pub` PEM do PC.
 
+O `vdlu-pack` **exclui o keyring e os binários `verify/` do feed** (a raiz de confiança é só-flash, nunca servida pela rede), junto com `baseline.json`, o scaffolding do instalador (`META-INF/`, `customize.sh`), o portão de flash `.vd/`, os `update.json`/`update-mmrl.json` preenchidos pelo CI, e os companheiros `.sha256` por arquivo. Só o conteúdo do próprio módulo é atualizável pelo feed, então um manifesto nunca pode reescrever a âncora de confiança no device.
+
 <!-- doc-footer -->
 
 ---

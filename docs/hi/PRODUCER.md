@@ -129,6 +129,8 @@ PEM नहीं - `ed25519-mini` raw 32 बाइट्स पढ़ता ह�
 **स्थिर** है (केवल key rotation इसे बदलता है): एक re-vendor को इसे **verify-not-copy** करना चाहिए, और इसे कभी
 PC-side `.pub` PEM से अधिलेखित नहीं करना चाहिए।
 
+`vdlu-pack` **keyring और `verify/` binaries को feed से बाहर करता है** (trust root केवल flash है, कभी नेटवर्क पर नहीं परोसा जाता), साथ ही `baseline.json`, installer स्कैफोल्डिंग (`META-INF/`, `customize.sh`), `.vd/` flash गेट, CI द्वारा भरे गए `update.json`/`update-mmrl.json`, और प्रति-फ़ाइल `.sha256` साथियों को भी। केवल मॉड्यूल की अपनी सामग्री feed से अपडेट करने योग्य है, इसलिए एक manifest कभी भी डिवाइस पर trust anchor को पुनः नहीं लिख सकता।
+
 <!-- doc-footer -->
 
 ---

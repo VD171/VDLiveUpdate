@@ -129,6 +129,8 @@ dat `<keyring>/<key_id>.pub` (raw) kiest, is het hele rotatiemechanisme - geen e
 **stabiel** over releases heen (alleen sleutelrotatie verandert hem): een her-vendor moet hem **verifiëren-niet-kopiëren**, en nooit
 overschrijven met de PC-zijdige `.pub` PEM.
 
+`vdlu-pack` **sluit de keyring en de `verify/`-binaries uit van de feed** (de vertrouwenswortel is alleen-flash, wordt nooit over de draad geserveerd), naast `baseline.json`, de installer-steiger (`META-INF/`, `customize.sh`), de `.vd/`-flashpoort, de door CI gevulde `update.json`/`update-mmrl.json`, en de `.sha256`-metgezellen per bestand. Alleen de eigen inhoud van de module is via de feed bij te werken, zodat een manifest het vertrouwensanker op het toestel nooit kan herschrijven.
+
 <!-- doc-footer -->
 
 ---

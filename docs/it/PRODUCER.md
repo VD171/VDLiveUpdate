@@ -129,6 +129,8 @@ che sceglie `<keyring>/<key_id>.pub` (grezza) sono l'intero meccanismo di rotazi
 **stabile** tra le release (solo la rotazione delle chiavi lo cambia): un re-vendor deve **verificare-non-copiare**, e mai
 sovrascriverlo con la `.pub` PEM PC-side.
 
+`vdlu-pack` **esclude il keyring e i binari `verify/` dal feed** (la radice di fiducia è solo-flash, mai servita via cavo), insieme a `baseline.json`, l'impalcatura dell'installer (`META-INF/`, `customize.sh`), il gate di flash `.vd/`, gli `update.json`/`update-mmrl.json` riempiti dalla CI, e i compagni `.sha256` per-file. Solo il contenuto proprio del modulo è aggiornabile via feed, quindi un manifest non può mai riscrivere l'ancora di fiducia sul dispositivo.
+
 <!-- doc-footer -->
 
 ---

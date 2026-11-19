@@ -5,6 +5,9 @@ signed manifest declares via `engine_min`.
 
 ## Unreleased
 - Public release: English README and dev docs, Apache-2.0 LICENSE, third-party NOTICE.
+- Hardening: path validation now also rejects dot-segment (`.`/`..` as a whole segment) and trailing-slash
+  paths. The signed feed never carries the on-device trust root (keyring + verifier) or flash-only infra, so
+  no manifest can rewrite what verifies it.
 
 ## ENGINE_VERSION 3 - 2026-11-16
 - `hardened` is the default profile; `profile` is fail-closed by inversion - only the literal `trusted`

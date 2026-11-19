@@ -129,6 +129,8 @@ som väljer `<keyring>/<key_id>.pub` (rå) är hela rotationsmekanismen - ingen 
 **stabil** över releaser (bara nyckelrotation ändrar den): en om-vendoring måste **verifiera-inte-kopiera** den, och aldrig
 skriva över den med den PC-sidiga `.pub` PEM:en.
 
+`vdlu-pack` **exkluderar keyringen och `verify/`-binärerna från flödet** (tillitsroten är endast flash, serveras aldrig över nätet), vid sidan av `baseline.json`, installerarställningen (`META-INF/`, `customize.sh`), `.vd/`-flashgrinden, de CI-fyllda `update.json`/`update-mmrl.json` och de per-fil `.sha256`-följeslagarna. Endast modulens eget innehåll är flödesuppdaterbart, så ett manifest kan aldrig skriva om tillitsankaret på enheten.
+
 <!-- doc-footer -->
 
 ---

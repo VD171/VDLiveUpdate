@@ -129,6 +129,8 @@ wybierające `<keyring>/<key_id>.pub` (surowy) to cały mechanizm rotacji - bez 
 **stabilny** między releasami (zmienia go tylko rotacja klucza): re-wendoring musi **weryfikować-nie-kopiować** i nigdy
 nie nadpisywać go PEM-em `.pub` po stronie PC.
 
+`vdlu-pack` **wyklucza keyring i binaria `verify/` z feedu** (korzeń zaufania jest wyłącznie-flash, nigdy nie serwowany po kablu), obok `baseline.json`, rusztowania instalatora (`META-INF/`, `customize.sh`), bramki flash `.vd/`, wypełnianych przez CI `update.json`/`update-mmrl.json` oraz towarzyszy `.sha256` per plik. Tylko własna treść modułu jest aktualizowalna przez feed, więc manifest nigdy nie może nadpisać kotwicy zaufania na urządzeniu.
+
 <!-- doc-footer -->
 
 ---

@@ -128,6 +128,8 @@ Keyring คือไดเรกทอรีของไฟล์ `<key_id>.pub`
 **เสถียร** ข้ามการ release (เปลี่ยนเฉพาะตอน rotate คีย์): การ re-vendor ต้อง **verify-not-copy** มัน, และไม่เคย
 เขียนทับมันด้วย `.pub` PEM ฝั่ง PC
 
+`vdlu-pack` **กัน keyring และไบนารี `verify/` ออกจากฟีด** (รากความเชื่อถืออยู่ใน flash เท่านั้น, ไม่เคยถูกเสิร์ฟผ่านเครือข่าย), เคียงข้างกับ `baseline.json`, โครงนั่งร้านของ installer (`META-INF/`, `customize.sh`), flash gate `.vd/`, `update.json`/`update-mmrl.json` ที่ CI เติม, และไฟล์คู่ `.sha256` ต่อไฟล์ มีเพียงเนื้อหาของโมดูลเองที่อัปเดตผ่านฟีดได้, ดังนั้น manifest จึงไม่มีทางเขียนทับ trust anchor บนอุปกรณ์ได้
+
 <!-- doc-footer -->
 
 ---

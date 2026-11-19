@@ -129,6 +129,8 @@ vybírající `<keyring>/<key_id>.pub` (raw) je celý rotační mechanismus - ž
 **stabilní** napříč releasy (mění ho jen rotace klíče): re-vendor musí **ověřit-ne-kopírovat** a nikdy ho
 nepřepsat PC-side `.pub` PEM.
 
+`vdlu-pack` **vylučuje keyring a `verify/` binárky z feedu** (kořen důvěry je flash-only, nikdy se neservíruje po síti), vedle `baseline.json`, lešení instalátoru (`META-INF/`, `customize.sh`), `.vd/` flash brány, CI-vyplněných `update.json`/`update-mmrl.json` a per-file `.sha256` společníků. Feedem aktualizovatelný je jen vlastní obsah modulu, takže manifest nikdy nemůže přepsat kotvu důvěry na zařízení.
+
 <!-- doc-footer -->
 
 ---

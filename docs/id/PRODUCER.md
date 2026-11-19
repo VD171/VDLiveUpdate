@@ -129,6 +129,8 @@ memilih `<keyring>/<key_id>.pub` (mentah) adalah keseluruhan mekanisme rotasi - 
 **stabil** lintas release (hanya rotasi kunci yang mengubahnya): sebuah re-vendor harus **verifikasi-bukan-salin**, dan tidak pernah
 menimpanya dengan `.pub` PEM sisi-PC.
 
+`vdlu-pack` **mengecualikan keyring dan biner `verify/` dari feed** (akar kepercayaan bersifat hanya-flash, tidak pernah disajikan lewat kabel), bersama `baseline.json`, scaffolding installer (`META-INF/`, `customize.sh`), gerbang flash `.vd/`, `update.json`/`update-mmrl.json` yang diisi CI, dan pendamping `.sha256` per file. Hanya konten milik modul itu sendiri yang dapat diperbarui lewat feed, sehingga sebuah manifest tidak pernah dapat menulis ulang jangkar kepercayaan di perangkat.
+
 <!-- doc-footer -->
 
 ---

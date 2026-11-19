@@ -127,6 +127,8 @@ keyring은 `<key_id>.pub` 파일들의 디렉터리이며, 각각 **RAW 32B** ed
 릴리스를 가로질러 **안정적**이다 (키 로테이션만이 그것을 변경함): 재벤더링은 **복사가 아니라 검증**해야 하며,
 결코 PC 측 `.pub` PEM으로 덮어써서는 안 된다.
 
+`vdlu-pack`은 **keyring과 `verify/` 바이너리를 피드에서 제외한다** (신뢰 루트는 플래시 전용이며, 결코 유선으로 제공되지 않는다). `baseline.json`, 인스톨러 스캐폴딩 (`META-INF/`, `customize.sh`), `.vd/` 플래시 게이트, CI가 채우는 `update.json`/`update-mmrl.json`, 그리고 파일별 `.sha256` 동반 파일도 마찬가지다. 피드로 업데이트할 수 있는 것은 모듈 자신의 내용뿐이므로, manifest가 기기의 신뢰 앵커를 다시 쓸 수는 결코 없다.
+
 <!-- doc-footer -->
 
 ---

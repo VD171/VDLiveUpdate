@@ -132,6 +132,8 @@ l'appareil choisissant `<keyring>/<key_id>.pub` (raw) est tout le mécanisme de 
 d'engine. Le keyring est **stable** à travers les releases (seule la rotation de clé le change) : un re-vendor
 doit le **vérifier-pas-copier** et ne jamais l'écraser avec le `.pub` PEM du PC-side.
 
+`vdlu-pack` **exclut le keyring et les binaires `verify/` du feed** (la racine de confiance est flash uniquement, jamais servie sur le réseau), aux côtés de `baseline.json`, de l'échafaudage de l'installeur (`META-INF/`, `customize.sh`), de la porte de flash `.vd/`, des `update.json`/`update-mmrl.json` remplis par la CI, et des compagnons `.sha256` par fichier. Seul le contenu propre du module est actualisable par le feed, donc un manifeste ne peut jamais réécrire l'ancre de confiance sur l'appareil.
+
 <!-- doc-footer -->
 
 ---

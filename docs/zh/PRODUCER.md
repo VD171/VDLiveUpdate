@@ -129,6 +129,8 @@ keyring 是一个 `<key_id>.pub` 文件的目录，每个文件是 **RAW 32B** �
 release 是**稳定的**（只有密钥轮换才改变它）：重新 vendor 必须**验证而非复制**它，且绝不
 用 PC 侧的 `.pub` PEM 覆盖它。
 
+`vdlu-pack` **将 keyring 和 `verify/` 二进制从 feed 中排除**（信任根仅在刷入中，绝不通过网络传输），连同 `baseline.json`、安装器脚手架（`META-INF/`、`customize.sh`）、`.vd/` 刷入闸、由 CI 填充的 `update.json`/`update-mmrl.json`，以及每文件的 `.sha256` 伴随文件。只有模块自身的内容可经 feed 更新，因此清单绝不能重写设备上的信任锚。
+
 <!-- doc-footer -->
 
 ---

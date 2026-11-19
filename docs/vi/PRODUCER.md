@@ -129,6 +129,8 @@ chọn `<keyring>/<key_id>.pub` (thô) là toàn bộ cơ chế luân chuyển -
 **ổn định** qua các release (chỉ luân chuyển khóa mới đổi nó): một lần re-vendor phải **xác minh-không-sao-chép** nó, và không bao giờ
 ghi đè nó bằng `.pub` PEM phía PC.
 
+`vdlu-pack` **loại trừ keyring và các nhị phân `verify/` khỏi feed** (gốc tin cậy chỉ có trong flash, không bao giờ được phục vụ qua mạng), cùng với `baseline.json`, giàn giáo trình cài đặt (`META-INF/`, `customize.sh`), cổng flash `.vd/`, `update.json`/`update-mmrl.json` do CI điền, và các tệp bạn đồng hành `.sha256` theo từng tệp. Chỉ nội dung của riêng module mới cập nhật được qua feed, nên một manifest không bao giờ có thể ghi đè neo tin cậy trên thiết bị.
+
 <!-- doc-footer -->
 
 ---

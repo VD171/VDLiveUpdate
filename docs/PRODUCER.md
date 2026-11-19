@@ -129,6 +129,12 @@ picking `<keyring>/<key_id>.pub` (raw) is the whole rotation mechanism - no engi
 **stable** across releases (only key rotation changes it): a re-vendor must **verify-not-copy** it, and never
 overwrite it with the PC-side `.pub` PEM.
 
+`vdlu-pack` **excludes the keyring and the `verify/` binaries from the feed** (the trust root is flash-only,
+never served over the wire), alongside `baseline.json`, the installer scaffolding (`META-INF/`,
+`customize.sh`), the `.vd/` flash gate, the CI-filled `update.json`/`update-mmrl.json`, and the per-file
+`.sha256` companions. Only the module's own content is feed-updatable, so a manifest can never rewrite the
+on-device trust anchor.
+
 <!-- doc-footer -->
 
 ---

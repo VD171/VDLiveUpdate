@@ -128,6 +128,8 @@ Keyring, `<key_id>.pub` dosyalarından oluşan bir dizindir, her biri **RAW 32B*
 sürümler boyunca **kararlıdır** (yalnızca anahtar rotasyonu onu değiştirir): bir yeniden-vendor onu **kopyalamadan-doğrulamalı** ve asla
 onu PC tarafı `.pub` PEM ile üzerine yazmamalıdır.
 
+`vdlu-pack` **keyring'i ve `verify/` ikililerini beslemeden hariç tutar** (güven kökü yalnızca flaştadır, asla ağ üzerinden sunulmaz), `baseline.json`, yükleyici iskelesi (`META-INF/`, `customize.sh`), `.vd/` flaş geçidi, CI'ın doldurduğu `update.json`/`update-mmrl.json` ve dosya başına `.sha256` eşlikçileriyle birlikte. Yalnızca modülün kendi içeriği besleme ile güncellenebilir, bu yüzden bir manifest cihazdaki güven çıpasını asla yeniden yazamaz.
+
 <!-- doc-footer -->
 
 ---

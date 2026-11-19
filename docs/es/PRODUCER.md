@@ -131,6 +131,8 @@ de `keygen`), NO PEM - `ed25519-mini` lee 32 bytes raw. Entrega la pubkey raw ac
 el engine. El keyring es **estable** entre releases (solo la rotación de clave lo cambia): un re-vendor debe
 **verificar-no-copiar** y nunca sobrescribirlo con el `.pub` PEM del PC-side.
 
+`vdlu-pack` **excluye el keyring y los binarios de `verify/` del feed** (la raíz de confianza es solo-flash, nunca servida por la red), junto con `baseline.json`, el andamiaje del instalador (`META-INF/`, `customize.sh`), la compuerta de flash `.vd/`, los `update.json`/`update-mmrl.json` rellenados por CI, y los compañeros `.sha256` por archivo. Solo el contenido propio del módulo es actualizable por el feed, así que un manifiesto nunca puede reescribir el ancla de confianza en el dispositivo.
+
 <!-- doc-footer -->
 
 ---
