@@ -14,7 +14,7 @@
   },
   "wrapper": {
     "file": "main.c",
-    "sha256": "51e676d8154fa1011e518682063fb4294b4c76fe7da333f0e549af7738e72b2e"
+    "sha256": "23e18f0f088b44d1f5b170d571766b30674f7135e63b8942101c47e44777b58f"
   },
   "verify_primitive": "crypto_sign_open over sig||msg (detached); message NOT hashed by the tool",
   "build": {

@@ -210,7 +210,7 @@
   function renderToast(j, opts) {
     ensureToast(); opts = opts || {};
     var total = Number(j && j.total) || 0, done = Number(j && j.done) || 0;
-    var pct = total > 0 ? Math.max(0, Math.min(100, Math.round(done / total * 100))) : (opts.indeterminate ? 0 : 0);
+    var pct = total > 0 ? Math.max(0, Math.min(100, Math.round(done / total * 100))) : 0;
     tr('ttl').textContent = T('updating') + ' ' + (C.module || C.modid) + (j && j.target != null ? ' → v' + j.target : '');
     var bar = tr('bar');
     bar.style.width = pct + '%';
@@ -606,7 +606,6 @@
       return readJournal().then(function (j) {
         lastJournal = j || null;
         if (j && j.state === 'PENDING_REBOOT') { showBanner(j.target); }
-        else if (j && j.state === 'ERROR') { lastJournal = j; }
         else if (j && !isTerminal(j.state)) {
           // non-terminal transaction left by a previous session/boot: offer to resume
           renderToast(j, {

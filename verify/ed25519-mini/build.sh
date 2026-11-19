@@ -19,8 +19,31 @@
 # Reproducible build of ed25519-mini (verify-only, dynamic against bionic libc).
 # Needs Android NDK r29. Outputs <abi>/ed25519-mini for arm64-v8a, armeabi-v7a, x86, x86_64.
 set -euo pipefail
+cd "$(dirname "$0")"
 NDK="${NDK:-/home/vd/Android/ndk/android-ndk-r29}"
 TC="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
+
+# Supply-chain guard: the sources must match the sha256 recorded in PROVENANCE.json before we compile,
+# so a tampered tweetnacl.c/.h or main.c can never reach the toolchain. Abort on any mismatch.
+verify_sources() {
+  local want_c want_h want_main
+  want_c=$(python3 -c 'import json;print(json.load(open("PROVENANCE.json"))["crypto"]["sha256_tweetnacl_c"])')
+  want_h=$(python3 -c 'import json;print(json.load(open("PROVENANCE.json"))["crypto"]["sha256_tweetnacl_h"])')
+  want_main=$(python3 -c 'import json;print(json.load(open("PROVENANCE.json"))["wrapper"]["sha256"])')
+  check_src tweetnacl.c "$want_c"
+  check_src tweetnacl.h "$want_h"
+  check_src main.c "$want_main"
+}
+check_src() { # <file> <expected-sha256>
+  local got
+  got=$(sha256sum "$1" | cut -d' ' -f1)
+  if [ "$got" != "$2" ]; then
+    echo "PROVENANCE mismatch: $1 is $got, expected $2 - aborting" >&2
+    exit 1
+  fi
+}
+verify_sources
+
 build() {
   mkdir -p "$2"
   "$TC/$1" -O2 -ffunction-sections -fdata-sections -Wl,--gc-sections \

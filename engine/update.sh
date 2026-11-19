@@ -337,11 +337,13 @@ validate_meta() {
 }
 
 # ---- manifest structure validation (SECURITY: paths/shas are untrusted input) ----
-# A path must stay inside MODULE_DIR: no absolute, no '..' component, no empty, no control char.
+# A path must stay inside MODULE_DIR: no absolute, no '..' component, no empty, no control char, no '.'
+# component (dot-only, leading './', embedded '/./', trailing '/.') and no trailing slash.
 path_unsafe() { # returns 0 (true) if the path is UNSAFE
 	case "$1" in
 		''|/*) return 0 ;;
 		..|../*|*/..|*/../*) return 0 ;;
+		.|./*|*/./*|*/.|*/) return 0 ;;
 	esac
 	case "$1" in *"$TAB"*|*'
 '*) return 0 ;; esac
@@ -821,7 +823,10 @@ cmd_boot() {
 	# when the network actually appears (cheap route probe `net_allowed` - reads the routing table, NO curl, NO
 	# radio wake) does it re-acquire the lock briefly and try a real fetch. Never retries a deterministic
 	# failure (bad manifest/sig/downgrade: fetch_offline gates on the transport exit). Bounded by
-	# boot_retry_minutes of AWAKE-time (0 = off = one-shot). service.sh backgrounds this, so boot never stalls.
+	# boot_retry_minutes of AWAKE-time (0 = off = one-shot). NOTE: `boot` runs SYNCHRONOUSLY in post-fs-data
+	# (pre-zygote - required so the .so swap lands before any process maps it). This patient retry-loop only
+	# engages when fetch_offline is true (a non-file/http source hitting a transport error) AND
+	# boot_retry_minutes>0, so a latent boot stall exists ONLY in that config.
 	interval=$(cfg boot_retry_interval 30); isnum "$interval" || interval=30
 	[ "$interval" -ge 5 ] || interval=5
 	cap=$(cfg boot_retry_minutes 0); isnum "$cap" || cap=0

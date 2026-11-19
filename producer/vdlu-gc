@@ -122,7 +122,7 @@ def main():
         full = os.path.join(blobs, name)
         if not os.path.isfile(full):
             continue
-        sha = name[:-4] if name.endswith(".zst") else name
+        sha = name[:-3] if name.endswith(".gz") else name
         if len(sha) == 64 and all(c in HEX for c in sha):
             if sha not in keep_shas:
                 orphans.append((name, os.path.getsize(full)))

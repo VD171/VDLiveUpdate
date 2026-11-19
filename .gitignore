@@ -1,3 +1,5 @@
 keys/*.pem
 CLAUDE.md
 integration/
+__pycache__/
+*.pyc

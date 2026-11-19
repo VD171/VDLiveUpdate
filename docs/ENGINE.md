@@ -63,6 +63,9 @@ check/boot (the WebUI shows a blue info toast "waiting for X network", not an er
 - **mkdir-lock `$VDLU_DIR/lock.d`** serializes (flock is unworkable on toybox; stale-recovery by PID). The
   PATIENT boot-retry does not hold the lock while waiting (`acquire_lock_try`+release between tries) nor a
   wakelock - battery-safe. A crash/network/reboot mid-way → `resume`/`boot` continues.
+- `boot` runs **synchronously** in post-fs-data (pre-zygote, required so the `.so` swap lands before any
+  process maps it). The patient boot-retry only engages with a non-file (http) source AND
+  `boot_retry_minutes>0` - a latent boot stall exists only in that config.
 - **profile=hardened** ⇒ `vdlu-verify` mandatory on the manifest BEFORE use; failure = abort; downgrade blocked
   (monotonic version). **trusted** ⇒ verify is best-effort, but every blob's hash is ALWAYS checked.
 - Degrades gracefully: missing binary / network down / disk full → a clear error on stderr + `state:ERROR` in

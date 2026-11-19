@@ -92,6 +92,49 @@ def iso_built():
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def exclusion_reason(rel):
+    """Log reason if rel must NOT be packed into the feed, else None.
+
+    Single source of truth for the raw-path exclusion predicate: walk_files uses
+    it to drop files, and the --prev delete[] computation runs prev paths through
+    it so an already-excluded path never leaks back as a spurious delete entry.
+    """
+    # baseline.json IS a copy of the signed manifest (the from:0 seed); including it in the
+    # manifest is a self-reference regress (manifest -> baseline -> manifest). Never pack it.
+    if rel == "vdlu/baseline.json" or rel == "baseline.json":
+        return "skip baseline.json (install seed, not a fetchable blob)"
+    # Per-file .sha256 companions belong only in the flashable zip, never in the
+    # feed: packing them doubles the manifest and they go stale after an incremental update. This
+    # lets committed-binary modules track them and CI-built modules keep them gitignored, either way.
+    if rel.endswith(".sha256"):
+        return "skip .sha256 companion (flashable-zip only, not VDLU content): " + rel
+    # Installer scaffolding: ksud consumes META-INF/* and customize.sh at FLASH and does not keep
+    # them in the installed module, and they ship in the full .zip, never via VDLU. Listing them
+    # serves useless blobs, and if one ever changes between versions it would be "pending" and get
+    # written as an installer file into the LIVE module dir. They are not VDLU content.
+    if rel.startswith("META-INF/") or rel == "customize.sh" or rel.startswith(".vd/"):
+        return "skip installer/flash scaffolding (ships in the .zip, not via VDLU): " + rel
+    # update.json / update-mmrl.json get their size/sha filled by CI AFTER the zips and baseline
+    # are built, so the shipped copy differs from the feed copy -> a phantom single-file fetch on
+    # every install's first self-update. On device they are vestigial (the manager reads the remote
+    # raw updateJson). Not VDLU content.
+    if rel in ("update.json", "update-mmrl.json"):
+        return "skip CI-filled update manifest (differs from feed, vestigial on device): " + rel
+    # Dev / release docs and repo files are never on the installed device (the build strips them;
+    # some are gitignored). Listing them serves useless blobs AND makes a doc edit churn the signed
+    # canon on every release. Not VDLU content.
+    if os.path.basename(rel) in ("RELEASE.md", "CLAUDE.md", ".gitignore"):
+        return "skip dev/doc file (not shipped to device): " + rel
+    # Vendored TRUST ROOT: keyring/ (RAW 32B trust-anchor pubkeys) and verify/ (ed25519-mini
+    # verifier binaries) are flash-only by design - the keyring is stable / verify-not-copy. Shipping
+    # them over the feed would let a manifest overwrite the on-device trust anchor in the trusted
+    # profile. NEVER feed-deliverable.
+    if rel.startswith("vdlu/keyring/") or rel.startswith("keyring/") or \
+       rel.startswith("vdlu/verify/") or rel.startswith("verify/"):
+        return "skip vendored trust root (keyring/verify are flash-only, never feed-deliverable): " + rel
+    return None
+
+
 def walk_files(tree):
     """Yield (relpath, abspath) for regular files only, sorted, never leaving the tree."""
     out = []
@@ -100,36 +143,9 @@ def walk_files(tree):
         for name in files:
             ap = os.path.join(dp, name)
             rel = os.path.relpath(ap, tree).replace(os.sep, "/")
-            # baseline.json IS a copy of the signed manifest (the from:0 seed); including it in the
-            # manifest is a self-reference regress (manifest -> baseline -> manifest). Never pack it.
-            if rel == "vdlu/baseline.json" or rel == "baseline.json":
-                log("skip baseline.json (install seed, not a fetchable blob)")
-                continue
-            # Per-file .sha256 companions belong only in the flashable zip, never in the
-            # feed: packing them doubles the manifest and they go stale after an incremental update. This
-            # lets committed-binary modules track them and CI-built modules keep them gitignored, either way.
-            if rel.endswith(".sha256"):
-                log("skip .sha256 companion (flashable-zip only, not VDLU content): " + rel)
-                continue
-            # Installer scaffolding: ksud consumes META-INF/* and customize.sh at FLASH and does not keep
-            # them in the installed module, and they ship in the full .zip, never via VDLU. Listing them
-            # serves useless blobs, and if one ever changes between versions it would be "pending" and get
-            # written as an installer file into the LIVE module dir. They are not VDLU content.
-            if rel.startswith("META-INF/") or rel == "customize.sh" or rel.startswith(".vd/"):
-                log("skip installer/flash scaffolding (ships in the .zip, not via VDLU): " + rel)
-                continue
-            # update.json / update-mmrl.json get their size/sha filled by CI AFTER the zips and baseline
-            # are built, so the shipped copy differs from the feed copy -> a phantom single-file fetch on
-            # every install's first self-update. On device they are vestigial (the manager reads the remote
-            # raw updateJson). Not VDLU content.
-            if rel in ("update.json", "update-mmrl.json"):
-                log("skip CI-filled update manifest (differs from feed, vestigial on device): " + rel)
-                continue
-            # Dev / release docs and repo files are never on the installed device (the build strips them;
-            # some are gitignored). Listing them serves useless blobs AND makes a doc edit churn the signed
-            # canon on every release. Not VDLU content.
-            if os.path.basename(rel) in ("RELEASE.md", "CLAUDE.md", ".gitignore"):
-                log("skip dev/doc file (not shipped to device): " + rel)
+            reason = exclusion_reason(rel)
+            if reason is not None:
+                log(reason)
                 continue
             if os.path.islink(ap):
                 log("skip symlink (not followed, no manifest type): " + rel)
@@ -196,8 +212,13 @@ def main():
         with open(a.prev, "r", encoding="utf-8") as pf:
             prev = json.load(pf)
         now_paths = {f["path"] for f in files_meta}
+        # Run every prev path through the SAME exclusion predicate walk_files uses: a --prev that
+        # points at a pre-exclusion manifest still lists now-excluded paths (baseline.json, META-INF/*,
+        # keyring/, verify/, ...), and emitting them as delete[] would order the device to remove files
+        # that were never feed content. An excluded path is simply not ours to delete.
         deleted = sorted(f["path"] for f in prev.get("files", [])
-                         if f["path"] not in now_paths)
+                         if f["path"] not in now_paths
+                         and exclusion_reason(f["path"]) is None)
 
     manifest = {
         "schema": 1,
