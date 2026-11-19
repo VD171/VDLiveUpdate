@@ -17,18 +17,18 @@
 ## 流水线
 
 ```sh
-# 1. 一次性：一个签名密钥。将 .pem 远离每台设备和任何仓库 push。
+# 1. one-time: a signing key. Keep the .pem off every device and off any repo push.
 producer/vdlu-keygen release-2026 ./keys
 
-# 2. 每次 release：打包最终树（与 .zip 发布的、经白名单后的同一棵树）。
+# 2. each release: pack the final tree (same tree the .zip ships, post-whitelist).
 producer/vdlu-pack  ./module_tree  ./out  demo 106 --version-name v106 --channel stable \
-                    [--prev ./prev/manifest.json]      # delete[] = 自 prev 以来消失的路径
+                    [--prev ./prev/manifest.json]      # delete[] = paths gone since prev
 
-# 3. 就地对清单签名。
+# 3. sign the manifest in place.
 producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 
-# 4. 将 ./out/{manifest.json,blobs/} 发布到 <source>（public 用 Pages 批量；private 用 rsync）。
-#    设备的精简 keyring 以 keyring/release-2026.pub（RAW 32B）持有 ./keys/release-2026.pub.raw。
+# 4. publish ./out/{manifest.json,blobs/} to <source> (Pages batch for public; rsync for private).
+#    The slim device keyring holds ./keys/release-2026.pub.raw as keyring/release-2026.pub (RAW 32B).
 ```
 
 `vdlu-pack` 是内容寻址且去重的：`<sha256>` 已存在的 blob 不会被
@@ -92,10 +92,10 @@ producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 POSIX sh 中的移除（两个工具中相同的函数，无 `sed`/`jq`）：
 
 ```sh
-# $1 = 完整的清单文本（尾随换行已被 $(cat ...) 剥除）
-_pre=${_c%%\"sig\":\"*}     # 直到  ...,"schema":N,
-_rest=${_c#*\"sig\":\"}      # 在 "sig":" 之后
-_tail=${_rest#*\",}          # 在 <value>", 之后  ->  "version":...
+# $1 = full manifest text (trailing newline already stripped by $(cat ...))
+_pre=${_c%%\"sig\":\"*}     # up to  ...,"schema":N,
+_rest=${_c#*\"sig\":\"}      # after "sig":"
+_tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 

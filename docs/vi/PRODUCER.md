@@ -17,18 +17,18 @@ Tuân theo [`INTERFACES.md`](INTERFACES.md) §3/§6/§7.
 ## Pipeline
 
 ```sh
-# 1. một lần: một khóa ký. Giữ .pem tránh xa mọi thiết bị và tránh mọi lần push repo.
+# 1. one-time: a signing key. Keep the .pem off every device and off any repo push.
 producer/vdlu-keygen release-2026 ./keys
 
-# 2. mỗi release: đóng gói cây cuối cùng (cùng cây mà .zip phát hành, sau whitelist).
+# 2. each release: pack the final tree (same tree the .zip ships, post-whitelist).
 producer/vdlu-pack  ./module_tree  ./out  demo 106 --version-name v106 --channel stable \
-                    [--prev ./prev/manifest.json]      # delete[] = các path đã mất kể từ prev
+                    [--prev ./prev/manifest.json]      # delete[] = paths gone since prev
 
-# 3. ký manifest tại chỗ.
+# 3. sign the manifest in place.
 producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 
-# 4. xuất bản ./out/{manifest.json,blobs/} tới <source> (Pages batch cho public; rsync cho private).
-#    Keyring gọn của thiết bị giữ ./keys/release-2026.pub.raw dưới dạng keyring/release-2026.pub (RAW 32B).
+# 4. publish ./out/{manifest.json,blobs/} to <source> (Pages batch for public; rsync for private).
+#    The slim device keyring holds ./keys/release-2026.pub.raw as keyring/release-2026.pub (RAW 32B).
 ```
 
 `vdlu-pack` là content-addressed và khử trùng lặp: một blob có `<sha256>` đã tồn tại không được
@@ -92,10 +92,10 @@ chứ không phải một lần tái-serialize JSON, nên nó không cần thư 
 Việc gỡ bỏ trong POSIX sh (cùng một hàm trong cả hai công cụ, không `sed`/`jq`):
 
 ```sh
-# $1 = toàn bộ văn bản manifest (newline cuối đã bị tước bởi $(cat ...))
-_pre=${_c%%\"sig\":\"*}     # cho tới  ...,"schema":N,
-_rest=${_c#*\"sig\":\"}      # sau "sig":"
-_tail=${_rest#*\",}          # sau <value>",  ->  "version":...
+# $1 = full manifest text (trailing newline already stripped by $(cat ...))
+_pre=${_c%%\"sig\":\"*}     # up to  ...,"schema":N,
+_rest=${_c#*\"sig\":\"}      # after "sig":"
+_tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 

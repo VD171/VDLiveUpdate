@@ -4,8 +4,8 @@
 
 # VDLU - WebUI widget (flashless update)
 
-Rozhrani VDLU (VD Live Update) pro WebUI root manazeru KernelSU/APatch. Vanilla JS, zadny framework, zadny
-build, zadne CDN. Drop-in: hostitelsky `index.html` nacte 2 soubory a vola API.
+Rozhraní VDLU (VD Live Update) pro WebUI root manažerů KernelSU/APatch. Vanilla JS, žádný framework, žádný
+build, žádné CDN. Drop-in: hostitelský `index.html` načte 2 soubory a volá API.
 
 Konvergence: `INTERFACES.md` §9 (WEBUI<->ENGINE), §4 (journal.json), §5 (config).
 
@@ -14,10 +14,10 @@ Konvergence: `INTERFACES.md` §9 (WEBUI<->ENGINE), §4 (journal.json), §5 (conf
 | Soubor | Co |
 |---|---|
 | `vdlu.js` | komponenta - exponuje `window.VDLU` |
-| `vdlu.css` | progress toast, reboot banner, zalozka "Updates" (tmavy motiv, dedi promenne hostitele) |
-| `demo.html` | samostatna stranka s mocknutym `ksu.exec` - otevre se v prohlizeci, bez zarizeni |
+| `vdlu.css` | progress toast, reboot banner, záložka "Updates" (tmavý motiv, dědí proměnné hostitele) |
+| `demo.html` | samostatná stránka s mocknutým `ksu.exec` - otevře se v prohlížeči, bez zařízení |
 
-## Integrace do hostitelskeho `index.html`
+## Integrace do hostitelského `index.html`
 
 ```html
 <link rel="stylesheet" href="vdlu.css">
@@ -39,9 +39,9 @@ Konvergence: `INTERFACES.md` §9 (WEBUI<->ENGINE), §4 (journal.json), §5 (conf
 </script>
 ```
 
-### Co musi hostitel definovat
+### Co musí hostitel definovat
 
-- **`moduleDir`** = `$MODULE_DIR` (`/data/adb/modules/<modid>`), kde je engine vlozeny
+- **`moduleDir`** = `$MODULE_DIR` (`/data/adb/modules/<modid>`), kde je engine vložený
   (`vdlu/update.sh`).
 - **`vdluDir`** = `$VDLU_DIR` (`/data/adb/<modid>/vdlu`), stav Tier-2 (`journal.json`, `config`,
   `cancel`).
@@ -49,88 +49,88 @@ Konvergence: `INTERFACES.md` §9 (WEBUI<->ENGINE), §4 (journal.json), §5 (conf
 
 Widget sestavi prikaz enginu uz nesouci env kontraktu (§1):
 `VDLU_DIR=… MODULE_DIR=… MODID=… sh $MODULE_DIR/vdlu/update.sh <cmd>`. `run`/`resume` jdou na
-**pozadi** (`(… &)`) a prubeh se cte lehkym pollem (~1s) `cat $VDLU_DIR/journal.json`.
+**pozadí** (`(… &)`) a průběh se čte lehkým pollem (~1s) `cat $VDLU_DIR/journal.json`.
 
-### `exec`/`toast`/`confirm` (volitelne)
+### `exec`/`toast`/`confirm` (volitelné)
 
-Pokud vynechano, widget pouzije sve vlastni:
-- **`exec(cmd)`** musi vratit `Promise`, ktery se **resolvne** s stdout (rc 0) a **rejectne** s stderr
-  (rc≠0) - presne signatura `ex()` z Demo `webroot/index.html`. Interni fallback vola
-  `ksu.exec(cmd, '{}', cb)` se stejnym kontraktem.
-- **`toast(msg)`** = kratke prechodne oznameni (fallback vstrikuje vlastni mini-toast).
-- **`confirm(title,msg,ok,danger,fn)`** = modal (dnes pouzivany jen hostitelem; widget nevyzaduje v zadnem toku zadne
-  potvrzeni).
+Pokud vynecháno, widget použije své vlastní:
+- **`exec(cmd)`** musí vrátit `Promise`, který se **resolvne** s stdout (rc 0) a **rejectne** s stderr
+  (rc≠0) - přesně signatura `ex()` z Demo `webroot/index.html`. Interní fallback volá
+  `ksu.exec(cmd, '{}', cb)` se stejným kontraktem.
+- **`toast(msg)`** = krátké přechodné oznámení (fallback vstřikuje vlastní mini-toast).
+- **`confirm(title,msg,ok,danger,fn)`** = modal (dnes používaný jen hostitelem; widget nevyžaduje v žádném toku žádné
+  potvrzení).
 
-Predani hostitelovych vlastnich necha widget mluvit skrze STEJNOU serializovanou frontu a vizualy jako zbytek
+Předání hostitelových vlastních nechá widget mluvit skrze STEJNOU serializovanou frontu a vizuály jako zbytek
 WebUI.
 
-## Verejne API (`window.VDLU`)
+## Veřejné API (`window.VDLU`)
 
-| Funkce | Dela |
+| Funkce | Dělá |
 |---|---|
-| `init(opts)` | konfiguruje (viz vyse). Vraci `window.VDLU`. |
-| `onWebUIOpen()` | volej pri nacteni: zobrazi banner pokud `reboot_pending`; nabidne **Resume** pokud existuje nefinalni transakce; s `auto_on_webui_open=1` spusti **TICHY auto-update** (nejprve tichy `check()`; `run`+trvaly toast spusti jen pokud `update && fetch>0` - aktualni/napred = inline vysledek v panelu, zadny toast). |
-| `mountUpdatesPanel(el)` | renderuje zalozku "Updates" uvnitr `el` (string id nebo element): **Check for update**, **Update now**, toggly `auto_on_webui_open`/`auto_on_reboot`, pole boot-retry, select **Network** (`net_policy`: Wi-Fi+mobile / Wi-Fi-only / mobile-only) a pole `source`/`channel`/`profile`. |
-| `check()` | spusti `update.sh check`; `Promise<{update,from,to,fetch,reboot}>`. |
-| `startUpdate()` | spusti `run` na pozadi + progress toast s **Cancel**. |
-| `cancel()` | vytvori `$VDLU_DIR/cancel` (engine se zastavi v bezpecnem bode). |
-| `resume()` | `update.sh resume` + toast (obnovi aktualni fazi). |
-| `refreshBanner()` | znovu vyhodnoti trvaly pending-reboot banner. |
+| `init(opts)` | konfiguruje (viz výše). Vrací `window.VDLU`. |
+| `onWebUIOpen()` | volej při načtení: zobrazí banner pokud `reboot_pending`; nabídne **Resume** pokud existuje nefinální transakce; s `auto_on_webui_open=1` spustí **TICHÝ auto-update** (nejprve tichý `check()`; `run`+trvalý toast spustí jen pokud `update && fetch>0` - aktuální/napřed = inline výsledek v panelu, žádný toast). |
+| `mountUpdatesPanel(el)` | renderuje záložku "Updates" uvnitř `el` (string id nebo element): **Check for update**, **Update now**, toggly `auto_on_webui_open`/`auto_on_reboot`, pole boot-retry, select **Network** (`net_policy`: Wi-Fi+mobile / Wi-Fi-only / mobile-only) a pole `source`/`channel`/`profile`. |
+| `check()` | spustí `update.sh check`; `Promise<{update,from,to,fetch,reboot}>`. |
+| `startUpdate()` | spustí `run` na pozadí + progress toast s **Cancel**. |
+| `cancel()` | vytvoří `$VDLU_DIR/cancel` (engine se zastaví v bezpečném bodě). |
+| `resume()` | `update.sh resume` + toast (obnoví aktuální fázi). |
+| `refreshBanner()` | znovu vyhodnotí trvalý pending-reboot banner. |
 
-Toast (rohovy overlay, neblokujici) a banner (nahore, trvaly) vstrikuje widget do
-`document.body` - hostitel pro ne nepotrebuje zadne HTML. Zalozka "Updates" je jediny bod, ktery hostitel alokuje (prazdny
+Toast (rohový overlay, neblokující) a banner (nahoře, trvalý) vstřikuje widget do
+`document.body` - hostitel pro ně nepotřebuje žádné HTML. Záložka "Updates" je jediný bod, který hostitel alokuje (prázdný
 `<div>`).
 
-### Tok stavu, ktery toast odrazi (journal.json, §4)
+### Tok stavu, který toast odráží (journal.json, §4)
 
 `PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` kdykoli.
-Toast zobrazuje **listu + `phase done/total · current · bytes`**. Finaly:
-- **`DONE`** → zeleny toast "v&lt;target&gt; applied".
-- **`PENDING_REBOOT`** (nebo `reboot_pending=true`) → zeleny toast + **trvaly banner** "⚠️ Reboot to
+Toast zobrazuje **lištu + `phase done/total · current · bytes`**. Finály:
+- **`DONE`** → zelený toast "v&lt;target&gt; applied".
+- **`PENDING_REBOOT`** (nebo `reboot_pending=true`) → zelený toast + **trvalý banner** "⚠️ Reboot to
   activate the new `.so` (vX)".
-- **`ERROR`** → cerveny toast s duvodem (`journal.error`/stderr). Nikdy nepredstira uspech.
-- **Cancelled** → "cancelled - N/M, resumable" + tlacitko **Resume**.
+- **`ERROR`** → červený toast s důvodem (`journal.error`/stderr). Nikdy nepředstírá úspěch.
+- **Cancelled** → "cancelled - N/M, resumable" + tlačítko **Resume**.
 
-## Spusteni demo
+## Spuštění demo
 
-Otevri `demo.html` v prohlizeci (`xdg-open webui/demo.html`). Mocknute `ksu.exec` simuluje `update.sh` a
-vyvijejici se `journal.json`; tlacitka prepinaji mezi scenari **LIVE→DONE**, **reboot_pending**, **error mid-way**
-a **cancellable**. Je to stejne `vdlu.js`/`vdlu.css` jako na zarizeni.
+Otevři `demo.html` v prohlížeči (`xdg-open webui/demo.html`). Mocknuté `ksu.exec` simuluje `update.sh` a
+vyvíjející se `journal.json`; tlačítka přepínají mezi scénáři **LIVE→DONE**, **reboot_pending**, **error mid-way**
+a **cancellable**. Je to stejné `vdlu.js`/`vdlu.css` jako na zařízení.
 
 ## i18n (jazyk)
 
-Retezce widgetu jsou vychozi **anglicky** (neutralni pro verejne vicejazycne moduly). Hostitel prepise
-jakykoli klic predanim mapy v `init`:
+Řetězce widgetu jsou výchozí **anglicky** (neutrální pro veřejné vícejazyčné moduly). Hostitel přepíše
+jakýkoli klíč předáním mapy v `init`:
 
 ```html
 <script src="i18n/pt-BR.js"></script>   <!-- defines window.VDLU_I18N_PT_BR -->
 <script>VDLU.init({ exec: ex, moduleDir: MOD, vdluDir: VDL, modid: 'x', i18n: window.VDLU_I18N_PT_BR });</script>
 ```
 
-- **Castecny** merge je v poradku: chybejici klic spadne zpet na anglicky vychozi.
-- Klice faze/stavu jsou `ph_<phase>` / `st_<STATE>`; zbytek je plochy (`cancel`, `updateNow`, …).
-- Uplna mapa klicu = objekt `DEFAULT_I18N` v `vdlu.js` (take exponovany jako `VDLU.i18n`).
-- Hotovy preklad je poskytnut jako zpracovany priklad: `i18n/pt-BR.js`. Nove jazyky = soubor
-  `i18n/<lang>.js` ve stejne forme, nebo hostitel sestavi mapu z vlastniho i18n systemu.
+- **Částečný** merge je v pořádku: chybějící klíč spadne zpět na anglický výchozí.
+- Klíče fáze/stavu jsou `ph_<phase>` / `st_<STATE>`; zbytek je plochý (`cancel`, `updateNow`, …).
+- Úplná mapa klíčů = objekt `DEFAULT_I18N` v `vdlu.js` (také exponovaný jako `VDLU.i18n`).
+- Hotový překlad je poskytnut jako zpracovaný příklad: `i18n/pt-BR.js`. Nové jazyky = soubor
+  `i18n/<lang>.js` ve stejné formě, nebo hostitel sestaví mapu z vlastního i18n systému.
 
-## Jediny zdroj (parita napric moduly)
+## Jediný zdroj (parita napříč moduly)
 
-Tyto `vdlu.js`/`vdlu.css` jsou **kanonicka kopie**. Kazdy modul, ktery widget vklada,
-**re-vendoruje** tuto kopii bajt po bajtu do sveho `webroot/` - **nikdy** needituje
-svou vlastni na miste. Nova featura widgetu se rodi zde a tece dolu re-vendorem; opacny smer plodi tichy
-drift (stalo se to v praxi: vlozena kopie zaostala a chybel ji `net_policy`, `DEFERRED`
+Tyto `vdlu.js`/`vdlu.css` jsou **kanonická kopie**. Každý modul, který widget vkládá,
+**re-vendoruje** tuto kopii bajt po bajtu do svého `webroot/` - **nikdy** needituje
+svou vlastní na místě. Nová featura widgetu se rodí zde a teče dolů re-vendorem; opačný směr plodí tichý
+drift (stalo se to v praxi: vložená kopie zaostala a chyběl jí `net_policy`, `DEFERRED`
 toast a pole `boot_retry`).
 
-Strazce: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) najde kazdou kopii ve zdrojovem stromu a oznaci
-ty, ktere se odchyluji od kanonicke (jen `vdlu.js`/`vdlu.css`; keyring je "overit, ne kopirovat").
+Strážce: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) najde každou kopii ve zdrojovém stromu a označí
+ty, které se odchylují od kanonické (jen `vdlu.js`/`vdlu.css`; keyring je "ověřit, ne kopírovat").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
 tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
-> 🪤 Keyring (`keyring/<id>.pub` RAW 32B) a engine (`vdlu/update.sh`) maji vlastni kadenci
-> re-vendoru; tento strazce pokryva **jen** WebUI widget.
+> 🪤 Keyring (`keyring/<id>.pub` RAW 32B) a engine (`vdlu/update.sh`) mají vlastní kadenci
+> re-vendoru; tento strážce pokrývá **jen** WebUI widget.
 
 <!-- doc-footer -->
 

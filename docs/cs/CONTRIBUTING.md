@@ -2,24 +2,24 @@
 
 ---
 
-# Prispivani do VDLiveUpdate
+# Přispívání do VDLiveUpdate
 
-VDLU je flashless, inkrementalni self-update engine vlozeny do modulu KernelSU/APatch/Magisk.
-Prispevky jsou vitany.
+VDLU je flashless, inkrementální self-update engine vložený do modulu KernelSU/APatch/Magisk.
+Příspěvky jsou vítány.
 
-- Nejprve si prectete [INTERFACES.md](INTERFACES.md): je to kontrakt sevu mezi komponentami (zakon
-  konvergence). Berte ho jako nemenny, pokud neni zmena koordinovana napric enginem, producerem a WebUI.
-- Testujte od zacatku do konce pred PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, pak engine
-  (`check` / `run` / `boot`). Take `sh -n engine/*.sh` a `node --check webui/vdlu.js`.
-- Bezpecnost je nediskutovatelna: kazde pole manifestu je nepratelsky vstup a `validate_plan()` zustava
-  fail-closed; privatni podpisovy klic se nikdy nedotkne CI ani zarizeni.
-- POSIX sh na zarizeni (zadne bashismy nad `local`, zadny `jq`); komentare drzte strucne.
-- Jedna logicka zmena na PR; rekni, co se zmenilo a proc.
+- Nejprve si přečtěte [INTERFACES.md](INTERFACES.md): je to kontrakt švu mezi komponentami (zákon
+  konvergence). Berte ho jako neměnný, pokud není změna koordinována napříč enginem, producerem a WebUI.
+- Testujte od začátku do konce před PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, pak engine
+  (`check` / `run` / `boot`). Také `sh -n engine/*.sh` a `node --check webui/vdlu.js`.
+- Bezpečnost je nediskutovatelná: každé pole manifestu je nepřátelský vstup a `validate_plan()` zůstává
+  fail-closed; privátní podpisový klíč se nikdy nedotkne CI ani zařízení.
+- POSIX sh na zařízení (žádné bashismy nad `local`, žádný `jq`); komentáře držte stručně.
+- Jedna logická změna na PR; řekni, co se změnilo a proč.
 
 ## Kontakty
 
 - Telegram: @VD_Priv8 https://t.me/VD_Priv8
-- Kanal: @Priv8_VD https://t.me/Priv8_VD
+- Kanál: @Priv8_VD https://t.me/Priv8_VD
 - E-mail: vd.priv8@pm.me
 
 <!-- doc-footer -->

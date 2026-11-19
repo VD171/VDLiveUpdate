@@ -4,17 +4,17 @@
 
 # Contribuire a VDLiveUpdate
 
-VDLU e un engine di auto-aggiornamento flashless e incrementale vendorizzato nei moduli KernelSU/APatch/Magisk.
+VDLU è un engine di auto-aggiornamento flashless e incrementale vendorizzato nei moduli KernelSU/APatch/Magisk.
 I contributi sono benvenuti.
 
-- Leggi prima [INTERFACES.md](INTERFACES.md): e il contratto di cucitura tra i componenti (la legge
+- Leggi prima [INTERFACES.md](INTERFACES.md): è il contratto di cucitura tra i componenti (la legge
   di convergenza). Trattalo come immutabile a meno che una modifica non sia coordinata tra engine, producer e WebUI.
 - Testa end to end prima di una PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, poi l'engine
   (`check` / `run` / `boot`). Anche `sh -n engine/*.sh` e `node --check webui/vdlu.js`.
-- La sicurezza non e negoziabile: ogni campo del manifest e input ostile e `validate_plan()` resta
+- La sicurezza non è negoziabile: ogni campo del manifest è input ostile e `validate_plan()` resta
   fail-closed; la chiave di firma privata non tocca mai la CI o un dispositivo.
 - sh POSIX sul dispositivo (niente bashism oltre a `local`, niente `jq`); mantieni i commenti stringati.
-- Una modifica logica per PR; dì cosa e cambiato e perche.
+- Una modifica logica per PR; dì cosa è cambiato e perché.
 
 ## Contatti
 

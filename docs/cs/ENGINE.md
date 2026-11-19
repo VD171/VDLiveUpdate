@@ -4,93 +4,93 @@
 
 # VDLU engine (`update.sh`)
 
-Flashless, inkrementalni update klient pro moduly KSU/Magisk. Implementuje cyklus
-`DIFF -> FETCH -> APPLY -> COMMIT` jako obnovitelnou transakci. Ridi se `INTERFACES.md` (zakonem
+Flashless, inkrementální update klient pro moduly KSU/Magisk. Implementuje cyklus
+`DIFF -> FETCH -> APPLY -> COMMIT` jako obnovitelnou transakci. Řídí se `INTERFACES.md` (zákonem
 konvergence).
 
-Ciste POSIX sh (mksh/busybox/toybox). **STIHLE:** zavisi jen na toyboxu (`sha256sum`/`gzip`/`base64`/`date`) +
-vestavenem `ed25519-mini` (ed25519 verify; **zadny openssl na zarizeni**) + statickem `curl`, ktery se **stahne** pri
-prvnim https updatu (WebUI provede `fetch()`, persistuje ho v Tier-2 a `install-tool` overi jeho
-podpis+hash PRED pouzitim). `file://` curl nepotrebuje. Nulova zavislost na `jq`.
+Čisté POSIX sh (mksh/busybox/toybox). **ŠTÍHLÉ:** závisí jen na toyboxu (`sha256sum`/`gzip`/`base64`/`date`) +
+vestavěném `ed25519-mini` (ed25519 verify; **žádný openssl na zařízení**) + statickém `curl`, který se **stáhne** při
+prvním https updatu (WebUI provede `fetch()`, persistuje ho v Tier-2 a `install-tool` ověří jeho
+podpis+hash PŘED použitím). `file://` curl nepotřebuje. Nulová závislost na `jq`.
 
-## Vyvolani
+## Vyvolání
 
 ```sh
 VDLU_DIR=/data/adb/<mod>/vdlu MODULE_DIR=/data/adb/modules/<mod> MODID=<mod> \
   sh $MODULE_DIR/vdlu/update.sh <cmd>
 ```
 
-`rc 0` = ok; `rc != 0` = chyba (duvod na stderr). `vdlu-verify` dodava jina komponenta
-(podpis v `INTERFACES.md §6`); engine ho jen vola.
+`rc 0` = ok; `rc != 0` = chyba (důvod na stderr). `vdlu-verify` dodává jiná komponenta
+(podpis v `INTERFACES.md §6`); engine ho jen volá.
 
 | cmd | dela |
 |---|---|
-| `check` | read-only DIFF; vypise `{"update":bool,"from":N,"to":M,"fetch":K,"reboot":bool}`; nic nemeni |
-| `run` | plny LIVE cyklus + stageuje REBOOT-hard; respektuje `cancel`; prubeh v `journal.json` |
-| `resume` | obnovi cekajici transakci (`target.json`) od aktualni faze; idempotentni; **ne**swapuje `.so` |
-| `boot` | rezim pre-zygote: resume **+** swapuje `staged/*.vdlu-new` -> uzavre `PENDING_REBOOT`->`DONE`. Bez cekajici transakce spusti cerstvy cyklus a aplikuje vse (vcetne `.so`) v jednom bootu |
-| `status` | vypise `journal.json` (nebo `{"state":"idle"}`) |
-| `cancel` | vytvori `$VDLU_DIR/cancel`; probihajici `run` se zastavi v nasledujicim bezpecnem bode |
+| `check` | read-only DIFF; vypíše `{"update":bool,"from":N,"to":M,"fetch":K,"reboot":bool}`; nic nemění |
+| `run` | plný LIVE cyklus + stageuje REBOOT-hard; respektuje `cancel`; průběh v `journal.json` |
+| `resume` | obnoví čekající transakci (`target.json`) od aktuální fáze; idempotentní; **ne**swapuje `.so` |
+| `boot` | režim pre-zygote: resume **+** swapuje `staged/*.vdlu-new` -> uzavře `PENDING_REBOOT`->`DONE`. Bez čekající transakce spustí čerstvý cyklus a aplikuje vše (včetně `.so`) v jednom bootu |
+| `status` | vypíše `journal.json` (nebo `{"state":"idle"}`) |
+| `cancel` | vytvoří `$VDLU_DIR/cancel`; probíhající `run` se zastaví v následujícím bezpečném bodě |
 
-## Stavovy automat (journal.json)
+## Stavový automat (journal.json)
 
 ```
 PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | DONE)
 ```
 
-`DONE` az kdyz prehasovani VSEHO souhlasi. Pokud byl stageovan jakykoli REBOOT-hard => `PENDING_REBOOT` (nikdy
-falesne `DONE`). `ERROR` pri jakemkoli selhani, bez poskozeni modulu (aplikovane LIVE soubory se vrati
-z `rollback/<v>/`; nic "napul aplikovaneho, co o tom lze"). Neskodny vystup faze `fetch`: **`DEFERRED`** -
-stahovani bylo odlozeno `net_policy` (sit nepovolena); plan/target zustavaji a obnovi se pri dalsim
-checku/bootu (WebUI zobrazi modry info toast "waiting for X network", ne chybu).
+`DONE` až když přehašování VŠEHO souhlasí. Pokud byl stageován jakýkoli REBOOT-hard => `PENDING_REBOOT` (nikdy
+falešné `DONE`). `ERROR` při jakémkoli selhání, bez poškození modulu (aplikované LIVE soubory se vrátí
+z `rollback/<v>/`; nic "napůl aplikovaného, co o tom lze"). Neškodný výstup fáze `fetch`: **`DEFERRED`** -
+stahování bylo odloženo `net_policy` (síť nepovolena); plan/target zůstávají a obnoví se při dalším
+checku/bootu (WebUI zobrazí modrý info toast "waiting for X network", ne chybu).
 
-## Zaruky prisnosti
+## Záruky přísnosti
 
-- **FETCH:** hlidano `net_policy` (any/wifi/mobile; jen http/https, `file://` nikdy) - nepovolena sit =>
-  `DEFERRED` (obnovitelne), bez utraceni dat. Stahuje jen to, co chybi, do `<sha>.part` (curl s
+- **FETCH:** hlídáno `net_policy` (any/wifi/mobile; jen http/https, `file://` nikdy) - nepovolená síť =>
+  `DEFERRED` (obnovitelné), bez utracení dat. Stahuje jen to, co chybí, do `<sha>.part` (curl s
   `--connect-timeout` + `--speed-time`, nikdy se nezasekne), dekomprimuje `gz` (toybox `gunzip`), kontroluje `sha256sum` ==
-  manifest, atomicke `mv` do `blobs/<sha>`. Cachovany+ok blob se preskoci. Muze naseedovat blob z nezmeneneho
-  lokalniho souboru (dedup/offline). **3 selhani na stejnem blobu = faze abortuje bez aplikace cehokoli.** Stane se
-  `FETCHED` az kdyz jsou VSECHNY bloby planu pritomne+overene.
-- **APPLY** (jen z `FETCHED`): `live`/`soft` -> zaloha do `rollback/<v>/` -> `.vdlu-tmp` -> `chmod` -> verify ->
-  atomicke `rename`. `reboot` -> materializuje do `staged/<path>.vdlu-new` (NEDOTYKA se ziveho inode).
-  `delete[]` -> zaloha -> odstranit. Idempotentni (soubor uz na cilovem hashi se preskoci).
-- **COMMIT:** prehasovani kazdeho `live`/`soft`; teprve pak zapise `current.json`. Se stageovanymi soubory =>
-  `PENDING_REBOOT`. `boot` provede `mv -f staged/....vdlu-new $MODULE_DIR/<path>` (pre-zygote) + znovu overi +
+  manifest, atomické `mv` do `blobs/<sha>`. Cachovaný+ok blob se přeskočí. Může naseedovat blob z nezměněného
+  lokálního souboru (dedup/offline). **3 selhání na stejném blobu = fáze abortuje bez aplikace čehokoli.** Stane se
+  `FETCHED` až když jsou VŠECHNY bloby plánu přítomné+ověřené.
+- **APPLY** (jen z `FETCHED`): `live`/`soft` -> záloha do `rollback/<v>/` -> `.vdlu-tmp` -> `chmod` -> verify ->
+  atomické `rename`. `reboot` -> materializuje do `staged/<path>.vdlu-new` (NEDOTÝKÁ se živého inode).
+  `delete[]` -> záloha -> odstranit. Idempotentní (soubor už na cílovém hashi se přeskočí).
+- **COMMIT:** přehašování každého `live`/`soft`; teprve pak zapíše `current.json`. Se stageovanými soubory =>
+  `PENDING_REBOOT`. `boot` provede `mv -f staged/....vdlu-new $MODULE_DIR/<path>` (pre-zygote) + znovu ověří +
   `DONE`.
-- **cancel:** kontrolovano mezi soubory (bezpecny bod); odstrani rozpracovane `.vdlu-tmp`/`.part`, smaze `cancel`,
-  ponecha journal obnovitelny (`cancelled:true`, `error:null`).
-- **mkdir-lock `$VDLU_DIR/lock.d`** serializuje (flock je na toyboxu nepouzitelny; stale-recovery podle PID).
-  TRPELIVY boot-retry nedrzi zamek behem cekani (`acquire_lock_try`+release mezi pokusy) ani
-  wakelock - setrny k baterii. Pad/sit/reboot uprostred -> `resume`/`boot` pokracuje.
-- **profile=hardened** => `vdlu-verify` povinne na manifestu PRED pouzitim; selhani = abort; downgrade zablokovan
-  (monotonni verze). **trusted** => verify je best-effort, ale hash kazdeho blobu se VZDY kontroluje.
-- Degraduje elegantne: chybejici binary / sit dole / plny disk -> jasna chyba na stderr + `state:ERROR` v
-  journalu, bez poskozeni modulu.
+- **cancel:** kontrolováno mezi soubory (bezpečný bod); odstraní rozpracované `.vdlu-tmp`/`.part`, smaže `cancel`,
+  ponechá journal obnovitelný (`cancelled:true`, `error:null`).
+- **mkdir-lock `$VDLU_DIR/lock.d`** serializuje (flock je na toyboxu nepoužitelný; stale-recovery podle PID).
+  TRPĚLIVÝ boot-retry nedrží zámek během čekání (`acquire_lock_try`+release mezi pokusy) ani
+  wakelock - šetrný k baterii. Pád/síť/reboot uprostřed -> `resume`/`boot` pokračuje.
+- **profile=hardened** => `vdlu-verify` povinné na manifestu PŘED použitím; selhání = abort; downgrade zablokován
+  (monotónní verze). **trusted** => verify je best-effort, ale hash každého blobu se VŽDY kontroluje.
+- Degraduje elegantně: chybějící binary / síť dole / plný disk -> jasná chyba na stderr + `state:ERROR` v
+  journalu, bez poškození modulu.
 
-## Parsovani JSON bez jq
+## Parsování JSON bez jq
 
-Flattener ve stylu gron v `awk` (ciste POSIX: `substr`/`index`/`gsub`/`split`/`printf` + lokaly predane jako
-parametry) tokenizuje manifest znak po znaku a emituje jeden radek `path<TAB>value` na skalarni list
-(`files/0/sha256<TAB>ab..`, `version<TAB>6`, `delete/0<TAB>etc/x`). Robustni vuci kompaktnimu NEBO pretty-printed
-JSON. `sh` ho konzumuje pres `grep`/`cut`; plan po souborech se znovu sestavi v 2. `awk` do TSV
-(`class st mode enc sha size path`), ktere se stane `$VDLU_DIR/plan.tsv`.
+Flattener ve stylu gron v `awk` (čisté POSIX: `substr`/`index`/`gsub`/`split`/`printf` + lokály předané jako
+parametry) tokenizuje manifest znak po znaku a emituje jeden řádek `path<TAB>value` na skalární list
+(`files/0/sha256<TAB>ab..`, `version<TAB>6`, `delete/0<TAB>etc/x`). Robustní vůči kompaktnímu NEBO pretty-printed
+JSON. `sh` ho konzumuje přes `grep`/`cut`; plán po souborech se znovu sestaví v 2. `awk` do TSV
+(`class st mode enc sha size path`), které se stane `$VDLU_DIR/plan.tsv`.
 
-## Stavove soubory (v `$VDLU_DIR`, Tier-2)
+## Stavové soubory (v `$VDLU_DIR`, Tier-2)
 
 | soubor | role |
 |---|---|
 | `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; viz INTERFACES §5) |
-| `current.json` | manifest AKTIVNI verze (diff base); chybi = nikdy neaktualizovano |
-| `target.json` | pripnuty manifest rozpracovane transakce (pritomnost = aktivni transakce); stane se `current.json` pri `DONE` |
-| `plan.tsv` / `plan.del` | plan + prubeh po souborech (st) / cesty k smazani |
-| `journal.json` | prubeh pro WebUI (regenerovano pri kazdem prechodu) |
-| `blobs/<sha256>` | cache overeneho puvodniho obsahu |
-| `rollback/<version>/<path>` | zaloha prepsanych souboru (undo; drzi poslednich 3) |
-| `staged/<path>.vdlu-new` | REBOOT-hard cekajici na swap pri bootu |
-| `lock.d/` | mkdir-lock (flock na toyboxu nepouzitelny; stale-recovery podle PID) |
-| `tools/<abi>/curl` | stazene staticke curl (stihly bootstrap); persistuje napric updaty |
-| `cancel` | pozadavek na zruseni |
+| `current.json` | manifest AKTIVNÍ verze (diff base); chybí = nikdy neaktualizováno |
+| `target.json` | připnutý manifest rozpracované transakce (přítomnost = aktivní transakce); stane se `current.json` při `DONE` |
+| `plan.tsv` / `plan.del` | plán + průběh po souborech (st) / cesty ke smazání |
+| `journal.json` | průběh pro WebUI (regenerováno při každém přechodu) |
+| `blobs/<sha256>` | cache ověřeného původního obsahu |
+| `rollback/<version>/<path>` | záloha přepsaných souborů (undo; drží posledních 3) |
+| `staged/<path>.vdlu-new` | REBOOT-hard čekající na swap při bootu |
+| `lock.d/` | mkdir-lock (flock na toyboxu nepoužitelný; stale-recovery podle PID) |
+| `tools/<abi>/curl` | stažené statické curl (štíhlý bootstrap); persistuje napříč updaty |
+| `cancel` | požadavek na zrušení |
 
 <!-- doc-footer -->
 

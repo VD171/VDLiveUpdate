@@ -19,15 +19,15 @@ toybox/busybox + `sha256sum`/`gzip`/`base64` из toybox + загруженны�
 ```
 $VDLU_DIR = /data/adb/<module>/vdlu
   config               # key=value (§5)
-  current.json         # манифест АКТИВНОЙ версии (база diff); отсутствует = никогда не обновлялся
-  journal.json         # транзакция в процессе (§4); отсутствует = простой
-  cancel               # наличие = запрос отмены (WebUI создаёт его; engine удаляет при остановке)
-  lock.d/              # mkdir-lock (flock неработоспособен на toybox; восстановление устаревшего по PID)
-  blobs/<sha256>       # кэш проверенных блобов (ОРИГИНАЛЬНОЕ содержимое, уже распакованное)
-  rollback/<version>/<path>   # резервная копия перезаписанных файлов
-  staged/<path>.vdlu-new      # REBOOT-hard, ожидающий swap при загрузке
-  target.json          # ЗАКРЕПЛЁННЫЙ манифест выполняемой транзакции (наличие = активная транзакция; становится current.json при DONE)
-  plan.tsv  plan.del   # внутренний план engine (прогресс); WebUI ЕГО ИГНОРИРУЕТ (читает только journal/config/current)
+  current.json         # manifest of the ACTIVE version (diff base); absent = never updated
+  journal.json         # transaction in progress (§4); absent = idle
+  cancel               # presence = cancel request (WebUI creates it; engine deletes it on stop)
+  lock.d/              # mkdir-lock (flock unworkable on toybox; stale-recovery by PID)
+  blobs/<sha256>       # cache of verified blobs (ORIGINAL content, already decompressed)
+  rollback/<version>/<path>   # backup of overwritten files
+  staged/<path>.vdlu-new      # REBOOT-hard awaiting swap at boot
+  target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
+  plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
 `cancelled:true` в journal = engine остановился на отмене (нетерминальное, возобновляемое состояние; `error`
 остаётся null).
@@ -89,15 +89,15 @@ auto_on_webui_open=0
 auto_on_reboot=1
 source=https://<user>.github.io/<repo>/<module>
 channel=stable
-profile=trusted        # trusted | hardened. ПО УМОЛЧАНИЮ В КОДЕ (строка отсутствует) = hardened (fail-closed, 9a9a824)
-net_policy=any         # any (Wi-Fi+мобильная) | wifi (только Wi-Fi) | mobile (только мобильная) - гейтит ЗАГРУЗКУ по типу сети
-allow_metered=0        # ⚠️ ЗАМЕНЕНО net_policy (не потребляется engine)
-pubkey_dir=keyring     # относительно $MODULE_DIR/vdlu (keyring из pubkey для verify)
-ca_path=               # пусто = автоопределение trust store Android; задайте path для переопределения
-tools_source=          # пусто = выводится из source (.../vdlu-tools); фид статического curl
-boot_retry_interval=30 # секунд между зондированиями, когда BOOT находит устройство офлайн (минимум 5s)
-boot_retry_minutes=0   # потолок ТЕРПЕЛИВОГО повтора (время БОДРСТВОВАНИЯ) только при загрузке; 0 = off. Безопасно для батареи (без wakelock,
-                       # без удержанного lock, зонд маршрута никогда не будит радио) -> щедрый потолок ~бесплатен
+profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = hardened (fail-closed, 9a9a824)
+net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
+allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
+pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
+boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
+                       # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
 ```
 
 **Boot retry (офлайн) - ТЕРПЕЛИВЫЙ, безопасный для батареи:** только при `boot` (никогда при check/auto-open).

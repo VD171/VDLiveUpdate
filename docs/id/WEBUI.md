@@ -26,16 +26,16 @@ Konvergensi: `INTERFACES.md` §9 (WEBUI↔ENGINE), §4 (journal.json), §5 (conf
 <script>
   VDLU.init({
     moduleDir: '/data/adb/modules/' + MODID,   // $MODULE_DIR
-    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, di luar direktori modul)
+    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, outside the module dir)
     modid:     MODID,
-    module:    'Demo',                     // nama yang ditampilkan di toast (default: modid)
-    exec:   ex,          // (opsional) wrapper ksu.exec host; lihat di bawah
-    toast:  toast,       // (opsional) toast transien host
-    confirm: askConfirm  // (opsional) modal konfirmasi host
+    module:    'Demo',                     // name shown in the toast (default: modid)
+    exec:   ex,          // (optional) the host's ksu.exec wrapper; see below
+    toast:  toast,       // (optional) the host's transient toast
+    confirm: askConfirm  // (optional) the host's confirmation modal
   });
 
-  VDLU.onWebUIOpen();                          // saat load: mengevaluasi journal + banner + auto_on_webui_open
-  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // ketika tab "Updates" dibuka
+  VDLU.onWebUIOpen();                          // on load: evaluates journal + banner + auto_on_webui_open
+  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // when the "Updates" tab is opened
 </script>
 ```
 
@@ -103,7 +103,7 @@ String widget default ke **bahasa Inggris** (netral untuk modul publik multi-bah
 kunci apa pun dengan meneruskan sebuah map di `init`:
 
 ```html
-<script src="i18n/pt-BR.js"></script>   <!-- mendefinisikan window.VDLU_I18N_PT_BR -->
+<script src="i18n/pt-BR.js"></script>   <!-- defines window.VDLU_I18N_PT_BR -->
 <script>VDLU.init({ exec: ex, moduleDir: MOD, vdluDir: VDL, modid: 'x', i18n: window.VDLU_I18N_PT_BR });</script>
 ```
 
@@ -125,8 +125,8 @@ Penjaga: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) menemukan set
 yang menyimpang dari yang kanonik (hanya `vdlu.js`/`vdlu.css`; keyring adalah "verifikasi, bukan salin").
 
 ```sh
-tools/webui-parity.sh         # laporan; keluar dengan 1 jika ada drift
-tools/webui-parity.sh --fix   # me-re-vendor yang menyimpang dari yang kanonik
+tools/webui-parity.sh         # report; exits 1 if there is drift
+tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 Keyring (`keyring/<id>.pub` RAW 32B) dan engine (`vdlu/update.sh`) memiliki kadens re-vendor-nya sendiri;

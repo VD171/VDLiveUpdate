@@ -26,16 +26,16 @@
 <script>
   VDLU.init({
     moduleDir: '/data/adb/modules/' + MODID,   // $MODULE_DIR
-    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, вне каталога модуля)
+    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, outside the module dir)
     modid:     MODID,
-    module:    'Demo',                     // имя, показываемое в тосте (default: modid)
-    exec:   ex,          // (опционально) хостовая обёртка ksu.exec; см. ниже
-    toast:  toast,       // (опционально) хостовый транзиентный тост
-    confirm: askConfirm  // (опционально) хостовое модальное подтверждение
+    module:    'Demo',                     // name shown in the toast (default: modid)
+    exec:   ex,          // (optional) the host's ksu.exec wrapper; see below
+    toast:  toast,       // (optional) the host's transient toast
+    confirm: askConfirm  // (optional) the host's confirmation modal
   });
 
-  VDLU.onWebUIOpen();                          // при загрузке: оценивает journal + баннер + auto_on_webui_open
-  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // когда открыта вкладка "Updates"
+  VDLU.onWebUIOpen();                          // on load: evaluates journal + banner + auto_on_webui_open
+  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // when the "Updates" tab is opened
 </script>
 ```
 
@@ -103,7 +103,7 @@ WebUI.
 любой ключ, передавая map в `init`:
 
 ```html
-<script src="i18n/pt-BR.js"></script>   <!-- определяет window.VDLU_I18N_PT_BR -->
+<script src="i18n/pt-BR.js"></script>   <!-- defines window.VDLU_I18N_PT_BR -->
 <script>VDLU.init({ exec: ex, moduleDir: MOD, vdluDir: VDL, modid: 'x', i18n: window.VDLU_I18N_PT_BR });</script>
 ```
 
@@ -125,8 +125,8 @@ WebUI.
 те, что расходятся с канонической (только `vdlu.js`/`vdlu.css`; keyring это "проверять, не копировать").
 
 ```sh
-tools/webui-parity.sh         # отчёт; выходит с 1, если есть дрейф
-tools/webui-parity.sh --fix   # пере-вендорит расходящиеся из канонической
+tools/webui-parity.sh         # report; exits 1 if there is drift
+tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 Keyring (`keyring/<id>.pub` RAW 32B) и engine (`vdlu/update.sh`) имеют свою собственную каденцию пере-вендоринга;

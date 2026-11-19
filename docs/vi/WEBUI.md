@@ -26,16 +26,16 @@ Hội tụ: `INTERFACES.md` §9 (WEBUI↔ENGINE), §4 (journal.json), §5 (confi
 <script>
   VDLU.init({
     moduleDir: '/data/adb/modules/' + MODID,   // $MODULE_DIR
-    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, bên ngoài thư mục module)
+    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, outside the module dir)
     modid:     MODID,
-    module:    'Demo',                     // tên hiển thị trong toast (mặc định: modid)
-    exec:   ex,          // (tùy chọn) wrapper ksu.exec của host; xem bên dưới
-    toast:  toast,       // (tùy chọn) toast nhất thời của host
-    confirm: askConfirm  // (tùy chọn) modal xác nhận của host
+    module:    'Demo',                     // name shown in the toast (default: modid)
+    exec:   ex,          // (optional) the host's ksu.exec wrapper; see below
+    toast:  toast,       // (optional) the host's transient toast
+    confirm: askConfirm  // (optional) the host's confirmation modal
   });
 
-  VDLU.onWebUIOpen();                          // khi tải: đánh giá journal + banner + auto_on_webui_open
-  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // khi tab "Updates" được mở
+  VDLU.onWebUIOpen();                          // on load: evaluates journal + banner + auto_on_webui_open
+  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // when the "Updates" tab is opened
 </script>
 ```
 
@@ -103,7 +103,7 @@ Các chuỗi của widget mặc định là **English** (trung tính cho các mo
 bất kỳ khóa nào bằng cách truyền một map trong `init`:
 
 ```html
-<script src="i18n/pt-BR.js"></script>   <!-- định nghĩa window.VDLU_I18N_PT_BR -->
+<script src="i18n/pt-BR.js"></script>   <!-- defines window.VDLU_I18N_PT_BR -->
 <script>VDLU.init({ exec: ex, moduleDir: MOD, vdluDir: VDL, modid: 'x', i18n: window.VDLU_I18N_PT_BR });</script>
 ```
 
@@ -125,8 +125,8 @@ Người gác: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) tìm m�
 những cái lệch khỏi bản chuẩn (chỉ `vdlu.js`/`vdlu.css`; keyring là "verify, not copy").
 
 ```sh
-tools/webui-parity.sh         # báo cáo; thoát 1 nếu có drift
-tools/webui-parity.sh --fix   # re-vendor những cái lệch từ bản chuẩn
+tools/webui-parity.sh         # report; exits 1 if there is drift
+tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 Keyring (`keyring/<id>.pub` RAW 32B) và engine (`vdlu/update.sh`) có nhịp re-vendor của riêng chúng;

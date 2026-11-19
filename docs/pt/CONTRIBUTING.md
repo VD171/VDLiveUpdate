@@ -13,7 +13,7 @@ Contribuições são bem-vindas.
   (`check` / `run` / `boot`). Também `sh -n engine/*.sh` e `node --check webui/vdlu.js`.
 - Segurança é inegociável: todo campo do manifesto é input hostil e `validate_plan()` permanece
   fail-closed; a chave de assinatura privada nunca toca o CI nem um device.
-- sh POSIX no device (sem bashismos além de `local`, sem `jq`); mantenha os comentários terse.
+- sh POSIX no device (sem bashismos além de `local`, sem `jq`); mantenha os comentários concisos.
 - Uma mudança lógica por PR; diga o que mudou e por quê.
 
 ## Contatos

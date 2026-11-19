@@ -4,8 +4,8 @@
 
 # VDLU - Contrato de interface (a costura entre os componentes)
 
-**Lei da convergência:** todo componente se conforma a este arquivo. As peças de 4 agentes precisam **encaixar-se**
-- as assinaturas de CLI, nomes de arquivo e chaves JSON abaixo são **imutáveis** (uma mudança significa alinhar aqui
+**Lei da convergência:** todo componente se conforma a este arquivo. As peças de 4 agentes precisam **encaixar-se** -
+as assinaturas de CLI, nomes de arquivo e chaves JSON abaixo são **imutáveis** (uma mudança significa alinhar aqui
 primeiro).
 
 Princípios herdados dos repositórios: **sh POSIX puro** no device (sem bashismos; roda com toybox/busybox +
@@ -20,15 +20,15 @@ falsamente "concluído", nada perdido), **nada afrouxado**.
 ```
 $VDLU_DIR = /data/adb/<module>/vdlu
   config               # key=value (§5)
-  current.json         # manifesto da versão ATIVA (base do diff); ausente = nunca atualizado
-  journal.json         # transação em andamento (§4); ausente = ocioso
-  cancel               # presença = pedido de cancelamento (a WebUI o cria; o engine o apaga ao parar)
-  lock.d/              # mkdir-lock (flock inviável no toybox; recuperação de stale por PID)
-  blobs/<sha256>       # cache de blobs verificados (conteúdo ORIGINAL, já descomprimido)
-  rollback/<version>/<path>   # backup de arquivos sobrescritos
-  staged/<path>.vdlu-new      # REBOOT-hard aguardando swap no boot
-  target.json          # manifesto FIXADO da transação em voo (presença = transação ativa; vira current.json no DONE)
-  plan.tsv  plan.del   # plano interno do engine (progresso); a WebUI o IGNORA (lê só journal/config/current)
+  current.json         # manifest of the ACTIVE version (diff base); absent = never updated
+  journal.json         # transaction in progress (§4); absent = idle
+  cancel               # presence = cancel request (WebUI creates it; engine deletes it on stop)
+  lock.d/              # mkdir-lock (flock unworkable on toybox; stale-recovery by PID)
+  blobs/<sha256>       # cache of verified blobs (ORIGINAL content, already decompressed)
+  rollback/<version>/<path>   # backup of overwritten files
+  staged/<path>.vdlu-new      # REBOOT-hard awaiting swap at boot
+  target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
+  plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
 `cancelled:true` no journal = o engine parou num cancelamento (um estado não-terminal, retomável; `error`
 permanece null).
@@ -90,15 +90,15 @@ auto_on_webui_open=0
 auto_on_reboot=1
 source=https://<user>.github.io/<repo>/<module>
 channel=stable
-profile=trusted        # trusted | hardened. PADRÃO DO CÓDIGO (linha ausente) = hardened (fail-closed, 9a9a824)
-net_policy=any         # any (Wi-Fi+móvel) | wifi (só Wi-Fi) | mobile (só móvel) - gateia o DOWNLOAD por tipo de rede
-allow_metered=0        # ⚠️ SUPERADO por net_policy (não consumido pelo engine)
-pubkey_dir=keyring     # relativo a $MODULE_DIR/vdlu (keyring de pubkeys para verify)
-ca_path=               # vazio = auto-detecção do trust store do Android; defina um path para sobrepor
-tools_source=          # vazio = derivado de source (.../vdlu-tools); feed do curl estático
-boot_retry_interval=30 # segundos entre sondagens quando o BOOT acha o device offline (piso 5s)
-boot_retry_minutes=0   # teto do retry PACIENTE (tempo ACORDADO) só no boot; 0 = off. Seguro p/ bateria (sem wakelock,
-                       # sem lock retido, a sonda de rota nunca acorda o rádio) -> um teto generoso é ~grátis
+profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = hardened (fail-closed, 9a9a824)
+net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
+allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
+pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
+boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
+                       # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
 ```
 
 **Boot retry (offline) - PACIENTE, seguro para a bateria:** só no `boot` (nunca no check/auto-open). Se o fetch

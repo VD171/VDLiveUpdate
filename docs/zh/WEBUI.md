@@ -26,16 +26,16 @@
 <script>
   VDLU.init({
     moduleDir: '/data/adb/modules/' + MODID,   // $MODULE_DIR
-    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR （Tier-2，在模块目录之外）
+    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, outside the module dir)
     modid:     MODID,
-    module:    'Demo',                     // 在 toast 中显示的名称（默认：modid）
-    exec:   ex,          // （可选）宿主的 ksu.exec wrapper；见下文
-    toast:  toast,       // （可选）宿主的瞬时 toast
-    confirm: askConfirm  // （可选）宿主的确认 modal
+    module:    'Demo',                     // name shown in the toast (default: modid)
+    exec:   ex,          // (optional) the host's ksu.exec wrapper; see below
+    toast:  toast,       // (optional) the host's transient toast
+    confirm: askConfirm  // (optional) the host's confirmation modal
   });
 
-  VDLU.onWebUIOpen();                          // 加载时：评估 journal + banner + auto_on_webui_open
-  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // 打开“Updates”标签页时
+  VDLU.onWebUIOpen();                          // on load: evaluates journal + banner + auto_on_webui_open
+  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // when the "Updates" tab is opened
 </script>
 ```
 
@@ -102,7 +102,7 @@ toast 显示**一个进度条 + `phase done/total · current · bytes`**。终�
 任何键：
 
 ```html
-<script src="i18n/pt-BR.js"></script>   <!-- 定义 window.VDLU_I18N_PT_BR -->
+<script src="i18n/pt-BR.js"></script>   <!-- defines window.VDLU_I18N_PT_BR -->
 <script>VDLU.init({ exec: ex, moduleDir: MOD, vdluDir: VDL, modid: 'x', i18n: window.VDLU_I18N_PT_BR });</script>
 ```
 
@@ -124,8 +124,8 @@ toast 和 `boot_retry` 字段）。
 那些与规范副本不一致的（仅 `vdlu.js`/`vdlu.css`；keyring 是“verify, not copy”）。
 
 ```sh
-tools/webui-parity.sh         # 报告；若存在 drift 则以 1 退出
-tools/webui-parity.sh --fix   # 从规范副本重新 vendor 那些不一致的
+tools/webui-parity.sh         # report; exits 1 if there is drift
+tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 keyring（`keyring/<id>.pub` RAW 32B）和 engine（`vdlu/update.sh`）有它们自己的重新 vendor

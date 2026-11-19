@@ -17,18 +17,18 @@ Menyesuaikan diri dengan [`INTERFACES.md`](INTERFACES.md) §3/§6/§7.
 ## Pipeline
 
 ```sh
-# 1. sekali-saja: sebuah kunci penandatanganan. Jauhkan .pem dari setiap perangkat dan setiap push repo.
+# 1. one-time: a signing key. Keep the .pem off every device and off any repo push.
 producer/vdlu-keygen release-2026 ./keys
 
-# 2. setiap release: paketkan pohon final (pohon yang sama yang dikirim .zip, pasca-whitelist).
+# 2. each release: pack the final tree (same tree the .zip ships, post-whitelist).
 producer/vdlu-pack  ./module_tree  ./out  demo 106 --version-name v106 --channel stable \
-                    [--prev ./prev/manifest.json]      # delete[] = path yang hilang sejak prev
+                    [--prev ./prev/manifest.json]      # delete[] = paths gone since prev
 
-# 3. tandatangani manifest in place.
+# 3. sign the manifest in place.
 producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 
-# 4. publikasikan ./out/{manifest.json,blobs/} ke <source> (batch Pages untuk publik; rsync untuk privat).
-#    Keyring ramping perangkat menyimpan ./keys/release-2026.pub.raw sebagai keyring/release-2026.pub (RAW 32B).
+# 4. publish ./out/{manifest.json,blobs/} to <source> (Pages batch for public; rsync for private).
+#    The slim device keyring holds ./keys/release-2026.pub.raw as keyring/release-2026.pub (RAW 32B).
 ```
 
 `vdlu-pack` bersifat content-addressed dan deduplicating: sebuah blob yang `<sha256>`-nya sudah ada tidak
@@ -92,10 +92,10 @@ byte, bukan re-serialisasi JSON, sehingga tidak membutuhkan library JSON di pera
 Penghapusan dalam sh POSIX (fungsi identik di kedua tool, tanpa `sed`/`jq`):
 
 ```sh
-# $1 = teks manifest lengkap (newline akhir sudah dihilangkan oleh $(cat ...))
-_pre=${_c%%\"sig\":\"*}     # sampai  ...,"schema":N,
-_rest=${_c#*\"sig\":\"}      # setelah "sig":"
-_tail=${_rest#*\",}          # setelah <value>",  ->  "version":...
+# $1 = full manifest text (trailing newline already stripped by $(cat ...))
+_pre=${_c%%\"sig\":\"*}     # up to  ...,"schema":N,
+_rest=${_c#*\"sig\":\"}      # after "sig":"
+_tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 

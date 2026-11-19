@@ -26,16 +26,16 @@ Zbieżność: `INTERFACES.md` §9 (WEBUI↔ENGINE), §4 (journal.json), §5 (con
 <script>
   VDLU.init({
     moduleDir: '/data/adb/modules/' + MODID,   // $MODULE_DIR
-    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, poza katalogiem modułu)
+    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, outside the module dir)
     modid:     MODID,
-    module:    'Demo',                     // nazwa pokazywana w toaście (default: modid)
-    exec:   ex,          // (opcjonalnie) hostowy wrapper ksu.exec; zob. niżej
-    toast:  toast,       // (opcjonalnie) hostowy toast przejściowy
-    confirm: askConfirm  // (opcjonalnie) hostowy modal potwierdzenia
+    module:    'Demo',                     // name shown in the toast (default: modid)
+    exec:   ex,          // (optional) the host's ksu.exec wrapper; see below
+    toast:  toast,       // (optional) the host's transient toast
+    confirm: askConfirm  // (optional) the host's confirmation modal
   });
 
-  VDLU.onWebUIOpen();                          // przy ładowaniu: ocenia journal + baner + auto_on_webui_open
-  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // gdy zakładka "Updates" jest otwierana
+  VDLU.onWebUIOpen();                          // on load: evaluates journal + banner + auto_on_webui_open
+  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // when the "Updates" tab is opened
 </script>
 ```
 
@@ -103,7 +103,7 @@ Stringi widgetu domyślnie na **angielski** (neutralny dla publicznych wielojęz
 dowolny klucz, przekazując mapę w `init`:
 
 ```html
-<script src="i18n/pt-BR.js"></script>   <!-- definiuje window.VDLU_I18N_PT_BR -->
+<script src="i18n/pt-BR.js"></script>   <!-- defines window.VDLU_I18N_PT_BR -->
 <script>VDLU.init({ exec: ex, moduleDir: MOD, vdluDir: VDL, modid: 'x', i18n: window.VDLU_I18N_PT_BR });</script>
 ```
 
@@ -125,8 +125,8 @@ Strażnik: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) znajduje ka
 te, które rozchodzą się z kanoniczną (tylko `vdlu.js`/`vdlu.css`; keyring to "weryfikuj, nie kopiuj").
 
 ```sh
-tools/webui-parity.sh         # raport; wychodzi 1 jeśli jest dryf
-tools/webui-parity.sh --fix   # re-wendoruje rozbieżne z kanonicznej
+tools/webui-parity.sh         # report; exits 1 if there is drift
+tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 Keyring (`keyring/<id>.pub` RAW 32B) i engine (`vdlu/update.sh`) mają własną kadencję re-wendoringu;

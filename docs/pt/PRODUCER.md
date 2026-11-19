@@ -17,18 +17,18 @@ Conforma-se a [`INTERFACES.md`](INTERFACES.md) §3/§6/§7.
 ## Pipeline
 
 ```sh
-# 1. uma vez: uma chave de assinatura. Mantenha a .pem fora de todo device e de todo push de repo.
+# 1. one-time: a signing key. Keep the .pem off every device and off any repo push.
 producer/vdlu-keygen release-2026 ./keys
 
-# 2. cada release: empacote a árvore final (a mesma árvore que o .zip entrega, pós-whitelist).
+# 2. each release: pack the final tree (same tree the .zip ships, post-whitelist).
 producer/vdlu-pack  ./module_tree  ./out  demo 106 --version-name v106 --channel stable \
-                    [--prev ./prev/manifest.json]      # delete[] = paths sumidos desde prev
+                    [--prev ./prev/manifest.json]      # delete[] = paths gone since prev
 
-# 3. assine o manifesto in place.
+# 3. sign the manifest in place.
 producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 
-# 4. publique ./out/{manifest.json,blobs/} em <source> (batch do Pages para público; rsync para privado).
-#    O keyring enxuto do device guarda ./keys/release-2026.pub.raw como keyring/release-2026.pub (RAW 32B).
+# 4. publish ./out/{manifest.json,blobs/} to <source> (Pages batch for public; rsync for private).
+#    The slim device keyring holds ./keys/release-2026.pub.raw as keyring/release-2026.pub (RAW 32B).
 ```
 
 O `vdlu-pack` é endereçado por conteúdo e deduplicante: um blob cujo `<sha256>` já existe não é
@@ -92,10 +92,10 @@ de bytes, não uma re-serialização de JSON, para não precisar de biblioteca J
 A remoção em sh POSIX (função idêntica em ambas as ferramentas, sem `sed`/`jq`):
 
 ```sh
-# $1 = texto completo do manifesto (newline final já removido por $(cat ...))
-_pre=${_c%%\"sig\":\"*}     # até  ...,"schema":N,
-_rest=${_c#*\"sig\":\"}      # depois de "sig":"
-_tail=${_rest#*\",}          # depois de <value>",  ->  "version":...
+# $1 = full manifest text (trailing newline already stripped by $(cat ...))
+_pre=${_c%%\"sig\":\"*}     # up to  ...,"schema":N,
+_rest=${_c#*\"sig\":\"}      # after "sig":"
+_tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 

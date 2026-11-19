@@ -19,15 +19,15 @@ bị "xong" giả, không mất gì), **không nới lỏng gì**.
 ```
 $VDLU_DIR = /data/adb/<module>/vdlu
   config               # key=value (§5)
-  current.json         # manifest của phiên bản ĐANG HOẠT ĐỘNG (cơ sở diff); vắng mặt = chưa bao giờ cập nhật
-  journal.json         # giao dịch đang diễn ra (§4); vắng mặt = nhàn rỗi
-  cancel               # hiện diện = yêu cầu hủy (WebUI tạo nó; engine xóa nó khi dừng)
-  lock.d/              # mkdir-lock (flock không khả thi trên toybox; khôi phục khóa cũ theo PID)
-  blobs/<sha256>       # bộ nhớ đệm các blob đã xác minh (nội dung GỐC, đã giải nén)
-  rollback/<version>/<path>   # sao lưu các tệp bị ghi đè
-  staged/<path>.vdlu-new      # REBOOT-hard chờ hoán đổi lúc khởi động
-  target.json          # manifest ĐƯỢC GHIM của giao dịch đang bay (hiện diện = giao dịch đang hoạt động; trở thành current.json khi DONE)
-  plan.tsv  plan.del   # kế hoạch nội bộ của engine (tiến độ); WebUI BỎ QUA nó (chỉ đọc journal/config/current)
+  current.json         # manifest of the ACTIVE version (diff base); absent = never updated
+  journal.json         # transaction in progress (§4); absent = idle
+  cancel               # presence = cancel request (WebUI creates it; engine deletes it on stop)
+  lock.d/              # mkdir-lock (flock unworkable on toybox; stale-recovery by PID)
+  blobs/<sha256>       # cache of verified blobs (ORIGINAL content, already decompressed)
+  rollback/<version>/<path>   # backup of overwritten files
+  staged/<path>.vdlu-new      # REBOOT-hard awaiting swap at boot
+  target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
+  plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
 `cancelled:true` trong journal = engine đã dừng do một yêu cầu hủy (một trạng thái không kết thúc, có thể tiếp tục; `error`
 vẫn là null).
@@ -89,15 +89,15 @@ auto_on_webui_open=0
 auto_on_reboot=1
 source=https://<user>.github.io/<repo>/<module>
 channel=stable
-profile=trusted        # trusted | hardened. MẶC ĐỊNH TRONG MÃ (thiếu dòng) = hardened (fail-closed, 9a9a824)
-net_policy=any         # any (Wi-Fi+mobile) | wifi (chỉ Wi-Fi) | mobile (chỉ mobile) - kiểm soát VIỆC TẢI theo loại mạng
-allow_metered=0        # ⚠️ BỊ THAY THẾ bởi net_policy (engine không dùng)
-pubkey_dir=keyring     # tương đối với $MODULE_DIR/vdlu (keyring các khóa công khai để verify)
-ca_path=               # rỗng = tự động phát hiện kho tin cậy Android; đặt một path để ghi đè
-tools_source=          # rỗng = suy ra từ source (.../vdlu-tools); feed của curl tĩnh
-boot_retry_interval=30 # giây giữa các lần thăm dò khi BOOT thấy thiết bị offline (sàn 5s)
-boot_retry_minutes=0   # trần của lần thử lại KIÊN NHẪN (thời gian AWAKE) chỉ lúc khởi động; 0 = tắt. An toàn pin (không wakelock,
-                       # không giữ khóa, thăm dò route không bao giờ đánh thức radio) -> một trần hào phóng gần như miễn phí
+profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = hardened (fail-closed, 9a9a824)
+net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
+allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
+pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
+boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
+                       # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
 ```
 
 **Thử lại khởi động (offline) - KIÊN NHẪN, an toàn pin:** chỉ lúc `boot` (không bao giờ lúc check/auto-open). Nếu

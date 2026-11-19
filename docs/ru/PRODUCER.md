@@ -17,18 +17,18 @@
 ## Конвейер
 
 ```sh
-# 1. однократно: ключ подписи. Держите .pem вне каждого устройства и вне любого push в репозиторий.
+# 1. one-time: a signing key. Keep the .pem off every device and off any repo push.
 producer/vdlu-keygen release-2026 ./keys
 
-# 2. каждый релиз: упакуйте финальное дерево (то же дерево, что поставляет .zip, после whitelist).
+# 2. each release: pack the final tree (same tree the .zip ships, post-whitelist).
 producer/vdlu-pack  ./module_tree  ./out  demo 106 --version-name v106 --channel stable \
-                    [--prev ./prev/manifest.json]      # delete[] = пути, исчезнувшие с prev
+                    [--prev ./prev/manifest.json]      # delete[] = paths gone since prev
 
-# 3. подпишите манифест in place.
+# 3. sign the manifest in place.
 producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 
-# 4. опубликуйте ./out/{manifest.json,blobs/} в <source> (batch Pages для публичного; rsync для приватного).
-#    Компактный keyring устройства хранит ./keys/release-2026.pub.raw как keyring/release-2026.pub (RAW 32B).
+# 4. publish ./out/{manifest.json,blobs/} to <source> (Pages batch for public; rsync for private).
+#    The slim device keyring holds ./keys/release-2026.pub.raw as keyring/release-2026.pub (RAW 32B).
 ```
 
 `vdlu-pack` адресуем по содержимому и дедуплицирует: блоб, чей `<sha256>` уже существует, не
@@ -92,10 +92,10 @@ producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 Удаление в POSIX sh (идентичная функция в обоих инструментах, без `sed`/`jq`):
 
 ```sh
-# $1 = полный текст манифеста (завершающий newline уже удалён $(cat ...))
-_pre=${_c%%\"sig\":\"*}     # до  ...,"schema":N,
-_rest=${_c#*\"sig\":\"}      # после "sig":"
-_tail=${_rest#*\",}          # после <value>",  ->  "version":...
+# $1 = full manifest text (trailing newline already stripped by $(cat ...))
+_pre=${_c%%\"sig\":\"*}     # up to  ...,"schema":N,
+_rest=${_c#*\"sig\":\"}      # after "sig":"
+_tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 

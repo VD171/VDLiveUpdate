@@ -26,16 +26,16 @@ Convergência: `INTERFACES.md` §9 (WEBUI↔ENGINE), §4 (journal.json), §5 (co
 <script>
   VDLU.init({
     moduleDir: '/data/adb/modules/' + MODID,   // $MODULE_DIR
-    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, fora do diretório do módulo)
+    vdluDir:   '/data/adb/' + MODID + '/vdlu',  // $VDLU_DIR  (Tier-2, outside the module dir)
     modid:     MODID,
-    module:    'Demo',                     // nome mostrado no toast (default: modid)
-    exec:   ex,          // (opcional) o wrapper ksu.exec do hospedeiro; ver abaixo
-    toast:  toast,       // (opcional) o toast transiente do hospedeiro
-    confirm: askConfirm  // (opcional) o modal de confirmação do hospedeiro
+    module:    'Demo',                     // name shown in the toast (default: modid)
+    exec:   ex,          // (optional) the host's ksu.exec wrapper; see below
+    toast:  toast,       // (optional) the host's transient toast
+    confirm: askConfirm  // (optional) the host's confirmation modal
   });
 
-  VDLU.onWebUIOpen();                          // no load: avalia journal + banner + auto_on_webui_open
-  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // quando a aba "Updates" é aberta
+  VDLU.onWebUIOpen();                          // on load: evaluates journal + banner + auto_on_webui_open
+  VDLU.mountUpdatesPanel(document.getElementById('b-updates'));  // when the "Updates" tab is opened
 </script>
 ```
 
@@ -103,12 +103,12 @@ As strings do widget default para **inglês** (neutro para os módulos públicos
 qualquer chave passando um map no `init`:
 
 ```html
-<script src="i18n/pt-BR.js"></script>   <!-- define window.VDLU_I18N_PT_BR -->
+<script src="i18n/pt-BR.js"></script>   <!-- defines window.VDLU_I18N_PT_BR -->
 <script>VDLU.init({ exec: ex, moduleDir: MOD, vdluDir: VDL, modid: 'x', i18n: window.VDLU_I18N_PT_BR });</script>
 ```
 
 - Um merge **parcial** é ok: uma chave faltando cai no default inglês.
-- As chaves de phase/state são `ph_<phase>` / `st_<STATE>`; o resto é flat (`cancel`, `updateNow`, …).
+- As chaves de phase/state são `ph_<phase>` / `st_<STATE>`; o resto é plano (`cancel`, `updateNow`, …).
 - O map de chaves completo = o objeto `DEFAULT_I18N` em `vdlu.js` (também exposto como `VDLU.i18n`).
 - Uma tradução pronta é fornecida como exemplo trabalhado: `i18n/pt-BR.js`. Novos idiomas = um
   arquivo `i18n/<lang>.js` no mesmo molde, ou o hospedeiro constrói o map a partir do seu próprio sistema de i18n.
@@ -117,7 +117,7 @@ qualquer chave passando um map no `init`:
 
 Estes `vdlu.js`/`vdlu.css` são a **cópia canônica**. Todo módulo que embarca o widget
 **re-vendoriza** esta cópia byte-a-byte no seu `webroot/` - **nunca** edita
-a sua própria in place. Uma feature nova do widget nasce aqui e flui para baixo por re-vendor; o inverso produz drift
+a sua própria in place. Uma feature nova do widget nasce aqui e flui para baixo por re-vendor; o inverso produz desvio
 silencioso (já aconteceu na prática: uma cópia vendorizada ficou para trás e estava sem `net_policy`, o toast
 `DEFERRED` e os campos `boot_retry`).
 
@@ -125,8 +125,8 @@ Guardião: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) acha toda c
 as que divergem da canônica (só `vdlu.js`/`vdlu.css`; o keyring é "verificar, não copiar").
 
 ```sh
-tools/webui-parity.sh         # relatório; sai 1 se houver drift
-tools/webui-parity.sh --fix   # re-vendoriza as divergentes a partir da canônica
+tools/webui-parity.sh         # report; exits 1 if there is drift
+tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 O keyring (`keyring/<id>.pub` RAW 32B) e o engine (`vdlu/update.sh`) têm sua própria cadência de re-vendor;

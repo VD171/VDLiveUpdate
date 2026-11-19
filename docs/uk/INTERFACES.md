@@ -19,15 +19,15 @@
 ```
 $VDLU_DIR = /data/adb/<module>/vdlu
   config               # key=value (§5)
-  current.json         # маніфест АКТИВНОЇ версії (база diff); відсутній = ніколи не оновлювався
-  journal.json         # транзакція в процесі (§4); відсутній = простій
-  cancel               # наявність = запит на скасування (WebUI створює його; engine видаляє на зупинці)
-  lock.d/              # mkdir-lock (flock непрацездатний на toybox; відновлення застарілого за PID)
-  blobs/<sha256>       # кеш перевірених блобів (ОРИГІНАЛЬНИЙ вміст, уже розпакований)
-  rollback/<version>/<path>   # резервна копія перезаписаних файлів
-  staged/<path>.vdlu-new      # REBOOT-hard, що очікує обміну під час завантаження
-  target.json          # ЗАФІКСОВАНИЙ маніфест транзакції в польоті (наявність = активна транзакція; стає current.json на DONE)
-  plan.tsv  plan.del   # внутрішній план engine (прогрес); WebUI ІГНОРУЄ його (читає лише journal/config/current)
+  current.json         # manifest of the ACTIVE version (diff base); absent = never updated
+  journal.json         # transaction in progress (§4); absent = idle
+  cancel               # presence = cancel request (WebUI creates it; engine deletes it on stop)
+  lock.d/              # mkdir-lock (flock unworkable on toybox; stale-recovery by PID)
+  blobs/<sha256>       # cache of verified blobs (ORIGINAL content, already decompressed)
+  rollback/<version>/<path>   # backup of overwritten files
+  staged/<path>.vdlu-new      # REBOOT-hard awaiting swap at boot
+  target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
+  plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
 `cancelled:true` у журналі = engine зупинився на скасуванні (нетермінальний, поновлюваний стан; `error`
 залишається null).
@@ -89,15 +89,15 @@ auto_on_webui_open=0
 auto_on_reboot=1
 source=https://<user>.github.io/<repo>/<module>
 channel=stable
-profile=trusted        # trusted | hardened. ЗА ЗАМОВЧУВАННЯМ У КОДІ (рядок відсутній) = hardened (fail-closed, 9a9a824)
-net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - контролює ЗАВАНТАЖЕННЯ за типом мережі
-allow_metered=0        # ⚠️ ЗАМІНЕНО на net_policy (не споживається engine)
-pubkey_dir=keyring     # відносно $MODULE_DIR/vdlu (keyring публічних ключів для verify)
-ca_path=               # порожньо = автовизначення сховища довіри Android; вкажіть шлях, щоб перевизначити
-tools_source=          # порожньо = виводиться з source (.../vdlu-tools); стрічка статичного curl
-boot_retry_interval=30 # секунди між пробами, коли BOOT знаходить пристрій офлайн (мінімум 5s)
-boot_retry_minutes=0   # стеля ТЕРПЛЯЧОГО повтору (час у стані AWAKE) лише під час завантаження; 0 = вимкнено. Безпечно для батареї (без wakelock,
-                       # без утримуваного замка, проба маршруту ніколи не будить радіо) -> щедра стеля ~безкоштовна
+profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = hardened (fail-closed, 9a9a824)
+net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
+allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
+pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
+boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
+                       # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
 ```
 
 **Повтор завантаження (офлайн) - ТЕРПЛЯЧИЙ, безпечний для батареї:** лише на `boot` (ніколи на check/auto-open). Якщо

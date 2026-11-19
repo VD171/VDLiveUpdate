@@ -20,15 +20,15 @@ yang palsu "selesai", tidak ada yang hilang), **tidak ada yang dilonggarkan**.
 ```
 $VDLU_DIR = /data/adb/<module>/vdlu
   config               # key=value (§5)
-  current.json         # manifest versi AKTIF (basis diff); tidak ada = belum pernah diperbarui
-  journal.json         # transaksi sedang berlangsung (§4); tidak ada = idle
-  cancel               # keberadaan = permintaan pembatalan (WebUI membuatnya; engine menghapusnya saat berhenti)
-  lock.d/              # mkdir-lock (flock tidak praktis di toybox; pemulihan stale berdasarkan PID)
-  blobs/<sha256>       # cache blob yang terverifikasi (konten ASLI, sudah didekompresi)
-  rollback/<version>/<path>   # backup file yang ditimpa
-  staged/<path>.vdlu-new      # REBOOT-hard menunggu swap saat boot
-  target.json          # manifest yang DIPATOK dari transaksi berjalan (keberadaan = transaksi aktif; menjadi current.json saat DONE)
-  plan.tsv  plan.del   # rencana internal engine (progres); WebUI MENGABAIKANnya (hanya membaca journal/config/current)
+  current.json         # manifest of the ACTIVE version (diff base); absent = never updated
+  journal.json         # transaction in progress (§4); absent = idle
+  cancel               # presence = cancel request (WebUI creates it; engine deletes it on stop)
+  lock.d/              # mkdir-lock (flock unworkable on toybox; stale-recovery by PID)
+  blobs/<sha256>       # cache of verified blobs (ORIGINAL content, already decompressed)
+  rollback/<version>/<path>   # backup of overwritten files
+  staged/<path>.vdlu-new      # REBOOT-hard awaiting swap at boot
+  target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
+  plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
 `cancelled:true` di journal = engine berhenti karena pembatalan (state non-terminal yang dapat dilanjutkan; `error`
 tetap null).
@@ -90,15 +90,15 @@ auto_on_webui_open=0
 auto_on_reboot=1
 source=https://<user>.github.io/<repo>/<module>
 channel=stable
-profile=trusted        # trusted | hardened. DEFAULT KODE (baris tidak ada) = hardened (fail-closed, 9a9a824)
-net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi saja) | mobile (mobile saja) - mengatur UNDUHAN berdasarkan tipe jaringan
-allow_metered=0        # ⚠️ DIGANTIKAN oleh net_policy (tidak dikonsumsi oleh engine)
-pubkey_dir=keyring     # relatif terhadap $MODULE_DIR/vdlu (keyring pubkey untuk verify)
-ca_path=               # kosong = auto-deteksi trust store Android; atur sebuah path untuk menimpa
-tools_source=          # kosong = diturunkan dari source (.../vdlu-tools); feed curl statis
-boot_retry_interval=30 # detik antar probe ketika BOOT menemukan perangkat offline (minimum 5s)
-boot_retry_minutes=0   # batas atas retry SABAR (waktu AWAKE) hanya saat boot; 0 = mati. Hemat baterai (tanpa wakelock,
-                       # tanpa lock ditahan, probe route tidak pernah membangunkan radio) -> batas atas yang murah hati ~gratis
+profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = hardened (fail-closed, 9a9a824)
+net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
+allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
+pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
+boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
+                       # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
 ```
 
 **Boot retry (offline) - SABAR, hemat baterai:** hanya saat `boot` (tidak pernah pada check/auto-open). Jika fetch manifest

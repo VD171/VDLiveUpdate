@@ -20,15 +20,15 @@ oszczędnie, bez pakietu binariów), **zero zbędnych komentarzy**, **zawsze rel
 ```
 $VDLU_DIR = /data/adb/<module>/vdlu
   config               # key=value (§5)
-  current.json         # manifest AKTYWNEJ wersji (baza diff); brak = nigdy nie aktualizowano
-  journal.json         # transakcja w toku (§4); brak = bezczynność
-  cancel               # obecność = żądanie anulowania (WebUI go tworzy; engine usuwa przy zatrzymaniu)
-  lock.d/              # mkdir-lock (flock niewykonalny na toybox; odzysk przestarzałego po PID)
-  blobs/<sha256>       # cache zweryfikowanych blobów (treść ORYGINALNA, już rozpakowana)
-  rollback/<version>/<path>   # kopia zapasowa nadpisanych plików
-  staged/<path>.vdlu-new      # REBOOT-hard oczekujący na swap przy rozruchu
-  target.json          # PRZYPIĘTY manifest transakcji w locie (obecność = aktywna transakcja; staje się current.json przy DONE)
-  plan.tsv  plan.del   # wewnętrzny plan engine (postęp); WebUI go IGNORUJE (czyta tylko journal/config/current)
+  current.json         # manifest of the ACTIVE version (diff base); absent = never updated
+  journal.json         # transaction in progress (§4); absent = idle
+  cancel               # presence = cancel request (WebUI creates it; engine deletes it on stop)
+  lock.d/              # mkdir-lock (flock unworkable on toybox; stale-recovery by PID)
+  blobs/<sha256>       # cache of verified blobs (ORIGINAL content, already decompressed)
+  rollback/<version>/<path>   # backup of overwritten files
+  staged/<path>.vdlu-new      # REBOOT-hard awaiting swap at boot
+  target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
+  plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
 `cancelled:true` w journal = engine zatrzymał się na anulowaniu (stan nieterminalny, wznawialny; `error`
 pozostaje null).
@@ -90,15 +90,15 @@ auto_on_webui_open=0
 auto_on_reboot=1
 source=https://<user>.github.io/<repo>/<module>
 channel=stable
-profile=trusted        # trusted | hardened. DOMYŚLNE W KODZIE (brak wiersza) = hardened (fail-closed, 9a9a824)
-net_policy=any         # any (Wi-Fi+komórkowa) | wifi (tylko Wi-Fi) | mobile (tylko komórkowa) - bramkuje POBIERANIE wg typu sieci
-allow_metered=0        # ⚠️ ZASTĄPIONE przez net_policy (nie konsumowane przez engine)
-pubkey_dir=keyring     # względem $MODULE_DIR/vdlu (keyring pubkeyów do verify)
-ca_path=               # puste = autowykrywanie trust store Androida; ustaw path, aby nadpisać
-tools_source=          # puste = wywiedzione z source (.../vdlu-tools); feed statycznego curl
-boot_retry_interval=30 # sekundy między sondami, gdy BOOT zastaje urządzenie offline (dolna granica 5s)
-boot_retry_minutes=0   # pułap CIERPLIWEGO retry (czas CZUWANIA) tylko przy boot; 0 = off. Bezpieczne dla baterii (bez wakelock,
-                       # bez trzymanego locka, sonda trasy nigdy nie budzi radia) -> hojny pułap jest ~darmowy
+profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = hardened (fail-closed, 9a9a824)
+net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
+allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
+pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
+boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
+                       # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
 ```
 
 **Boot retry (offline) - CIERPLIWY, bezpieczny dla baterii:** tylko przy `boot` (nigdy przy check/auto-open).

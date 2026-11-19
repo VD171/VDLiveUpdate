@@ -2,19 +2,19 @@
 
 ---
 
-# VDLU - Kontrakt rozhrani (sev mezi komponentami)
+# VDLU - Kontrakt rozhraní (šev mezi komponentami)
 
-**Zakon konvergence:** kazda komponenta se ridi timto souborem. Dily od 4 agentu musi **zapadnout dohromady** - podpisy
-CLI, nazvy souboru a JSON klice nize jsou **nemenne** (zmena znamena nejprve zarovnat zde).
+**Zákon konvergence:** každá komponenta se řídí tímto souborem. Díly od 4 agentů musí **zapadnout dohromady** - podpisy
+CLI, názvy souborů a JSON klíče níže jsou **neměnné** (změna znamená nejprve zarovnat zde).
 
-Principy zdedene z repozitaru: **ciste POSIX sh** na zarizeni (zadne bashismy; bezi s toybox/busybox +
-toyboxovym `sha256sum`/`gzip`/`base64` + stazenym `curl` + vestavenym `ed25519-mini` - stihle, zadny bin
-bundle), **zadne nadbytecne komentare**, **vzdy release**, **prisnost pri selhani** (obnovitelna transakce, nic
-falesne "hotove", nic ztraceneho), **nic nerozvolneno**.
+Principy zděděné z repozitáře: **čisté POSIX sh** na zařízení (žádné bashismy; běží s toybox/busybox +
+toyboxovým `sha256sum`/`gzip`/`base64` + staženým `curl` + vestavěným `ed25519-mini` - štíhle, žádný bin
+bundle), **žádné nadbytečné komentáře**, **vždy release**, **přísnost při selhání** (obnovitelná transakce, nic
+falešně "hotové", nic ztraceného), **nic nerozvolněno**.
 
 ---
 
-## 1. Rozlozeni stavu (Tier-2, mimo adresar modulu)
+## 1. Rozložení stavu (Tier-2, mimo adresář modulu)
 
 ```
 $VDLU_DIR = /data/adb/<module>/vdlu
@@ -29,29 +29,29 @@ $VDLU_DIR = /data/adb/<module>/vdlu
   target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
   plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
-`cancelled:true` v journalu = engine se zastavil pri zruseni (nefinalni, obnovitelny stav; `error`
-zustava null).
+`cancelled:true` v journalu = engine se zastavil při zrušení (nefinální, obnovitelný stav; `error`
+zůstává null).
 
-Engine vlozeny v modulu: `$MODULE_DIR/vdlu/update.sh` (+ `vdlu-verify`). `$MODULE_DIR =
-/data/adb/modules/<module>`. Engine dostava pres env: `VDLU_DIR`, `MODULE_DIR`, `MODID`.
+Engine vložený v modulu: `$MODULE_DIR/vdlu/update.sh` (+ `vdlu-verify`). `$MODULE_DIR =
+/data/adb/modules/<module>`. Engine dostává přes env: `VDLU_DIR`, `MODULE_DIR`, `MODID`.
 
 ## 2. CLI enginu (komponenta ENGINE)
 
-`sh update.sh <cmd>` - rc 0 = ok, !=0 = chyba (duvod je na stderr):
+`sh update.sh <cmd>` - rc 0 = ok, !=0 = chyba (důvod je na stderr):
 
-| cmd | dela |
+| cmd | dělá |
 |---|---|
-| `check` | DIFF: stahne manifest, porovna; vypise jednoradkovy JSON `{"update":bool,"from":N,"to":M,"fetch":K,"reboot":bool}`; nic nemeni. Zarizeni PRED feedem (downgrade zablokovan, zpevneno) = NESKODNY stav: `{"update":false,"ahead":true,"from":N,"to":M}` + rc0 (nikdy "check failed"). do_diff rc: 2 fetch/parse, 3 verify/meta, 4 ahead |
-| `run` | plny cyklus: DIFF->FETCH->APPLY->COMMIT; respektuje `cancel`; zapisuje prubeh do `journal.json`; aplikuje LIVE, stageuje REBOOT-hard |
-| `resume` | obnovi transakci `journal.json` od aktualni faze (idempotentni) |
-| `boot` | rezim pre-zygote: `resume` + provede SWAP `staged/*.vdlu-new` (aplikuje `.so`), uzavre `PENDING_REBOOT`->`DONE` |
-| `status` | vypise `journal.json` (nebo `{"state":"idle"}`) |
-| `cancel` | vytvori `$VDLU_DIR/cancel` (probihajici `run` se zastavi v nasledujicim bezpecnem bode) |
+| `check` | DIFF: stáhne manifest, porovná; vypíše jednořádkový JSON `{"update":bool,"from":N,"to":M,"fetch":K,"reboot":bool}`; nic nemění. Zařízení PŘED feedem (downgrade zablokován, zpevněno) = NEŠKODNÝ stav: `{"update":false,"ahead":true,"from":N,"to":M}` + rc0 (nikdy "check failed"). do_diff rc: 2 fetch/parse, 3 verify/meta, 4 ahead |
+| `run` | plný cyklus: DIFF->FETCH->APPLY->COMMIT; respektuje `cancel`; zapisuje průběh do `journal.json`; aplikuje LIVE, stageuje REBOOT-hard |
+| `resume` | obnoví transakci `journal.json` od aktuální fáze (idempotentní) |
+| `boot` | režim pre-zygote: `resume` + provede SWAP `staged/*.vdlu-new` (aplikuje `.so`), uzavře `PENDING_REBOOT`->`DONE` |
+| `status` | vypíše `journal.json` (nebo `{"state":"idle"}`) |
+| `cancel` | vytvoří `$VDLU_DIR/cancel` (probíhající `run` se zastaví v následujícím bezpečném bodě) |
 
-Zdroj blobu/manifestu: `source` z configu. `<source>` + `/manifest.json`, `/blobs/<sha>`, `/blobs/<sha>.gz`.
-`source` zacina `https://` (staticke stazene curl, TLS) nebo `file://` (lokalni staging).
+Zdroj blobů/manifestu: `source` z configu. `<source>` + `/manifest.json`, `/blobs/<sha>`, `/blobs/<sha>.gz`.
+`source` začíná `https://` (statické stažené curl, TLS) nebo `file://` (lokální staging).
 
-## 3. manifest.json (vyrabi PRODUCER, konzumuje ENGINE)
+## 3. manifest.json (vyrábí PRODUCER, konzumuje ENGINE)
 
 ```json
 { "schema":1, "module":"<id>", "version":<int>, "version_name":"<str>", "built":"<ISO8601>",
@@ -60,14 +60,14 @@ Zdroj blobu/manifestu: `source` z configu. `<source>` + `/manifest.json`, `/blob
   "delete":["<path>"], "sig":"<base64>" }
 ```
 
-- `files[]` = UPLNY cilovy strom. `class`: `live` (webroot/bin/lib/confs/scripts-on-demand/module.prop) ·
+- `files[]` = ÚPLNÝ cílový strom. `class`: `live` (webroot/bin/lib/confs/scripts-on-demand/module.prop) ·
   `soft` (service.sh/post-fs-data.sh/boot-completed.sh) · `reboot` (`zygisk/**/*.so`, `system/**`, `*.rule`).
-  Vychozi podle cesty; nikdy nesnizuje `reboot`->`live`.
-- `enc`: `gz` (gzip `-9 -n`, deterministicke; toybox gunzip na zarizeni) jen kdyz se dobre komprimuje A
-  velikost je vyznamna; `sha256` je VZDY z puvodniho obsahu.
-- `sig`: podpis kanonickeho manifestu BEZ pole `sig` (§4 verify).
+  Výchozí podle cesty; nikdy nesnižuje `reboot`->`live`.
+- `enc`: `gz` (gzip `-9 -n`, deterministické; toybox gunzip na zařízení) jen když se dobře komprimuje A
+  velikost je významná; `sha256` je VŽDY z původního obsahu.
+- `sig`: podpis kanonického manifestu BEZ pole `sig` (§4 verify).
 
-## 4. journal.json (ENGINE zapisuje, WEBUI cte - kontrakt prubehu)
+## 4. journal.json (ENGINE zapisuje, WEBUI čte - kontrakt průběhu)
 
 ```json
 { "schema":1, "module":"<id>", "target":<version>, "from":<version>,
@@ -77,12 +77,12 @@ Zdroj blobu/manifestu: `source` z configu. `<source>` + `/manifest.json`, `/blob
   "items":[ {"path":"<p>","sha256":"<h>","class":"<c>","st":"pending|fetched|applied|staged|skipped"} ] }
 ```
 
-Stavovy automat (pevne poradi): `PLANNED->FETCHING->FETCHED->APPLYING->APPLIED_LIVE->(PENDING_REBOOT|DONE)`.
-`DONE` az kdyz prehasovani VSEHO souhlasi. Stageovany REBOOT-hard => `PENDING_REBOOT` (ne `DONE`). Vystupy
-z faze `fetch`: `ERROR` (tvrde selhani) nebo `DEFERRED` (net_policy zablokovala stahovani - neskodne/obnovitelne,
-neni to chyba).
+Stavový automat (pevné pořadí): `PLANNED->FETCHING->FETCHED->APPLYING->APPLIED_LIVE->(PENDING_REBOOT|DONE)`.
+`DONE` až když přehašování VŠEHO souhlasí. Stageovaný REBOOT-hard => `PENDING_REBOOT` (ne `DONE`). Výstupy
+z fáze `fetch`: `ERROR` (tvrdé selhání) nebo `DEFERRED` (net_policy zablokovala stahování - neškodné/obnovitelné,
+není to chyba).
 
-## 5. config (key=value, jedno na radek; editovatelne ve WEBUI)
+## 5. config (key=value, jedno na řádek; editovatelné ve WEBUI)
 
 ```
 auto_on_webui_open=0
@@ -100,111 +100,111 @@ boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot;
                        # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
 ```
 
-**Boot retry (offline) - TRPELIVY, setrny k baterii:** jen pri `boot` (nikdy pri check/auto-open). Pokud stazeni
-manifestu selze kvuli SITI (`fetch_offline` klasifikuje podle navratoveho kodu fetcheru), ceka a opakuje az do
-uspechu NEBO dokud se nevycerpa `boot_retry_minutes` AWAKE-casu. Navrh, ktery **nic nedrzi a nevycerpava**:
-- **Nulovy wakelock:** mezi pokusy je to `sleep`, ktery v deep-sleepu zmrzne -> zarizeni normalne spi
-  (~nulova baterie); retry pozastavi a pokracuje, jakmile je zarizeni uz vzhuru.
-- **Nulovy drzeny zamek:** `acquire_lock_try`+release MEZI pokusy (nedrzi zamek behem cekani) ->
-  `run`/manualni check nikdy neblokuji; pokud manualni run mezitim stageuje TARGET, boot se odlozi.
-- **Nebudi radio zbytecne:** sonda `net_allowed` (pres `net_type`/`ip route get`, kernelovy lookup
-  smerovani, ktery respektuje Androidi policy-routing; zadny paket) hlida kazdy pokus - fetch utrati az kdyz se
-  sit objevi.
-- NIKDY neopakuje deterministicke selhani (manifest/sig/downgrade). `--connect-timeout 15` pri fetchi (nezasekne se
-  na captive portalu). `service.sh` ho da na pozadi (boot se nikdy nezasekne).
-- ⛔ **TVRDE: zapnuti `boot_retry_minutes>0` vyzaduje TRPELIVY engine** (ten s
-  `net_allowed`+`acquire_lock_try`, kanonicky `da7115f4`+). PREDCHOZI boot-retry (drzi zamek cele
-  okno + opakuje slepe curl offline) **VYCERPAVA baterii/budi radio** - zapnout retry ve starem
-  enginu je footgun. Pri zapnuti vlozte aktualni engine.
+**Boot retry (offline) - TRPĚLIVÝ, šetrný k baterii:** jen při `boot` (nikdy při check/auto-open). Pokud stažení
+manifestu selže kvůli SÍTI (`fetch_offline` klasifikuje podle návratového kódu fetcheru), čeká a opakuje až do
+úspěchu NEBO dokud se nevyčerpá `boot_retry_minutes` AWAKE-času. Návrh, který **nic nedrží a nevyčerpává**:
+- **Nulový wakelock:** mezi pokusy je to `sleep`, který v deep-sleepu zmrzne -> zařízení normálně spí
+  (~nulová baterie); retry pozastaví a pokračuje, jakmile je zařízení už vzhůru.
+- **Nulový držený zámek:** `acquire_lock_try`+release MEZI pokusy (nedrží zámek během čekání) ->
+  `run`/manuální check nikdy neblokují; pokud manuální run mezitím stageuje TARGET, boot se odloží.
+- **Nebudí radio zbytečně:** sonda `net_allowed` (přes `net_type`/`ip route get`, kernelový lookup
+  směrování, který respektuje Androidí policy-routing; žádný paket) hlídá každý pokus - fetch utratí až když se
+  síť objeví.
+- NIKDY neopakuje deterministické selhání (manifest/sig/downgrade). `--connect-timeout 15` při fetchi (nezasekne se
+  na captive portalu). `service.sh` ho dá na pozadí (boot se nikdy nezasekne).
+- ⛔ **TVRDĚ: zapnutí `boot_retry_minutes>0` vyžaduje TRPĚLIVÝ engine** (ten s
+  `net_allowed`+`acquire_lock_try`, kanonický `da7115f4`+). PŘEDCHOZÍ boot-retry (drží zámek celé
+  okno + opakuje slepě curl offline) **VYČERPÁVÁ baterii/budí radio** - zapnout retry ve starém
+  enginu je footgun. Při zapnutí vložte aktuální engine.
 
-**`net_policy` (any|wifi|mobile):** hlida **STAHOVANI** podle typu site. `net_type()` klasifikuje egress
-`ip route get` (celularni iface `rmnet/ccmni/v4-*/clat` = mobile; vse ostatni = wifi; kernelovy lookup, zadny
-paket). `net_allowed()` porovnava s `net_policy` a hlida `do_fetch` (bloby) + sondu trpeliveho boot-retry.
-**Kontrola manifestu zustava volna** (drobna -> UI hlasi update na jakekoli siti); jen stahovani ceka na povolenou
-sit. Stahovani na nepovolene siti = stav **`DEFERRED`** v journalu (NE ERROR; jemny modry INFO toast
-"waiting for X network"; plan/target zustavaji, obnovi se pri dalsim checku/bootu na spravne siti). `net_policy`
-**nahrazuje** `allow_metered` (ktere se nikdy nekonzumovalo). Engine `97baf887`+ (`file://` se nikdy nehlida).
+**`net_policy` (any|wifi|mobile):** hlídá **STAHOVÁNÍ** podle typu sítě. `net_type()` klasifikuje egress
+`ip route get` (celulární iface `rmnet/ccmni/v4-*/clat` = mobile; vše ostatní = wifi; kernelový lookup, žádný
+paket). `net_allowed()` porovnává s `net_policy` a hlídá `do_fetch` (bloby) + sondu trpělivého boot-retry.
+**Kontrola manifestu zůstává volná** (drobná -> UI hlásí update na jakékoli síti); jen stahování čeká na povolenou
+síť. Stahování na nepovolené síti = stav **`DEFERRED`** v journalu (NE ERROR; jemný modrý INFO toast
+"waiting for X network"; plan/target zůstávají, obnoví se při dalším checku/bootu na správné síti). `net_policy`
+**nahrazuje** `allow_metered` (které se nikdy nekonzumovalo). Engine `97baf887`+ (`file://` se nikdy nehlídá).
 
-## 6. Podpis (PRODUCER podepisuje na PC pres openssl; ENGINE overuje na zarizeni pres ed25519-mini)
+## 6. Podpis (PRODUCER podepisuje na PC přes openssl; ENGINE ověřuje na zařízení přes ed25519-mini)
 
-- Kanonizace: manifest BEZ `sig`, klice serazene, kompaktni JSON (zadne zbytecne mezery), UTF-8.
-  Co se podepisuje/overuje = `sha256` hex teto kanonicke formy (poskytuje determinismus napric nastroji).
-- `producer/vdlu-sign <manifest.json> <privkey.pem> <key_id>` -> vlozi `key_id` + `sig` (base64 podpisu ed25519 kanonickeho sha256) do manifestu, na miste.
-- `engine/vdlu-verify <manifest.json> <keyring_dir>` -> rc 0 pokud `sig` odpovida verejnemu klici `<key_id>.pub` v
-  keyringu (STIHLE: verejny klic **RAW 32 bajtu**). Interne, zadny openssl: toybox `sha256sum`/`base64 -d` + vestaveny
-  binary `ed25519-mini` (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=platne/1=neplatne/2=usage).
-  rc!=0 = odmitnuti. **`profile=hardened` => verify povinne; selhani = abort.**
-  `profile=trusted` => verify je best-effort (zdroj uz duveryhodny pres SSH), ale hash kazdeho blobu se VZDY kontroluje.
-- `producer/vdlu-keygen <id> <out>` -> generuje `<id>.pem` (priv) + `<id>.pub` (PEM, pro nastroje na PC) +
-  `<id>.pub.raw` (**RAW 32B** = `<id>.pub` stihleho keyringu na zarizeni). openssl `genpkey -algorithm ed25519`.
+- Kanonizace: manifest BEZ `sig`, klíče seřazené, kompaktní JSON (žádné zbytečné mezery), UTF-8.
+  Co se podepisuje/ověřuje = `sha256` hex této kanonické formy (poskytuje determinismus napříč nástroji).
+- `producer/vdlu-sign <manifest.json> <privkey.pem> <key_id>` -> vloží `key_id` + `sig` (base64 podpisu ed25519 kanonického sha256) do manifestu, na místě.
+- `engine/vdlu-verify <manifest.json> <keyring_dir>` -> rc 0 pokud `sig` odpovídá veřejnému klíči `<key_id>.pub` v
+  keyringu (ŠTÍHLE: veřejný klíč **RAW 32 bajtů**). Interně, žádný openssl: toybox `sha256sum`/`base64 -d` + vestavěný
+  binary `ed25519-mini` (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=platné/1=neplatné/2=usage).
+  rc!=0 = odmítnutí. **`profile=hardened` => verify povinné; selhání = abort.**
+  `profile=trusted` => verify je best-effort (zdroj už důvěryhodný přes SSH), ale hash každého blobu se VŽDY kontroluje.
+- `producer/vdlu-keygen <id> <out>` -> generuje `<id>.pem` (priv) + `<id>.pub` (PEM, pro nástroje na PC) +
+  `<id>.pub.raw` (**RAW 32B** = `<id>.pub` štíhlého keyringu na zařízení). openssl `genpkey -algorithm ed25519`.
 
-## 7. Blob - overeni (ENGINE)
+## 7. Blob - ověření (ENGINE)
 
-Stahne `<source>/blobs/<sha>` (nebo `.gz` pokud `enc=gz`), zapise `.part`, pokud `gz` dekomprimuje (`gunzip`),
-zkontroluje `sha256sum` == `sha256` manifestu; shoda -> atomicke `mv` do `$VDLU_DIR/blobs/<sha>`. 3 selhani na
-stejnem blobu = abortuje fazi (nic aplikovano). Blob uz v `$VDLU_DIR/blobs/<sha>` s ok hashem =
-preskoci stahovani.
+Stáhne `<source>/blobs/<sha>` (nebo `.gz` pokud `enc=gz`), zapíše `.part`, pokud `gz` dekomprimuje (`gunzip`),
+zkontroluje `sha256sum` == `sha256` manifestu; shoda -> atomické `mv` do `$VDLU_DIR/blobs/<sha>`. 3 selhání na
+stejném blobu = abortuje fázi (nic aplikováno). Blob už v `$VDLU_DIR/blobs/<sha>` s ok hashem =
+přeskočí stahování.
 
-## 8. APPLY podle tridy (ENGINE)
+## 8. APPLY podle třídy (ENGINE)
 
-- `live`/`soft`: zaloha `rollback/<v>/<path>` -> zapise `$MODULE_DIR/<path>.vdlu-tmp` z blobu -> `chmod mode` ->
-  atomicke `rename` pres cil. Uz na cilovem hashi = skip. (Ve variante Zygisk jde zapis do
-  mountovaneho adresare = merge po souborech, nikdy `rm -rf` adresare.)
-- `reboot`: materializuje do `$VDLU_DIR/staged/<path>.vdlu-new` (NEDOTYKA se zive). Swap je pri `boot`.
-- `delete[]`: zaloha -> odstranit.
+- `live`/`soft`: záloha `rollback/<v>/<path>` -> zapíše `$MODULE_DIR/<path>.vdlu-tmp` z blobu -> `chmod mode` ->
+  atomické `rename` přes cíl. Už na cílovém hashi = skip. (Ve variantě Zygisk jde zápis do
+  mountovaného adresáře = merge po souborech, nikdy `rm -rf` adresáře.)
+- `reboot`: materializuje do `$VDLU_DIR/staged/<path>.vdlu-new` (NEDOTÝKÁ se živé). Swap je při `boot`.
+- `delete[]`: záloha -> odstranit.
 
 ## 9. WEBUI <-> ENGINE (komponenta WEBUI)
 
-- Spousti: `ksu.exec("sh $MODULE_DIR/vdlu/update.sh run")` (pozadi).
-- Prubeh: lehky poll `ksu.exec("cat $VDLU_DIR/journal.json")` kazdou ~1s; renderuje `{phase,state,total,done,current,bytes}`.
-- Zivost: journal chybejici 8 ticku => "no response". Journal ZMRZLY (stejne hodnoty) 20 ticku => kontroluje `lock.d`: zivy = pokracuje (pomale fetchovani 1 blobu), mrtvy = chyba + Resume. Bez toho by run, ktery umrel uprostred fetche, zmrazil toast na "updating".
+- Spouští: `ksu.exec("sh $MODULE_DIR/vdlu/update.sh run")` (pozadí).
+- Průběh: lehký poll `ksu.exec("cat $VDLU_DIR/journal.json")` každou ~1s; renderuje `{phase,state,total,done,current,bytes}`.
+- Živost: journal chybějící 8 ticků => "no response". Journal ZMRZLÝ (stejné hodnoty) 20 ticků => kontroluje `lock.d`: živý = pokračuje (pomalé fetchování 1 blobu), mrtvý = chyba + Resume. Bez toho by run, který umřel uprostřed fetche, zmrazil toast na "updating".
 - Cancel: `ksu.exec("touch $VDLU_DIR/cancel")`.
-- Config: cte/zapisuje `$VDLU_DIR/config` (key=value) v zalozce "Updates".
-- Toast: lista + `phase done/total · current`; pri dokonceni s `reboot_pending` => trvaly banner "reboot to activate the .so".
-- Auto-open (`auto_on_webui_open=1`): nejprve provede TICHY `check()` (zadny progress toast); `run`+trvaly toast spusti jen pokud `update && fetch>0`. Aktualni/napred/nic noveho = inline vysledek v panelu, zadny zbyly toast. Nevtiravy jako manualni tlacitko (toast se objevi jen kdyz je skutecne stahovani). Curl bootstrap je jednorazovy.
+- Config: čte/zapisuje `$VDLU_DIR/config` (key=value) v záložce "Updates".
+- Toast: lišta + `phase done/total · current`; při dokončení s `reboot_pending` => trvalý banner "reboot to activate the .so".
+- Auto-open (`auto_on_webui_open=1`): nejprve provede TICHÝ `check()` (žádný progress toast); `run`+trvalý toast spustí jen pokud `update && fetch>0`. Aktuální/napřed/nic nového = inline výsledek v panelu, žádný zbylý toast. Nevtíravý jako manuální tlačítko (toast se objeví jen když je skutečné stahování). Curl bootstrap je jednorázový.
 
-## 10. Integrace do demo (komponenta INTEGRATION) - SNIPPETY, needitujte zive soubory
+## 10. Integrace do demo (komponenta INTEGRATION) - SNIPPETY, needitujte živé soubory
 
-Vyrabi, v `integration/demo/`, snippety + `INTEGRATION.md` rikajici kam kazdy patri (bez aplikace):
+Vyrábí, v `integration/demo/`, snippety + `INTEGRATION.md` říkající kam každý patří (bez aplikace):
 - hook `auto_on_reboot` v `post-fs-data`/`service.sh` (pre-zygote -> `update.sh boot`) a `auto_on_webui_open`.
-- vychozi hodnoty `config` + vlozeny keyring + vendoring (`modules/<mod>/vdlu/`).
-- PARTIAL varianta (merge do mountovaneho adresare).
+- výchozí hodnoty `config` + vložený keyring + vendoring (`modules/<mod>/vdlu/`).
+- PARTIAL varianta (merge do mountovaného adresáře).
 
-## 11. Stazeny toolchain + baseline (STIHLE, pristup B)
+## 11. Stažený toolchain + baseline (ŠTÍHLE, přístup B)
 
-**Rozlozeni v modulu (zip):** `vdlu/{update.sh, vdlu-verify, config.default, keyring/<id>.pub (RAW 32B),
-verify/<abi>/ed25519-mini, baseline.json}`. **ZADNY** `bin/` (openssl/curl/zstd). `customize.sh` muze oriznout
-`verify/` na ABI zarizeni (`vdlu-verify` najde mini v `<dir>/ed25519-mini` NEBO `<dir>/verify/<abi>/ed25519-mini`).
+**Rozložení v modulu (zip):** `vdlu/{update.sh, vdlu-verify, config.default, keyring/<id>.pub (RAW 32B),
+verify/<abi>/ed25519-mini, baseline.json}`. **ŽÁDNÝ** `bin/` (openssl/curl/zstd). `customize.sh` může oříznout
+`verify/` na ABI zařízení (`vdlu-verify` najde mini v `<dir>/ed25519-mini` NEBO `<dir>/verify/<abi>/ed25519-mini`).
 
-**ed25519-mini** (vestaveny binary, jen verify): `ed25519-mini <pubkey32> <msg> <sig64>` -> rc 0=platne,
-1=neplatne, 2=usage/IO. msg = presne podepsane bajty (NEHASHUJE znovu). TweetNaCl PD, staticke per-ABI, PROVENANCE.
+**ed25519-mini** (vestavěný binary, jen verify): `ed25519-mini <pubkey32> <msg> <sig64>` -> rc 0=platné,
+1=neplatné, 2=usage/IO. msg = přesně podepsané bajty (NEHASHUJE znovu). TweetNaCl PD, statické per-ABI, PROVENANCE.
 
-**tools-feed** (jen public/https profil): servirovano na `<tools_source>` (vychozi odvozeno: vymeni posledni segment
-`source` za `vdlu-tools`, napr. `https://<user>.github.io/<repo>/vdlu-tools`). Obsahuje:
-- `tools-manifest.json` - PODEPSANY `vdlu-pack` manifest nad stromem `<abi>/curl`, pripinajici `sha256` kazdeho
-  curl (stejny klic `release-2026`).
-- `<abi>/curl` - HOLE **staticke** curl (sobestacne, ~1MB; curl 8.11.1 + mbedTLS). 🪤 mbedTLS NENESE
-  CA bundle: `fetch_url` predava `--capath` (auto-detekce Androidiho trust store: `/system/etc/security/cacerts`
-  -> APEX conscrypt; `ca_path` prepisuje). Zadny capath = chyba 60. Integrita je ed25519; cert-check je defense-in-depth.
+**tools-feed** (jen public/https profil): servírováno na `<tools_source>` (výchozí odvozeno: vymění poslední segment
+`source` za `vdlu-tools`, např. `https://<user>.github.io/<repo>/vdlu-tools`). Obsahuje:
+- `tools-manifest.json` - PODEPSANÝ `vdlu-pack` manifest nad stromem `<abi>/curl`, připínající `sha256` každého
+  curl (stejný klíč `release-2026`).
+- `<abi>/curl` - HOLÉ **statické** curl (soběstačné, ~1MB; curl 8.11.1 + mbedTLS). 🪤 mbedTLS NENESE
+  CA bundle: `fetch_url` předává `--capath` (auto-detekce Androidího trust store: `/system/etc/security/cacerts`
+  -> APEX conscrypt; `ca_path` přepisuje). Žádný capath = chyba 60. Integrita je ed25519; cert-check je defense-in-depth.
 
-**install-tool** (ENGINE): `update.sh install-tool <abi>` cte `$VDLU_DIR/.work/{tools-manifest.json, tool.<abi>}`
-(WEBUI to stahne pres `fetch()` a zapise tam), **overi podpis tools-manifestu (ed25519-mini,
-POVINNE v jakemkoli profilu)** + hash curl == manifest, a teprve pak ho nainstaluje do `$VDLU_DIR/tools/<abi>/curl` (0755).
-Curl bezi jako root -> sig+hash pred exec uzavira RCE. Persistuje v Tier-2: nikdy se znovu nestahuje (krome odinstalace).
+**install-tool** (ENGINE): `update.sh install-tool <abi>` čte `$VDLU_DIR/.work/{tools-manifest.json, tool.<abi>}`
+(WEBUI to stáhne přes `fetch()` a zapíše tam), **ověří podpis tools-manifestu (ed25519-mini,
+POVINNĚ v jakémkoli profilu)** + hash curl == manifest, a teprve pak ho nainstaluje do `$VDLU_DIR/tools/<abi>/curl` (0755).
+Curl běží jako root -> sig+hash před exec uzavírá RCE. Persistuje v Tier-2: nikdy se znovu nestahuje (kromě odinstalace).
 
-**fetch-bootstrap** (WEBUI, `ensureToolchain()`): bezi pred check/run/resume. `file://` = no-op; curl UZ
-dostupne (Tier-2, NEBO `module/bin/<abi>/curl` ze **self-bundled** modulu, NEBO system) = no-op
-(VDLU znovu pouzije existujici curl); jen `https` **vubec bez curl** stahne curl + tools-manifest pres webview, zapise
-je do `.work` (chunkovany base64 pres `ksu.exec`), vola `install-tool`. Trust = kontrola na zarizeni, ne stahovani.
+**fetch-bootstrap** (WEBUI, `ensureToolchain()`): běží před check/run/resume. `file://` = no-op; curl UŽ
+dostupné (Tier-2, NEBO `module/bin/<abi>/curl` ze **self-bundled** modulu, NEBO system) = no-op
+(VDLU znovu použije existující curl); jen `https` **vůbec bez curl** stáhne curl + tools-manifest přes webview, zapíše
+je do `.work` (chunkovaný base64 přes `ksu.exec`), volá `install-tool`. Trust = kontrola na zařízení, ne stahování.
 
-> 🪤 **Stihle (fetch-bootstrap) != povinne.** Modul, jehoz `bin/` existuje pro JEHO VLASTNI featury (napr. bundluje
-> restic/rclone/age/tar/curl...), se **neztenci** na ~2MB ani nestahuje curl - VDLU prevezme stihly engine
-> (gz, mini, baseline, fixy) a **znovu pouzije** vestaveny toolchain. Jen moduly bez vlastniho toolchainu
-> ziskavaji ~2MB.
+> 🪤 **Štíhle (fetch-bootstrap) != povinné.** Modul, jehož `bin/` existuje pro JEHO VLASTNÍ featury (např. bundluje
+> restic/rclone/age/tar/curl...), se **neztenčí** na ~2MB ani nestahuje curl - VDLU převezme štíhlý engine
+> (gz, mini, baseline, fixy) a **znovu použije** vestavěný toolchain. Jen moduly bez vlastního toolchainu
+> získávají ~2MB.
 
-**baseline.json** (fix from:0): release kopiruje PODEPSANY `manifest.json` dodane verze do
-`vdlu/baseline.json`; pri cerstve instalaci engine naseeduje `current.json` z nej (`init_paths`, jen pokud chybi) -> zarizeni
-se narodi "current", bez auto-updatu sebe sama a bez re-fetche.
+**baseline.json** (fix from:0): release kopíruje PODEPSANÝ `manifest.json` dodané verze do
+`vdlu/baseline.json`; při čerstvé instalaci engine naseeduje `current.json` z něj (`init_paths`, jen pokud chybí) -> zařízení
+se narodí "current", bez auto-updatu sebe sama a bez re-fetche.
 
 <!-- doc-footer -->
 

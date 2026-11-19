@@ -50,7 +50,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   `--connect-timeout` + `--speed-time`، هرگز گیر نمی‌کند)، `gz` را از حالت فشرده خارج می‌کند (toybox `gunzip`)، بررسی می‌کند
   `sha256sum` == مانیفست، `mv` اتمی به `blobs/<sha>`. یک بلابِ کش‌شده+درست رد می‌شود. می‌تواند بلاب را از یک فایل محلیِ بدون
   تغییر بذر کند (dedup/آفلاین). **۳ شکست روی یک بلاب = فاز بدون اعمالِ چیزی abort می‌شود.** تنها زمانی `FETCHED` می‌شود که
-  همه‌ی بلاب‌های planحاضر+تاییدشده باشند.
+  همه‌ی بلاب‌های plan حاضر+تاییدشده باشند.
 - **APPLY** (تنها از `FETCHED`): `live`/`soft` → پشتیبان به `rollback/<v>/` → `.vdlu-tmp` → `chmod` → verify →
   `rename` اتمی. `reboot` → در `staged/<path>.vdlu-new` تحقق می‌یابد (به inode زنده دست نمی‌زند).
   `delete[]` → پشتیبان → حذف. ایدمپوتنت (فایلی که پیشاپیش در هشِ هدف است رد می‌شود).
@@ -58,7 +58,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   `boot` کارِ `mv -f staged/....vdlu-new $MODULE_DIR/<path>` را می‌کند (pre-zygote) + دوباره تایید می‌کند + `DONE`.
 - **cancel:** میان فایل‌ها بررسی می‌شود (نقطه‌ی امن)؛ `.vdlu-tmp`/`.part`ِ در جریان را حذف می‌کند، `cancel` را پاک می‌کند،
   journal را ازسرگیری‌پذیر می‌گذارد (`cancelled:true`، `error:null`).
-- **mkdir-lock `$VDLU_DIR/lock.d`** سریالی می‌کند (flock روی toybox غیرقابل‌استفاده است؛ بازیابیِ staleبا PID). تلاش مجددِ
+- **mkdir-lock `$VDLU_DIR/lock.d`** سریالی می‌کند (flock روی toybox غیرقابل‌استفاده است؛ بازیابیِ stale با PID). تلاش مجددِ
   boot صبور، نه قفل را حین انتظار نگه می‌دارد (`acquire_lock_try`+release میان تلاش‌ها) و نه wakelock - ایمن برای باتری. یک
   crash/شبکه/reboot در میانه‌ی راه → `resume`/`boot` ادامه می‌دهد.
 - **profile=hardened** ⇒ `vdlu-verify` روی مانیفست پیش از استفاده الزامی؛ شکست = abort؛ downgrade مسدود (نسخه‌ی یکنوا).
@@ -86,7 +86,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 | `blobs/<sha256>` | کش محتوای اصلیِ تاییدشده |
 | `rollback/<version>/<path>` | پشتیبان فایل‌های بازنویسی‌شده (undo؛ ۳ تای آخر را نگه می‌دارد) |
 | `staged/<path>.vdlu-new` | REBOOT-hard در انتظار swap هنگام boot |
-| `lock.d/` | mkdir-lock (flock روی toybox غیرقابل‌استفاده؛ بازیابیِ staleبا PID) |
+| `lock.d/` | mkdir-lock (flock روی toybox غیرقابل‌استفاده؛ بازیابیِ stale با PID) |
 | `tools/<abi>/curl` | curlِ استاتیکِ واکشی‌شده (bootstrap سبک)؛ در طول به‌روزرسانی‌ها باقی می‌ماند |
 | `cancel` | درخواست لغو |
 

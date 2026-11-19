@@ -115,8 +115,15 @@ def walk_files(tree):
             # them in the installed module, and they ship in the full .zip, never via VDLU. Listing them
             # serves useless blobs, and if one ever changes between versions it would be "pending" and get
             # written as an installer file into the LIVE module dir. They are not VDLU content.
-            if rel.startswith("META-INF/") or rel == "customize.sh":
-                log("skip installer scaffolding (ships in the .zip, not via VDLU): " + rel)
+            if rel.startswith("META-INF/") or rel == "customize.sh" or rel.startswith(".vd/"):
+                log("skip installer/flash scaffolding (ships in the .zip, not via VDLU): " + rel)
+                continue
+            # update.json / update-mmrl.json get their size/sha filled by CI AFTER the zips and baseline
+            # are built, so the shipped copy differs from the feed copy -> a phantom single-file fetch on
+            # every install's first self-update. On device they are vestigial (the manager reads the remote
+            # raw updateJson). Not VDLU content.
+            if rel in ("update.json", "update-mmrl.json"):
+                log("skip CI-filled update manifest (differs from feed, vestigial on device): " + rel)
                 continue
             # Dev / release docs and repo files are never on the installed device (the build strips them;
             # some are gitignored). Listing them serves useless blobs AND makes a doc edit churn the signed

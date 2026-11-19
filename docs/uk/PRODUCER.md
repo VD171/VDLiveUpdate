@@ -17,18 +17,18 @@
 ## Конвеєр
 
 ```sh
-# 1. одноразово: ключ підпису. Тримайте .pem подалі від кожного пристрою і від будь-якого push у репозиторій.
+# 1. one-time: a signing key. Keep the .pem off every device and off any repo push.
 producer/vdlu-keygen release-2026 ./keys
 
-# 2. кожен реліз: запакувати фінальне дерево (те саме дерево, що відвантажує .zip, після whitelist).
+# 2. each release: pack the final tree (same tree the .zip ships, post-whitelist).
 producer/vdlu-pack  ./module_tree  ./out  demo 106 --version-name v106 --channel stable \
-                    [--prev ./prev/manifest.json]      # delete[] = шляхи, зниклі з часів prev
+                    [--prev ./prev/manifest.json]      # delete[] = paths gone since prev
 
-# 3. підписати маніфест на місці.
+# 3. sign the manifest in place.
 producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 
-# 4. опублікувати ./out/{manifest.json,blobs/} до <source> (пакетний Pages для публічного; rsync для приватного).
-#    Компактний keyring пристрою тримає ./keys/release-2026.pub.raw як keyring/release-2026.pub (RAW 32B).
+# 4. publish ./out/{manifest.json,blobs/} to <source> (Pages batch for public; rsync for private).
+#    The slim device keyring holds ./keys/release-2026.pub.raw as keyring/release-2026.pub (RAW 32B).
 ```
 
 `vdlu-pack` є content-addressed і дедуплікуючим: блоб, чий `<sha256>` уже існує, не
@@ -92,10 +92,10 @@ producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 Видалення у POSIX sh (ідентична функція в обох інструментах, без `sed`/`jq`):
 
 ```sh
-# $1 = повний текст маніфесту (кінцевий перехід рядка вже прибраний $(cat ...))
-_pre=${_c%%\"sig\":\"*}     # до  ...,"schema":N,
-_rest=${_c#*\"sig\":\"}      # після "sig":"
-_tail=${_rest#*\",}          # після <value>",  ->  "version":...
+# $1 = full manifest text (trailing newline already stripped by $(cat ...))
+_pre=${_c%%\"sig\":\"*}     # up to  ...,"schema":N,
+_rest=${_c#*\"sig\":\"}      # after "sig":"
+_tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 

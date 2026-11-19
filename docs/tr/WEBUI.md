@@ -54,8 +54,8 @@ Widget, motor komutunu sözleşmenin env'ini (§1) zaten taşıyarak bir araya g
 ### `exec`/`toast`/`confirm` (isteğe bağlı)
 
 Atlanırsa, widget kendininkini kullanır:
-- **`exec(cmd)`** stdout ile **çözülen** (rc 0) ve stderr ile **reddeden** (rc≠0) bir `Promise` döndürmelidir
-  - tam olarak Demo `webroot/index.html`'inin `ex()`'inin imzası. Dahili geri çekilme, aynı sözleşmeyle
+- **`exec(cmd)`** stdout ile **çözülen** (rc 0) ve stderr ile **reddeden** (rc≠0) bir `Promise` döndürmelidir -
+  tam olarak Demo `webroot/index.html`'inin `ex()`'inin imzası. Dahili geri çekilme, aynı sözleşmeyle
   `ksu.exec(cmd, '{}', cb)`'yi çağırır.
 - **`toast(msg)`** = kısa bir geçici bildirim (geri çekilme kendi mini-toast'unu enjekte eder).
 - **`confirm(title,msg,ok,danger,fn)`** = bir modal (bugün yalnızca ana makine tarafından kullanılıyor; widget
@@ -77,8 +77,8 @@ konuşmasını sağlar.
 | `resume()` | `update.sh resume` + toast (geçerli aşamadan devam ettirir). |
 | `refreshBanner()` | kalıcı bekleyen-reboot afişini yeniden değerlendirir. |
 
-Toast (köşe kaplaması, bloke etmeyen) ve afiş (üst, kalıcı), widget tarafından `document.body` içine enjekte edilir
-- ana makinenin bunlar için HTML'ye ihtiyacı yoktur. "Updates" sekmesi, ana makinenin ayırdığı tek noktadır (boş
+Toast (köşe kaplaması, bloke etmeyen) ve afiş (üst, kalıcı), widget tarafından `document.body` içine enjekte edilir -
+ana makinenin bunlar için HTML'ye ihtiyacı yoktur. "Updates" sekmesi, ana makinenin ayırdığı tek noktadır (boş
 bir `<div>`).
 
 ### Toast'un yansıttığı durum akışı (journal.json, §4)

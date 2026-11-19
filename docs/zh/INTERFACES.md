@@ -18,16 +18,16 @@ toybox 的 `sha256sum`/`gzip`/`base64` + 抓取的 `curl` + 内嵌的 `ed25519-m
 
 ```
 $VDLU_DIR = /data/adb/<module>/vdlu
-  config               # key=value（§5）
-  current.json         # 当前 ACTIVE 版本的清单（diff 基准）；缺失 = 从未更新过
-  journal.json         # 进行中的事务（§4）；缺失 = 空闲
-  cancel               # 存在 = 取消请求（WebUI 创建它；engine 在停止时删除它）
-  lock.d/              # mkdir-lock（flock 在 toybox 上不可行；按 PID 恢复过期锁）
-  blobs/<sha256>       # 已校验 blob 的缓存（原始内容，已解压）
-  rollback/<version>/<path>   # 被覆盖文件的备份
-  staged/<path>.vdlu-new      # 等待在启动时交换的 REBOOT-hard
-  target.json          # 在途事务的 PINNED 清单（存在 = 活动事务；DONE 时变为 current.json）
-  plan.tsv  plan.del   # engine 的内部计划（进度）；WebUI 忽略它（只读 journal/config/current）
+  config               # key=value (§5)
+  current.json         # manifest of the ACTIVE version (diff base); absent = never updated
+  journal.json         # transaction in progress (§4); absent = idle
+  cancel               # presence = cancel request (WebUI creates it; engine deletes it on stop)
+  lock.d/              # mkdir-lock (flock unworkable on toybox; stale-recovery by PID)
+  blobs/<sha256>       # cache of verified blobs (ORIGINAL content, already decompressed)
+  rollback/<version>/<path>   # backup of overwritten files
+  staged/<path>.vdlu-new      # REBOOT-hard awaiting swap at boot
+  target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
+  plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
 journal 中的 `cancelled:true` = engine 因取消而停止（一个非终止、可恢复的状态；`error`
 保持 null）。
@@ -89,15 +89,15 @@ auto_on_webui_open=0
 auto_on_reboot=1
 source=https://<user>.github.io/<repo>/<module>
 channel=stable
-profile=trusted        # trusted | hardened。代码默认（缺少该行）= hardened（fail-closed，9a9a824）
-net_policy=any         # any（Wi-Fi+mobile）| wifi（仅 Wi-Fi）| mobile（仅 mobile）- 按网络类型控制下载
-allow_metered=0        # ⚠️ 已被 net_policy 取代（engine 不消费它）
-pubkey_dir=keyring     # 相对于 $MODULE_DIR/vdlu（用于 verify 的公钥 keyring）
-ca_path=               # 空 = 自动检测 Android 信任库；设置一个路径以覆盖
-tools_source=          # 空 = 从 source 派生（.../vdlu-tools）；静态 curl 的 feed
-boot_retry_interval=30 # BOOT 发现设备离线时各探测之间的秒数（下限 5s）
-boot_retry_minutes=0   # 仅在启动时的耐心重试（AWAKE 时间）的上限；0 = 关闭。省电（无 wakelock、
-                       # 无持有锁，route 探测从不唤醒射频）-> 慷慨的上限几乎是免费的
+profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = hardened (fail-closed, 9a9a824)
+net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
+allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
+pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
+boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
+                       # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
 ```
 
 **启动重试（离线）- 耐心、省电：** 仅在 `boot` 时（从不在 check/auto-open 时）。如果清单

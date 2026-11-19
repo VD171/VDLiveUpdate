@@ -17,29 +17,29 @@ Si conforma a [`INTERFACES.md`](INTERFACES.md) §3/§6/§7.
 ## Pipeline
 
 ```sh
-# 1. una tantum: una chiave di firma. Tieni il .pem lontano da ogni dispositivo e da ogni push su repo.
+# 1. one-time: a signing key. Keep the .pem off every device and off any repo push.
 producer/vdlu-keygen release-2026 ./keys
 
-# 2. ogni release: impacchetta l'albero finale (lo stesso albero che spedisce lo .zip, post-whitelist).
+# 2. each release: pack the final tree (same tree the .zip ships, post-whitelist).
 producer/vdlu-pack  ./module_tree  ./out  demo 106 --version-name v106 --channel stable \
-                    [--prev ./prev/manifest.json]      # delete[] = path spariti da prev
+                    [--prev ./prev/manifest.json]      # delete[] = paths gone since prev
 
-# 3. firma il manifest in place.
+# 3. sign the manifest in place.
 producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 
-# 4. pubblica ./out/{manifest.json,blobs/} su <source> (batch Pages per il pubblico; rsync per il privato).
-#    Il keyring snello del dispositivo contiene ./keys/release-2026.pub.raw come keyring/release-2026.pub (RAW 32B).
+# 4. publish ./out/{manifest.json,blobs/} to <source> (Pages batch for public; rsync for private).
+#    The slim device keyring holds ./keys/release-2026.pub.raw as keyring/release-2026.pub (RAW 32B).
 ```
 
-`vdlu-pack` e content-addressed e deduplicante: un blob il cui `<sha256>` esiste gia non viene
-riscritto, quindi la pubblicazione e incrementale e il contenuto invariato / ripristinato non viene mai ri-pushato.
+`vdlu-pack` è content-addressed e deduplicante: un blob il cui `<sha256>` esiste già non viene
+riscritto, quindi la pubblicazione è incrementale e il contenuto invariato / ripristinato non viene mai ri-pushato.
 
 ### Decisione `enc` (vdlu-pack)
 
-`sha256` e **sempre** del contenuto originale (non compresso); `enc` nomina solo come il blob viene memorizzato.
+`sha256` è **sempre** del contenuto originale (non compresso); `enc` nomina solo come il blob viene memorizzato.
 
 - `gz` quando `size >= 4096` **e** gzip (`-9 -n`, deterministico) risparmia almeno il 10% (`comp <= raw*0.90`).
-- `raw` altrimenti (testo piccolo che il gzip di HTTP copre gia, o dati gia incomprimibili).
+- `raw` altrimenti (testo piccolo che il gzip di HTTP copre già, o dati già incomprimibili).
 - gzip mancante sull'host di build -> tutto `raw` (non fallisce mai).
 
 Un blob viene memorizzato una volta, in un formato: `blobs/<sha256>` (raw) oppure `blobs/<sha256>.gz` (gz). Il dispositivo
@@ -56,17 +56,17 @@ Derivata dal path (INTERFACES §3, doc §4). Solo default; una regola di path no
 | `live` | tutto il resto (webroot, bin, lib, confs, module.prop, ...) | scritta live, atomica |
 
 I symlink **non vengono seguiti** (non fa mai trapelare contenuto da fuori dell'albero, es. un link a
-`/etc/shadow`) e vengono saltati con un avviso, poiche lo schema del manifest non ha un tipo symlink.
+`/etc/shadow`) e vengono saltati con un avviso, poiché lo schema del manifest non ha un tipo symlink.
 I file non regolari (dir, fifo, device) vengono saltati. `built` rispetta `SOURCE_DATE_EPOCH` per
 manifest riproducibili.
 
 ### Baseline (il seme di installazione) - non firmata, senza chiave
 
 `baseline.json` (spedito a `vdlu/baseline.json` nello zip del modulo) semina `current.json` a un'installazione pulita
-cosi il dispositivo nasce "corrente" (niente da:0, niente re-fetch). L'engine lo tratta come un **seme locale fidato**
-(e arrivato nello zip flashato, che e il confine di fiducia dell'installazione) e **NON ne verifica la firma** -
-solo il manifest RECUPERATO dal feed passa per `vdlu-verify`. Quindi la baseline non ha bisogno di **nessuna chiave**: e
-semplicemente l'output di `vdlu-pack` sull'albero spedito (non firmata; `sig`/`key_id` restano vuoti). Una CI puo quindi
+così il dispositivo nasce "corrente" (niente da:0, niente re-fetch). L'engine lo tratta come un **seme locale fidato**
+(è arrivato nello zip flashato, che è il confine di fiducia dell'installazione) e **NON ne verifica la firma** -
+solo il manifest RECUPERATO dal feed passa per `vdlu-verify`. Quindi la baseline non ha bisogno di **nessuna chiave**: è
+semplicemente l'output di `vdlu-pack` sull'albero spedito (non firmata; `sig`/`key_id` restano vuoti). Una CI può quindi
 generarla **senza chiave**, tenendo la chiave di firma al 100% fuori dalla CI - solo il FEED pubblicato viene firmato (operatore,
 localmente). `vdlu-pack` esclude `baseline.json` dal proprio manifest (anti auto-riferimento). Non fatale se
 assente: il dispositivo parte semplicemente da:0 al primo aggiornamento, mai rotto.
@@ -74,28 +74,28 @@ assente: il dispositivo parte semplicemente da:0 al primo aggiornamento, mai rot
 ## Canonicalizzazione (il punto di convergenza)
 
 `vdlu-sign` e `engine/vdlu-verify` devono derivare gli **stessi byte** da un manifest, su due
-runtime diversi (openssl del PC vs toybox + openssl del dispositivo). La regola e deliberatamente una trasformazione di
-byte, non una ri-serializzazione JSON, cosi non ha bisogno di alcuna libreria JSON sul dispositivo:
+runtime diversi (openssl del PC vs toybox + openssl del dispositivo). La regola è deliberatamente una trasformazione di
+byte, non una ri-serializzazione JSON, così non ha bisogno di alcuna libreria JSON sul dispositivo:
 
 1. `vdlu-pack` scrive `manifest.json` **compatto, chiavi ordinate, UTF-8**
    (`json.dumps(obj, sort_keys=True, separators=(",",":"), ensure_ascii=False)`), includendo sempre
-   i campi `key_id` e `sig` (segnaposto stringa vuota finche non firmato). Questa e la forma canonica
+   i campi `key_id` e `sig` (segnaposto stringa vuota finché non firmato). Questa è la forma canonica
    di memorizzazione.
-2. **Forma canonica = quel testo con il campo `"sig"` rimosso.** Poiche le chiavi sono ordinate, `sig`
+2. **Forma canonica = quel testo con il campo `"sig"` rimosso.** Poiché le chiavi sono ordinate, `sig`
    appare sempre come `,"sig":"<value>",` racchiuso tra `"schema"` (prima) e `"version"` (dopo),
    entrambi sempre presenti. Rimuoverlo lascia `...,"schema":N,"version":...` ben formato.
-   JSON fa l'escape di ogni `"` dentro i valori stringa in `\"`, quindi il token strutturale `"sig":"` e
+   JSON fa l'escape di ogni `"` dentro i valori stringa in `\"`, quindi il token strutturale `"sig":"` è
    non ambiguo anche contro un filename che contiene letteralmente `"sig":"` (testato).
-3. Il messaggio firmato/verificato e lo **sha256 esadecimale** (64 caratteri ASCII, nessun newline) della forma
+3. Il messaggio firmato/verificato è lo **sha256 esadecimale** (64 caratteri ASCII, nessun newline) della forma
    canonica. ed25519 su quell'esadecimale (`openssl pkeyutl -sign/-verify -rawin`).
 
 La rimozione in sh POSIX (funzione identica in entrambi i tool, niente `sed`/`jq`):
 
 ```sh
-# $1 = testo completo del manifest (newline finale gia rimosso da $(cat ...))
-_pre=${_c%%\"sig\":\"*}     # fino a  ...,"schema":N,
-_rest=${_c#*\"sig\":\"}      # dopo "sig":"
-_tail=${_rest#*\",}          # dopo <value>",  ->  "version":...
+# $1 = full manifest text (trailing newline already stripped by $(cat ...))
+_pre=${_c%%\"sig\":\"*}     # up to  ...,"schema":N,
+_rest=${_c#*\"sig\":\"}      # after "sig":"
+_tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
@@ -110,11 +110,11 @@ solo per cross-check; i produttori autoritativi sono i due tool sh.
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   per firma/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (il DER SPKI
-  ed25519 e un prefisso di 12 byte + la chiave di 32 byte, quindi `tail -c 32` E la chiave). Emette ENTRAMBE.
+  ed25519 è un prefisso di 12 byte + la chiave di 32 byte, quindi `tail -c 32` È la chiave). Emette ENTRAMBE.
 - `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` sullo sha256 esadecimale canonico; firma memorizzata base64.
 - `vdlu-verify` (**dispositivo, snello**): `ed25519-mini <pubkey32> <msg> <sig64>` - legge il keyring come la pubkey **RAW 32B**,
-  NIENTE openssl sul dispositivo. `key_id` e sanificato come path (niente `/`, `.`, `..`, `"`). 🚨 Il keyring spedisce la
-  **`.pub.raw` (32B)**, mai la `.pub` PEM (113B): il PEM e solo PC-side e `ed25519-mini` non puo leggerlo.
+  NIENTE openssl sul dispositivo. `key_id` è sanificato come path (niente `/`, `.`, `..`, `"`). 🚨 Il keyring spedisce la
+  **`.pub.raw` (32B)**, mai la `.pub` PEM (113B): il PEM è solo PC-side e `ed25519-mini` non può leggerlo.
 
 Modello di fiducia (INTERFACES §6, doc §11/§13): `profile=hardened` (pubblico) rende il verify obbligatorio - una
 firma fallita o mancante aborta l'aggiornamento. `profile=trusted` (privato, sorgente SSH-staged) tratta
@@ -122,10 +122,10 @@ il verify come best-effort, ma lo sha256 di ogni blob viene controllato comunque
 
 ## Keyring + rotazione
 
-Il keyring e una directory di file `<key_id>.pub`, ognuno la pubkey ed25519 **RAW 32B** (dalla `.pub.raw`
+Il keyring è una directory di file `<key_id>.pub`, ognuno la pubkey ed25519 **RAW 32B** (dalla `.pub.raw`
 di `keygen`), NON PEM - `ed25519-mini` legge 32 byte grezzi. Spedisci la pubkey grezza corrente **e** la precedente
-(doc §13) cosi una chiave ruotata non brickizza le installazioni piu vecchie. `vdlu-sign` con il nuovo `key_id` e il dispositivo
-che sceglie `<keyring>/<key_id>.pub` (grezza) sono l'intero meccanismo di rotazione - nessuna modifica all'engine. Il keyring e
+(doc §13) così una chiave ruotata non brickizza le installazioni più vecchie. `vdlu-sign` con il nuovo `key_id` e il dispositivo
+che sceglie `<keyring>/<key_id>.pub` (grezza) sono l'intero meccanismo di rotazione - nessuna modifica all'engine. Il keyring è
 **stabile** tra le release (solo la rotazione delle chiavi lo cambia): un re-vendor deve **verificare-non-copiare**, e mai
 sovrascriverlo con la `.pub` PEM PC-side.
 
