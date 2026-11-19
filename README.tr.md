@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Belgeler
 
-- [`INTERFACES.md`](INTERFACES.md): bileşenler arasındaki ek yeri (seam) sözleşmesi (yakınsama yasası; değişmez olarak ele al).
+- [`INTERFACES.md`](docs/INTERFACES.md): bileşenler arasındaki ek yeri (seam) sözleşmesi (yakınsama yasası; değişmez olarak ele al).
 - `integration/`: adım adım bir benimseme kılavuzu ve bağlama parçacıkları.
 
 ## Ayrıca bakınız

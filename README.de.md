@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Dokumentation
 
-- [`INTERFACES.md`](INTERFACES.md): der Nahtvertrag zwischen den Komponenten (das Gesetz der Konvergenz; behandle ihn als unveränderlich).
+- [`INTERFACES.md`](docs/INTERFACES.md): der Nahtvertrag zwischen den Komponenten (das Gesetz der Konvergenz; behandle ihn als unveränderlich).
 - `integration/`: eine Schritt-für-Schritt-Anleitung zur Übernahme und Verdrahtungs-Snippets.
 
 ## Siehe auch

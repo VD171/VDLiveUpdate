@@ -1,0 +1,136 @@
+> **Languages:** [English](../PRODUCER.md) · [العربية](../ar/PRODUCER.md) · [Čeština](../cs/PRODUCER.md) · Deutsch · [Español](../es/PRODUCER.md) · [فارسی](../fa/PRODUCER.md) · [Français](../fr/PRODUCER.md) · [हिन्दी](../hi/PRODUCER.md) · [Bahasa Indonesia](../id/PRODUCER.md) · [Italiano](../it/PRODUCER.md) · [日本語](../ja/PRODUCER.md) · [한국어](../ko/PRODUCER.md) · [Nederlands](../nl/PRODUCER.md) · [Polski](../pl/PRODUCER.md) · [Português](../pt/PRODUCER.md) · [Русский](../ru/PRODUCER.md) · [Svenska](../sv/PRODUCER.md) · [ไทย](../th/PRODUCER.md) · [Türkçe](../tr/PRODUCER.md) · [Українська](../uk/PRODUCER.md) · [Tiếng Việt](../vi/PRODUCER.md) · [中文](../zh/PRODUCER.md)
+
+---
+
+# VDLU-Producer + Signierschicht
+
+Baut die inhaltsadressierte Auslieferung (Manifest + Blobs) fuer ein Modul und signiert sie.
+Richtet sich nach [`INTERFACES.md`](INTERFACES.md) §3/§6/§7.
+
+| tool | laeuft auf | Sprache | Aufgabe |
+|---|---|---|---|
+| `producer/vdlu-pack` | PC / CI | python3 | den finalen Modulbaum durchlaufen -> `manifest.json` + `blobs/` |
+| `producer/vdlu-keygen` | PC | sh + openssl | ed25519-Schluesselpaar (`<id>.pem` priv, `<id>.pub` PEM, `<id>.pub.raw` RAW 32B fuer das schlanke Keyring) |
+| `producer/vdlu-sign` | PC | sh + openssl | `key_id` + `sig` in ein Manifest injizieren, an Ort und Stelle |
+| `engine/vdlu-verify` | **Geraet** | sh + ed25519-mini | `sig` via das eingebettete ed25519-mini verifizieren; Keyring = RAW 32B Pubkey (KEIN openssl auf dem Geraet) |
+
+## Pipeline
+
+```sh
+# 1. one-time: a signing key. Keep the .pem off every device and off any repo push.
+producer/vdlu-keygen release-2026 ./keys
+
+# 2. each release: pack the final tree (same tree the .zip ships, post-whitelist).
+producer/vdlu-pack  ./module_tree  ./out  demo 106 --version-name v106 --channel stable \
+                    [--prev ./prev/manifest.json]      # delete[] = paths gone since prev
+
+# 3. sign the manifest in place.
+producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
+
+# 4. publish ./out/{manifest.json,blobs/} to <source> (Pages batch for public; rsync for private).
+#    The slim device keyring holds ./keys/release-2026.pub.raw as keyring/release-2026.pub (RAW 32B).
+```
+
+`vdlu-pack` ist inhaltsadressiert und deduplizierend: ein Blob, dessen `<sha256>` bereits existiert, wird nicht
+neu geschrieben, sodass die Veroeffentlichung inkrementell ist und der unveraenderte / zurueckgesetzte Inhalt nie erneut gepusht wird.
+
+### `enc`-Entscheidung (vdlu-pack)
+
+`sha256` ist **immer** vom originalen (unkomprimierten) Inhalt; `enc` benennt nur, wie der Blob gespeichert wird.
+
+- `gz`, wenn `size >= 4096` **und** gzip (`-9 -n`, deterministisch) mindestens 10% spart (`comp <= raw*0.90`).
+- `raw` ansonsten (kleiner Text, den HTTP-gzip bereits abdeckt, oder bereits inkompressible Daten).
+- gzip fehlt auf dem Build-Host -> alles `raw` (schlaegt nie fehl).
+
+Ein Blob wird einmal gespeichert, in einem Format: `blobs/<sha256>` (raw) oder `blobs/<sha256>.gz` (gz). Das Geraet
+dekomprimiert mit toybox `gunzip` (immer vorhanden), sodass kein zstd gebundelt wird.
+
+### `class`-Entscheidung (vdlu-pack) - Reboot-Taxonomie
+
+Abgeleitet aus dem Pfad (INTERFACES §3, doc §4). Nur Standardwerte; eine Pfadregel stuft `reboot`->`live` nie herab.
+
+| class | gematcht durch | angewandt |
+|---|---|---|
+| `reboot` | `system/**`, `zygisk/**/*.so`, `*.rule` | gestaget `.vdlu-new`, Swap beim Boot |
+| `soft` | root `service.sh` / `post-fs-data.sh` / `boot-completed.sh` | live geschrieben, laeuft naechsten Boot |
+| `live` | alles andere (webroot, bin, lib, confs, module.prop, ...) | live geschrieben, atomar |
+
+Symlinks werden **nicht gefolgt** (leakt nie Inhalt von ausserhalb des Baums, z.B. ein Link auf
+`/etc/shadow`) und werden mit einer Warnung uebersprungen, da das Manifest-Schema keinen Symlink-Typ hat.
+Nicht-regulaere Dateien (Verzeichnisse, FIFOs, Devices) werden uebersprungen. `built` beachtet `SOURCE_DATE_EPOCH` fuer
+reproduzierbare Manifeste.
+
+### Baseline (der Installations-Seed) - unsigniert, schluessellos
+
+`baseline.json` (ausgeliefert unter `vdlu/baseline.json` im Modul-Zip) seedet `current.json` bei einer frischen Installation,
+sodass das Geraet "current" geboren wird (kein from:0, kein Re-Fetch). Die Engine behandelt es als **lokalen vertrauenswuerdigen Seed**
+(es kam im geflashten Zip an, das die Installations-Vertrauensgrenze ist) und **verifiziert seine Signatur NICHT** -
+nur das vom Feed GEHOLTE Manifest durchlaeuft `vdlu-verify`. Die Baseline braucht also **keinen Schluessel**: sie ist
+einfach `vdlu-pack`-Ausgabe ueber den ausgelieferten Baum (unsigniert; `sig`/`key_id` bleiben leer). Eine CI kann sie daher
+**schluessellos** erzeugen und haelt den Signierschluessel 100% aus der CI heraus - nur der veroeffentlichte FEED wird signiert (Betreiber,
+lokal). `vdlu-pack` schliesst `baseline.json` aus seinem eigenen Manifest aus (Anti-Selbstreferenz). Nicht fatal, wenn
+abwesend: das Geraet startet einfach from:0 beim ersten Update, nie kaputt.
+
+## Kanonisierung (der Konvergenzpunkt)
+
+`vdlu-sign` und `engine/vdlu-verify` muessen **dieselben Bytes** aus einem Manifest ableiten, auf zwei
+verschiedenen Laufzeitumgebungen (PC openssl vs Geraet toybox + openssl). Die Regel ist bewusst eine Byte-
+Transformation, keine JSON-Reserialisierung, sodass sie keine JSON-Bibliothek auf dem Geraet braucht:
+
+1. `vdlu-pack` schreibt `manifest.json` **kompakt, Schluessel sortiert, UTF-8**
+   (`json.dumps(obj, sort_keys=True, separators=(",",":"), ensure_ascii=False)`), immer einschliesslich
+   der Felder `key_id` und `sig` (leere String-Platzhalter bis signiert). Dies ist die kanonische
+   Speicherform.
+2. **Kanonische Form = dieser Text mit entferntem `"sig"`-Feld.** Da die Schluessel sortiert sind, erscheint `sig`
+   immer als `,"sig":"<value>",`, eingeklammert von `"schema"` (davor) und `"version"` (danach),
+   beide immer vorhanden. Das Entfernen hinterlaesst wohlgeformtes `...,"schema":N,"version":...`.
+   JSON escaped jedes `"` innerhalb von String-Werten zu `\"`, sodass das strukturelle Token `"sig":"`
+   eindeutig ist, selbst gegenueber einem Dateinamen, der woertlich `"sig":"` enthaelt (getestet).
+3. Die signierte/verifizierte Nachricht ist der **sha256-Hex** (64 ASCII-Zeichen, kein Zeilenumbruch) der kanonischen
+   Form. ed25519 ueber diesen Hex (`openssl pkeyutl -sign/-verify -rawin`).
+
+Das Entfernen in POSIX sh (identische Funktion in beiden Tools, kein `sed`/`jq`):
+
+```sh
+# $1 = full manifest text (trailing newline already stripped by $(cat ...))
+_pre=${_c%%\"sig\":\"*}     # up to  ...,"schema":N,
+_rest=${_c#*\"sig\":\"}      # after "sig":"
+_tail=${_rest#*\",}          # after <value>",  ->  "version":...
+printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
+```
+
+`key_id` ist Teil der kanonischen Form (nur `sig` wird entfernt); `vdlu-sign` setzt `key_id` **vor**
+dem Hashen. Der Wert-Platzhalter, ob leer (`"sig":""`, Signierzeit) oder gefuellt (Verifizierzeit), ergibt die
+identischen kanonischen Bytes, sodass Signieren und Verifizieren per Konstruktion uebereinstimmen.
+
+Python reproduziert es als `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` dann sha256 - verwendet
+nur zur Gegenpruefung; die massgeblichen Produzenten sind die beiden sh-Tools.
+
+## Signatur (ed25519)
+
+- `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
+  zum Signieren/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (das ed25519
+  SPKI DER ist ein 12-Byte-Praefix + der 32-Byte-Schluessel, sodass `tail -c 32` DER Schluessel IST). Es emittiert BEIDE.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` ueber den kanonischen sha256-Hex; Signatur base64 gespeichert.
+- `vdlu-verify` (**Geraet, schlank**): `ed25519-mini <pubkey32> <msg> <sig64>` - liest das Keyring als den **RAW 32B**
+  Pubkey, KEIN openssl auf dem Geraet. `key_id` ist pfad-bereinigt (kein `/`, `.`, `..`, `"`). 🚨 Das Keyring liefert den
+  **`.pub.raw` (32B)** aus, niemals den `.pub` PEM (113B): der PEM ist nur PC-seitig und `ed25519-mini` kann ihn nicht lesen.
+
+Trust-Modell (INTERFACES §6, doc §11/§13): `profile=hardened` (public) macht verify obligatorisch - eine
+fehlgeschlagene oder fehlende Signatur bricht das Update ab. `profile=trusted` (privat, SSH-gestagete Quelle) behandelt
+verify als best-effort, aber der sha256 jedes Blobs wird unabhaengig davon geprueft.
+
+## Keyring + Rotation
+
+Das Keyring ist ein Verzeichnis von `<key_id>.pub`-Dateien, jede der **RAW 32B** ed25519-Pubkey (aus `keygen`s
+`.pub.raw`), NICHT PEM - `ed25519-mini` liest rohe 32 Byte. Liefere den aktuellen **und** den vorherigen Raw-Pubkey aus
+(doc §13), sodass ein rotierter Schluessel aeltere Installationen nicht brickt. `vdlu-sign` mit dem neuen `key_id` und das Geraet,
+das `<keyring>/<key_id>.pub` (raw) waehlt, ist der gesamte Rotationsmechanismus - keine Engine-Aenderung. Das Keyring ist
+**stabil** ueber Releases hinweg (nur Schluesselrotation aendert es): ein Re-Vendor muss es **verifizieren-nicht-kopieren** und es niemals
+mit dem PC-seitigen `.pub` PEM ueberschreiben.
+
+<!-- doc-footer -->
+
+---
+
+> _Diese Dokumentation wurde mit Claude (Anthropic) erstellt und wird von VD171 gepflegt. Korrekturen und Verbesserungen sind willkommen; siehe [CONTRIBUTING.md](CONTRIBUTING.md)._

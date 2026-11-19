@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## التوثيق
 
-- [`INTERFACES.md`](INTERFACES.md): عقد الوصل بين المكوّنات (قانون التقارب؛ عامِله كأنه غير قابل للتغيير).
+- [`INTERFACES.md`](docs/INTERFACES.md): عقد الوصل بين المكوّنات (قانون التقارب؛ عامِله كأنه غير قابل للتغيير).
 - `integration/`: دليل اعتماد خطوة بخطوة ومقتطفات التوصيل.
 
 ## انظر أيضًا

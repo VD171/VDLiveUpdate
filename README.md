@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Documentation
 
-- [`INTERFACES.md`](INTERFACES.md): the seam contract between the components (the law of convergence; treat it as immutable).
+- [`INTERFACES.md`](docs/INTERFACES.md): the seam contract between the components (the law of convergence; treat it as immutable).
 - `integration/`: a step-by-step adoption guide and wiring snippets.
 
 ## See also

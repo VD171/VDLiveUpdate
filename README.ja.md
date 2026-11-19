@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## ドキュメント
 
-- [`INTERFACES.md`](INTERFACES.md): コンポーネント間の接合部の契約 (収束の法則。不変のものとして扱ってください)。
+- [`INTERFACES.md`](docs/INTERFACES.md): コンポーネント間の接合部の契約 (収束の法則。不変のものとして扱ってください)。
 - `integration/`: ステップバイステップの導入ガイドと配線スニペット。
 
 ## 関連項目

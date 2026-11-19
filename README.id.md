@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Dokumentasi
 
-- [`INTERFACES.md`](INTERFACES.md): kontrak sambungan (seam contract) antar komponen (hukum konvergensi; perlakukan sebagai tak-berubah).
+- [`INTERFACES.md`](docs/INTERFACES.md): kontrak sambungan (seam contract) antar komponen (hukum konvergensi; perlakukan sebagai tak-berubah).
 - `integration/`: panduan adopsi langkah-demi-langkah dan potongan kode wiring.
 
 ## Lihat juga

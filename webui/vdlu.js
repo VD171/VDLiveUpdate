@@ -20,7 +20,7 @@
 /*
  * VDLU - flashless update widget for a root-manager WebUI (KernelSU/APatch).
  * Vanilla JS, no framework, no build, no CDN. Drop-in into a host index.html.
- * Contract: VDLiveUpdate/INTERFACES.md §4 (journal.json), §5 (config), §9 (WEBUI<->ENGINE).
+ * Contract: VDLiveUpdate/docs/INTERFACES.md §4 (journal.json), §5 (config), §9 (WEBUI<->ENGINE).
  *
  * Public API (window.VDLU):
  *   init(opts)             configure the widget (see defaults + i18n below).

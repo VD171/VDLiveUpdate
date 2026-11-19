@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## เอกสาร
 
-- [`INTERFACES.md`](INTERFACES.md): สัญญารอยต่อ (seam contract) ระหว่างคอมโพเนนต์ (กฎแห่งการบรรจบ; ให้ถือว่าเปลี่ยนแปลงไม่ได้)
+- [`INTERFACES.md`](docs/INTERFACES.md): สัญญารอยต่อ (seam contract) ระหว่างคอมโพเนนต์ (กฎแห่งการบรรจบ; ให้ถือว่าเปลี่ยนแปลงไม่ได้)
 - `integration/`: คู่มือการนำไปใช้แบบทีละขั้นตอนและสคริปต์การต่อสาย
 
 ## ดูเพิ่มเติม

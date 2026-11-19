@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # potem run /
 
 ## Dokumentacja
 
-- [`INTERFACES.md`](INTERFACES.md): kontrakt szwu między komponentami (prawo konwergencji; traktuj je jako niezmienne).
+- [`INTERFACES.md`](docs/INTERFACES.md): kontrakt szwu między komponentami (prawo konwergencji; traktuj je jako niezmienne).
 - `integration/`: przewodnik wdrożenia krok po kroku i fragmenty podpięć.
 
 ## Zobacz również

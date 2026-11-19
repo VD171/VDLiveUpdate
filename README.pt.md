@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # então run 
 
 ## Documentação
 
-- [`INTERFACES.md`](INTERFACES.md): o contrato de costura entre os componentes (a lei da convergência; trate-o como imutável).
+- [`INTERFACES.md`](docs/INTERFACES.md): o contrato de costura entre os componentes (a lei da convergência; trate-o como imutável).
 - `integration/`: um guia de adoção passo a passo e snippets de fiação.
 
 ## Veja também

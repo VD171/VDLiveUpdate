@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## مستندات
 
-- [`INTERFACES.md`](INTERFACES.md): قرارداد درز میان مؤلفه‌ها (قانون هم‌گرایی؛ آن را تغییرناپذیر در نظر بگیرید).
+- [`INTERFACES.md`](docs/INTERFACES.md): قرارداد درز میان مؤلفه‌ها (قانون هم‌گرایی؛ آن را تغییرناپذیر در نظر بگیرید).
 - `integration/`: یک راهنمای به‌کارگیری گام‌به‌گام و قطعه‌های سیم‌کشی.
 
 ## همچنین ببینید

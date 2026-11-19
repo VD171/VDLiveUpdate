@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Documentazione
 
-- [`INTERFACES.md`](INTERFACES.md): il contratto di giunzione (seam contract) tra i componenti (la legge della convergenza; trattalo come immutabile).
+- [`INTERFACES.md`](docs/INTERFACES.md): il contratto di giunzione (seam contract) tra i componenti (la legge della convergenza; trattalo come immutabile).
 - `integration/`: una guida all'adozione passo-passo e snippet di wiring.
 
 ## Vedi anche

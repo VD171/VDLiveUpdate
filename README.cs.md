@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Dokumentace
 
-- [`INTERFACES.md`](INTERFACES.md): kontrakt švu mezi komponentami (zákon konvergence; ber ho jako neměnný).
+- [`INTERFACES.md`](docs/INTERFACES.md): kontrakt švu mezi komponentami (zákon konvergence; ber ho jako neměnný).
 - `integration/`: průvodce zavedením krok za krokem a úryvky zapojení.
 
 ## Viz také

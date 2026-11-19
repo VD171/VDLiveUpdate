@@ -18,7 +18,7 @@
 # ======================================================================
 # VDLU engine - flashless incremental module updater (DIFF->FETCH->APPLY->COMMIT).
 # POSIX sh (mksh/busybox/toybox). Env in: VDLU_DIR, MODULE_DIR, MODID.
-# Contract: INTERFACES.md (CLI/layout/JSON keys = immutable).
+# Contract: docs/INTERFACES.md (CLI/layout/JSON keys = immutable).
 
 ENGINE_VERSION=3
 MAX_FILE_BYTES=268435456     # 256 MiB per-file ceiling: anti decompression-bomb / disk DoS

@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## 문서
 
-- [`INTERFACES.md`](INTERFACES.md): 컴포넌트 간 접합부 계약 (수렴의 법칙. 불변의 것으로 취급하세요).
+- [`INTERFACES.md`](docs/INTERFACES.md): 컴포넌트 간 접합부 계약 (수렴의 법칙. 불변의 것으로 취급하세요).
 - `integration/`: 단계별 도입 가이드와 연결 스니펫.
 
 ## 함께 보기

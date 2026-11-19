@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## दस्तावेज़ीकरण
 
-- [`INTERFACES.md`](INTERFACES.md): घटकों के बीच सीवन-अनुबंध (seam contract) (अभिसरण का नियम; इसे अपरिवर्तनीय मानें)।
+- [`INTERFACES.md`](docs/INTERFACES.md): घटकों के बीच सीवन-अनुबंध (seam contract) (अभिसरण का नियम; इसे अपरिवर्तनीय मानें)।
 - `integration/`: एक चरण-दर-चरण अपनाने की मार्गदर्शिका और वायरिंग स्निपेट्स।
 
 ## यह भी देखें

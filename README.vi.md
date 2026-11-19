@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Tài liệu
 
-- [`INTERFACES.md`](INTERFACES.md): hợp đồng đường nối giữa các thành phần (luật hội tụ; hãy coi nó là bất biến).
+- [`INTERFACES.md`](docs/INTERFACES.md): hợp đồng đường nối giữa các thành phần (luật hội tụ; hãy coi nó là bất biến).
 - `integration/`: một hướng dẫn áp dụng từng bước và các đoạn mã nối dây.
 
 ## Xem thêm

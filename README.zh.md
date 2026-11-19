@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## 文档
 
-- [`INTERFACES.md`](INTERFACES.md): 各组件之间的接缝契约（收敛之法；请将其视为不可变）。
+- [`INTERFACES.md`](docs/INTERFACES.md): 各组件之间的接缝契约（收敛之法；请将其视为不可变）。
 - `integration/`: 一份逐步的采用指南和接线片段。
 
 ## 另见

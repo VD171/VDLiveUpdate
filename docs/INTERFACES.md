@@ -1,3 +1,7 @@
+> **Languages:** English · [العربية](ar/INTERFACES.md) · [Čeština](cs/INTERFACES.md) · [Deutsch](de/INTERFACES.md) · [Español](es/INTERFACES.md) · [فارسی](fa/INTERFACES.md) · [Français](fr/INTERFACES.md) · [हिन्दी](hi/INTERFACES.md) · [Bahasa Indonesia](id/INTERFACES.md) · [Italiano](it/INTERFACES.md) · [日本語](ja/INTERFACES.md) · [한국어](ko/INTERFACES.md) · [Nederlands](nl/INTERFACES.md) · [Polski](pl/INTERFACES.md) · [Português](pt/INTERFACES.md) · [Русский](ru/INTERFACES.md) · [Svenska](sv/INTERFACES.md) · [ไทย](th/INTERFACES.md) · [Türkçe](tr/INTERFACES.md) · [Українська](uk/INTERFACES.md) · [Tiếng Việt](vi/INTERFACES.md) · [中文](zh/INTERFACES.md)
+
+---
+
 # VDLU - Interface contract (the seam between the components)
 
 **Law of convergence:** every component conforms to this file. The pieces from 4 agents have to **fit together** - the
@@ -202,3 +206,9 @@ them to `.work` (chunked base64 via `ksu.exec`), calls `install-tool`. Trust = t
 **baseline.json** (fix from:0): the release copies the SIGNED `manifest.json` of the shipped version to
 `vdlu/baseline.json`; on a fresh install the engine seeds `current.json` from it (`init_paths`, only if absent) → the
 device is born "current", with no auto-update of itself and no re-fetch.
+
+<!-- doc-footer -->
+
+---
+
+> _This documentation was generated with Claude (Anthropic) and is maintained by VD171. Corrections and improvements are welcome; see [CONTRIBUTING.md](../CONTRIBUTING.md)._

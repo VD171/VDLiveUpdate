@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Dokumentation
 
-- [`INTERFACES.md`](INTERFACES.md): sömkontraktet mellan komponenterna (konvergensens lag; behandla det som oföränderligt).
+- [`INTERFACES.md`](docs/INTERFACES.md): sömkontraktet mellan komponenterna (konvergensens lag; behandla det som oföränderligt).
 - `integration/`: en steg-för-steg-guide för anammande och kopplingssnuttar.
 
 ## Se även

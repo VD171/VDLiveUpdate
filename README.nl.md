@@ -71,7 +71,7 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Documentatie
 
-- [`INTERFACES.md`](INTERFACES.md): het naadcontract tussen de componenten (de wet van convergentie; behandel het als onveranderlijk).
+- [`INTERFACES.md`](docs/INTERFACES.md): het naadcontract tussen de componenten (de wet van convergentie; behandel het als onveranderlijk).
 - `integration/`: een stapsgewijze adoptiegids en bedradingssnippets.
 
 ## Zie ook
