@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 同一作者的姊妹项目:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: 以 root 权限对应用和数据进行完整备份与还原，完全由 WebUI 驱动。
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: 一个设备伪装器，把一个全新的 fingerprint 变成一份连贯、一致的配置。
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: 一个面向 KernelSU/APatch/Magisk 的独立、可配置的 root SSH 守护进程。
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: 一个设备方法调试器，通过每一种能读取某项的方法来读取该项。
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: 读取 Google 在你设备上记录的内容，完全在设备上进行且无需联网。
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: 一个设备伪装器，把一个全新的 fingerprint 变成一份连贯、一致的配置。
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: 一个面向 KernelSU/APatch/Magisk 的独立、可配置的 root SSH 守护进程。
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: 以 root 权限对应用和数据进行完整备份与还原，完全由 WebUI 驱动。
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: 一个面向单个、批量和拆分 APK 的无摩擦 root 侧载安装器，带有 Play Protect 验证器开关和安装来源伪装。
 
 ## Contacts
 

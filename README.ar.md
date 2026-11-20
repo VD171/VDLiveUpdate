@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 مشاريع شقيقة للمؤلف نفسه:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: نسخ احتياطي واستعادة كاملان للتطبيقات والبيانات بصلاحيات الجذر، يُدار بالكامل من واجهة WebUI.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: مُزيِّف جهاز يحوّل بصمة جديدة إلى ملف تعريف متماسك ومتسق.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: خادم SSH مستقل وقابل للإعداد يعمل بصلاحيات الجذر لـ KernelSU/APatch/Magisk.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: مُنقِّح طرق الجهاز يقرأ كل عنصر عبر كل طريقة قادرة على قراءته.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: يقرأ ما تسجّله Google على جهازك، على الجهاز بالكامل ودون إنترنت.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: مُزيِّف جهاز يحوّل بصمة جديدة إلى ملف تعريف متماسك ومتسق.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: خادم SSH مستقل وقابل للإعداد يعمل بصلاحيات الجذر لـ KernelSU/APatch/Magisk.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: نسخ احتياطي واستعادة كاملان للتطبيقات والبيانات بصلاحيات الجذر، يُدار بالكامل من واجهة WebUI.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: مثبّت تحميل جانبي بصلاحيات الجذر وبلا احتكاك لحزم APK المفردة والمجمّعة والمقسّمة، مع مفتاح لمدقّق Play Protect وانتحال مصدر التثبيت.
 
 ## جهات الاتصال
 

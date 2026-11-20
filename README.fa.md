@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 پروژه‌های هم‌خانوادهٔ همین نویسنده:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: پشتیبان‌گیری و بازیابی کامل برنامه‌ها و داده‌ها با دسترسی روت، که به‌طور کامل از یک WebUI اداره می‌شود.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: یک spoofer دستگاه که یک fingerprint تازه را به یک پروفایل منسجم و سازگار تبدیل می‌کند.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: یک دیمن SSH روت‌شدهٔ مستقل و پیکربندی‌پذیر برای KernelSU/APatch/Magisk.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: یک دیباگر متدهای دستگاه که هر آیتم را از طریق تمام متدهایی که می‌توانند آن را بخوانند می‌خواند.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: آنچه را گوگل روی دستگاه شما ثبت می‌کند می‌خواند، کاملاً روی خود دستگاه و بدون اینترنت.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: یک spoofer دستگاه که یک fingerprint تازه را به یک پروفایل منسجم و سازگار تبدیل می‌کند.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: یک دیمن SSH روت‌شدهٔ مستقل و پیکربندی‌پذیر برای KernelSU/APatch/Magisk.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: پشتیبان‌گیری و بازیابی کامل برنامه‌ها و داده‌ها با دسترسی روت، که به‌طور کامل از یک WebUI اداره می‌شود.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: یک نصب‌کنندهٔ ساید‌لود روت‌شدهٔ بدون‌اصطکاک برای APKهای تکی، دسته‌ای و تقسیم‌شده، همراه با کلید تأییدکنندهٔ Play Protect و جعل منبع نصب.
 
 ## تماس‌ها
 

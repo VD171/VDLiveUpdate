@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 Zusterprojecten van dezelfde auteur:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: volledige back-up en herstel van apps en gegevens als root, volledig aangestuurd vanuit een WebUI.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: een apparaatspoofer die een verse fingerprint omzet in een coherent, consistent profiel.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: een zelfstandige, configureerbare root-SSH-daemon voor KernelSU/APatch/Magisk.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: een apparaatmethode-debugger die elk item leest via elke methode die het kan lezen.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: leest wat Google op je apparaat vastlegt, volledig op het apparaat en zonder internet.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: een apparaatspoofer die een verse fingerprint omzet in een coherent, consistent profiel.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: een zelfstandige, configureerbare root-SSH-daemon voor KernelSU/APatch/Magisk.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: volledige back-up en herstel van apps en gegevens als root, volledig aangestuurd vanuit een WebUI.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: een wrijvingsloze root-sideload-installer voor losse, batch- en split-APK's, met een Play Protect-verifier-schakelaar en vervalsing van de installatiebron.
 
 ## Contact
 

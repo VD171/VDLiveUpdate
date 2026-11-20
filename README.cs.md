@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 Sesterské projekty téhož autora:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: úplné zálohování a obnova aplikací a dat jako root, plně ovládané z WebUI.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: nástroj na podvržení zařízení, který z čerstvého fingerprintu udělá soudržný a konzistentní profil.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: samostatný, konfigurovatelný rootový SSH démon pro KernelSU/APatch/Magisk.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: debugger metod zařízení, který čte každou položku přes každou metodu, jež ji umí přečíst.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: čte, co o tobě Google na tvém zařízení zaznamenává, celé na zařízení a bez internetu.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: nástroj na podvržení zařízení, který z čerstvého fingerprintu udělá soudržný a konzistentní profil.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: samostatný, konfigurovatelný rootový SSH démon pro KernelSU/APatch/Magisk.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: úplné zálohování a obnova aplikací a dat jako root, plně ovládané z WebUI.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: bezproblémový rootový sideload instalátor pro jednotlivé, dávkové a rozdělené APK, s přepínačem ověřování Play Protect a podvržením zdroje instalace.
 
 ## Kontakty
 

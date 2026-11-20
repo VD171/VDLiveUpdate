@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 उसी लेखक की सहोदर परियोजनाएँ:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: रूट के रूप में पूर्ण ऐप और डेटा बैकअप तथा पुनर्स्थापना, पूरी तरह एक WebUI से संचालित।
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: एक डिवाइस स्पूफ़र जो एक ताज़ा फ़िंगरप्रिंट को एक सुसंगत, संगत प्रोफ़ाइल में बदल देता है।
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: KernelSU/APatch/Magisk के लिए एक स्वतंत्र, कॉन्फ़िगर करने योग्य रूटेड SSH डीमन।
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: एक डिवाइस मेथड डिबगर जो हर आइटम को उस हर मेथड से पढ़ता है जो उसे पढ़ सकता है।
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: पढ़ता है कि Google आपके डिवाइस पर क्या रिकॉर्ड करता है, पूरी तरह ऑन-डिवाइस और बिना इंटरनेट के।
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: एक डिवाइस स्पूफ़र जो एक ताज़ा फ़िंगरप्रिंट को एक सुसंगत, संगत प्रोफ़ाइल में बदल देता है।
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: KernelSU/APatch/Magisk के लिए एक स्वतंत्र, कॉन्फ़िगर करने योग्य रूटेड SSH डीमन।
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: रूट के रूप में पूर्ण ऐप और डेटा बैकअप तथा पुनर्स्थापना, पूरी तरह एक WebUI से संचालित।
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: एकल, बैच और स्प्लिट APK के लिए एक घर्षण-रहित रूट साइडलोड इंस्टॉलर, जिसमें Play Protect वेरिफायर टॉगल और इंस्टॉल-सोर्स स्पूफिंग शामिल है।
 
 ## संपर्क
 

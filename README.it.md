@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 Progetti fratelli dello stesso autore:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: backup e ripristino completi di app e dati come root, guidati interamente da una WebUI.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: uno spoofer di dispositivo che trasforma un fingerprint fresco in un profilo coerente e consistente.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: un daemon SSH con root autonomo e configurabile per KernelSU/APatch/Magisk.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: un debugger di metodi del dispositivo che legge ogni elemento attraverso ogni metodo in grado di leggerlo.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: legge ciò che Google registra sul tuo dispositivo, interamente on-device e senza internet.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: uno spoofer di dispositivo che trasforma un fingerprint fresco in un profilo coerente e consistente.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: un daemon SSH con root autonomo e configurabile per KernelSU/APatch/Magisk.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: backup e ripristino completi di app e dati come root, guidati interamente da una WebUI.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: un installer sideload con root e senza attriti per APK singoli, in batch e split, con un interruttore per il verificatore Play Protect e lo spoofing della sorgente di installazione.
 
 ## Contatti
 

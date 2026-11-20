@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 Schwesterprojekte desselben Autors:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: vollständiges Sichern und Wiederherstellen von Apps und Daten als root, komplett über eine WebUI gesteuert.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: ein Geräte-Spoofer, der aus einem frischen Fingerprint ein kohärentes, konsistentes Profil macht.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: ein eigenständiger, konfigurierbarer gerooteter SSH-Daemon für KernelSU/APatch/Magisk.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: ein Geräte-Methoden-Debugger, der jedes Element über jede Methode liest, die es lesen kann.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: liest, was Google auf deinem Gerät aufzeichnet, vollständig auf dem Gerät und ohne Internet.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: ein Geräte-Spoofer, der aus einem frischen Fingerprint ein kohärentes, konsistentes Profil macht.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: ein eigenständiger, konfigurierbarer gerooteter SSH-Daemon für KernelSU/APatch/Magisk.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: vollständiges Sichern und Wiederherstellen von Apps und Daten als root, komplett über eine WebUI gesteuert.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: ein reibungsloser Root-Sideload-Installer für einzelne, Batch- und Split-APKs, mit einem Play-Protect-Verifier-Schalter und Fälschung der Installationsquelle.
 
 ## Kontakte
 

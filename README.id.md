@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 Proyek sejawat oleh penulis yang sama:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: cadangkan dan pulihkan aplikasi serta data sepenuhnya sebagai root, dikendalikan seluruhnya dari sebuah WebUI.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: sebuah device spoofer yang mengubah fingerprint segar menjadi profil yang koheren dan konsisten.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: sebuah daemon SSH ber-root yang mandiri dan dapat dikonfigurasi untuk KernelSU/APatch/Magisk.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: sebuah device method debugger yang membaca setiap item melalui setiap metode yang bisa membacanya.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: membaca apa yang Google catat di perangkat Anda, sepenuhnya on-device dan tanpa internet.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: sebuah device spoofer yang mengubah fingerprint segar menjadi profil yang koheren dan konsisten.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: sebuah daemon SSH ber-root yang mandiri dan dapat dikonfigurasi untuk KernelSU/APatch/Magisk.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: cadangkan dan pulihkan aplikasi serta data sepenuhnya sebagai root, dikendalikan seluruhnya dari sebuah WebUI.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: sebuah pemasang sideload ber-root tanpa hambatan untuk APK tunggal, batch, dan split, dengan sakelar verifier Play Protect dan pemalsuan sumber pemasangan.
 
 ## Kontak
 

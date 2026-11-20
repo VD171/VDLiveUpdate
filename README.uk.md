@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 Споріднені проєкти того самого автора:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: повне резервне копіювання та відновлення застосунків і даних із правами root, кероване повністю через WebUI.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: підмінювач пристрою, який перетворює свіжий fingerprint на узгоджений, послідовний профіль.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: автономний, налаштовуваний SSH-демон із root-правами для KernelSU/APatch/Magisk.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: налагоджувач методів пристрою, який читає кожен елемент через кожен метод, що може його прочитати.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: читає те, що Google записує на вашому пристрої, повністю на пристрої й без інтернету.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: підмінювач пристрою, який перетворює свіжий fingerprint на узгоджений, послідовний профіль.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: автономний, налаштовуваний SSH-демон із root-правами для KernelSU/APatch/Magisk.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: повне резервне копіювання та відновлення застосунків і даних із правами root, кероване повністю через WebUI.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: безперешкодний root-інсталятор sideload для одиночних, пакетних і розділених APK, з перемикачем верифікатора Play Protect та підробкою джерела встановлення.
 
 ## Contacts
 

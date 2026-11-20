@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 Aynı yazara ait kardeş projeler:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: tamamen bir WebUI'den yönetilen, root olarak tam uygulama ve veri yedekleme ve geri yükleme.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: taze bir fingerprint'i tutarlı, uyumlu bir profile dönüştüren bir cihaz spoofer'ı.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: KernelSU/APatch/Magisk için bağımsız, yapılandırılabilir root'lu bir SSH daemon'ı.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: her öğeyi, onu okuyabilen her yöntem üzerinden okuyan bir cihaz yöntemi hata ayıklayıcısı.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: Google'ın cihazında neyi kaydettiğini okur, tamamen cihaz üzerinde ve internet olmadan.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: taze bir fingerprint'i tutarlı, uyumlu bir profile dönüştüren bir cihaz spoofer'ı.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: KernelSU/APatch/Magisk için bağımsız, yapılandırılabilir root'lu bir SSH daemon'ı.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: tamamen bir WebUI'den yönetilen, root olarak tam uygulama ve veri yedekleme ve geri yükleme.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: tekli, toplu ve bölünmüş APK'lar için sürtünmesiz bir root sideload yükleyicisi; Play Protect doğrulayıcı anahtarı ve kurulum kaynağı sahteciliği ile birlikte.
 
 ## İletişim
 

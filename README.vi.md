@@ -81,11 +81,12 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 Các dự án anh em của cùng tác giả:
 
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: sao lưu và khôi phục toàn bộ ứng dụng và dữ liệu với quyền root, điều khiển hoàn toàn từ một WebUI.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: một trình giả mạo thiết bị biến một fingerprint mới thành một hồ sơ mạch lạc, nhất quán.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: một daemon SSH root độc lập, có thể cấu hình cho KernelSU/APatch/Magisk.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: một trình gỡ lỗi phương thức của thiết bị, đọc từng mục qua mọi phương thức có thể đọc nó.
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: đọc những gì Google ghi lại trên thiết bị của bạn, hoàn toàn trên thiết bị và không cần internet.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: một trình giả mạo thiết bị biến một fingerprint mới thành một hồ sơ mạch lạc, nhất quán.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: một daemon SSH root độc lập, có thể cấu hình cho KernelSU/APatch/Magisk.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: sao lưu và khôi phục toàn bộ ứng dụng và dữ liệu với quyền root, điều khiển hoàn toàn từ một WebUI.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: một trình cài đặt sideload với quyền root không ma sát cho các APK đơn, hàng loạt và phân tách, với công tắc trình xác minh Play Protect và giả mạo nguồn cài đặt.
 
 ## Contacts
 
