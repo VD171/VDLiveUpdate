@@ -110,6 +110,23 @@ keyring flash time पर module के अंदर भेजी जाती �
 
 ---
 
+## module-update `key_id` allowlist
+
+Key rotation का पहले से ही मतलब है कि keyring वैध रूप से एक से अधिक key रख सकती है, और एक module एक दूसरे कारण से भी एक से अधिक रख सकता है: यह एक कम-trust वाली key भेज सकता है जो एक *अलग* feed को sign करती है। fingerprint feed ठीक यही मामला है। एक module एक संकरी key रख सकता है जिसका एकमात्र काम एक fingerprint feed को sign करना है, जो उसी keyring में ठीक उस release key के बगल में बैठी होती है जो module को खुद sign करती है।
+
+यह एक सवाल उठाता है जिसका जवाब अकेली rotation की कहानी नहीं देती: एक बार जब दो keys keyring में रहती हैं, तो उनमें से *कौन सी* को एक **module update** sign करने की अनुमति है? एक module update सबसे शक्तिशाली चीज़ है जो एक manifest माँग सकता है, क्योंकि यह उन files को दोबारा लिखता है जिन्हें device root के रूप में चलाता है। verifier पहले manifest की `key_id` द्वारा नामित pubkey चुनता था और keyring में मौजूद किसी भी key को स्वीकार कर लेता था। तो fingerprint-feed की कम-trust वाली key, यदि leak हो जाए, एक module-update manifest को sign कर सकती थी और device उसका सम्मान करता। यह एक trust-root bypass है: एक संकरे काम के लिए बनी एक key एक पूरा flashless root update चला सकती थी।
+
+फिक्स स्वीकृत module-update `key_id` को एक fail-closed **allowlist** से pin करता है, जो pubkey चुने जाने से **पहले** जाँची जाती है। config key `key_id` है, और engine इसे इस तरह resolve करता है:
+
+- **एक single-key keyring उस एक key को अपने आप pin कर देती है।** आम मामले को किसी config की ज़रूरत ही नहीं: यदि keyring में ठीक एक key है, तो वही key *ही* allowlist है, और कुछ और एक module update sign नहीं कर सकता।
+- **एक multi-key keyring को `key_id` सेट करना ही होगा।** जिस क्षण एक दूसरी key प्रकट होती है, engine अनुमान लगाने से इनकार कर देता है। यह "multiple keys in keyring; config must pin key_id" के साथ fail-closed हो जाता है जब तक config उस key (या rotation window के दौरान comma से अलग की गई keys) को नाम नहीं देती जो module updates sign कर सकती है।
+
+क्योंकि जाँच pubkey चुनाव से पहले चलती है, एक manifest जो ऐसी key नाम देता है जो मौजूद है पर allowlisted नहीं है, verifier द्वारा वह key कभी load किए बिना ही अस्वीकार हो जाता है। resolve किया गया set `VDLU_KEYID_ALLOW` के ज़रिए `vdlu-verify` में mirror होता है, तो पतला on-device checker वही pin लागू करता है और दोनों असहमत नहीं हो सकते। यह **दोनों** profiles में लागू होता है: `hardened` और `trusted` दोनों allowlist से परामर्श करते हैं, क्योंकि allowlist यह तय करती है कि *कौन सी key* एक वैध module-update root है, यह नहीं कि *क्या* एक signature आवश्यक है।
+
+fingerprint feed अपनी खुद की अलग pinned trust root, `FEED_KEY_ID`, बनाए रखता है। यह एक अलग काम वाली एक अलग root है, जो ऊपर के module-update path से कभी पहुँच में नहीं आती, तो module-update allowlist को pin करना उसे नहीं छूता और एक leak हुई feed key फिर भी एक module update sign नहीं कर सकती। इस बदलाव ने `ENGINE_VERSION` को 4 तक bump किया।
+
+---
+
 ## tools-manifest क्या बंद करता है
 
 पतला fetch bootstrap उन modules के लिए पहले उपयोग पर एक static `curl` डाउनलोड करता है जो अपना खुद का नहीं भेजते। क्योंकि वह binary root के रूप में चलता है, इसकी अपनी manifest signature (ed25519-mini) और इसका hash किसी भी profile में **अनिवार्य** हैं, `trusted` समेत, इससे पहले कि इसे कभी install या execute किया जाए। webview सिर्फ transport है; trust on-device signature और hash check से आता है, कभी इस तथ्य से नहीं कि एक download सफल हुआ।
@@ -124,6 +141,7 @@ feed का मालिक होकर भी, या एक पूरे MITM
 - **module के बाहर delete करना।** `delete[]` entries वही path validation पास करती हैं।
 - **एक command inject करना।** कोई manifest value एक shell या `awk system()` में interpolate नहीं होती; `sha256` को शुद्ध 64-hex होना चाहिए वरना पूरा manifest अस्वीकार हो जाता है।
 - **एक public install को unsigned code भेजना।** `hardened` signature को अनिवार्य बनाता है, और profile inversion से fail-closed है, तो कोई typo या विकृत value उसे downgrade नहीं करती।
+- **एक कम-trust वाली key से एक module update sign करना।** module-update `key_id` एक fail-closed allowlist से pin है, जो pubkey चुने जाने से पहले जाँची जाती है, तो keyring साझा करती एक leak हुई fingerprint-feed key एक पूरा root update sign नहीं कर सकती।
 - **यहाँ एक दूसरे module का signed feed परोसना।** signed `module` field इस `MODID` के बराबर होनी चाहिए।
 - **आपको वापस roll करना।** `hardened` में Downgrade blocked है।
 - **एक blob को बिना पकड़े corrupt करना।** हर डाउनलोड किया गया blob दोनों profiles में manifest `sha256` के विरुद्ध दोबारा-hash होता है; तीन प्रयासों के बाद एक mismatch phase को बिना कुछ लागू किए abort कर देता है।

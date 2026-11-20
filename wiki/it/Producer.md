@@ -84,6 +84,8 @@ Scrive tre file:
 
 La chiave pubblica raw di 32 byte è ciò che il verificatore del dispositivo legge (non porta `openssl`, quindi non può leggere il PEM). Incorpori `<id>.pub.raw` nel modulo come `vdlu/keyring/<id>.pub`. Il PEM è solo per uso lato PC. Questa separazione, e come funziona la rotazione delle chiavi, è spiegata in [[Security and Trust Model]].
 
+> **Un keyring a più chiavi deve vincolare `key_id`.** Se il keyring del modulo spedisce più di una chiave (per esempio la chiave di release più una chiave di feed di fingerprint a minore fiducia), l'engine non indovinerà quale possa firmare un aggiornamento di modulo. Imposta la config `key_id` sulla chiave, o sulle chiavi separate da virgola durante una finestra di rotazione, autorizzata a firmare gli aggiornamenti; un keyring a chiave singola si vincola automaticamente e non richiede alcuna config. Questa è l'allowlist di aggiornamento modulo, trattata in [[Security and Trust Model]].
+
 > Il `.pem` privato è l'unico segreto dell'intero sistema. Tienilo fuori da ogni dispositivo e fuori da ogni push di repository. Vedi la nota sulla CI più sotto.
 
 ---

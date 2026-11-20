@@ -110,6 +110,23 @@ Když se podpisový klíč rotuje, keyring dodává **jak aktuální, tak předc
 
 ---
 
+## Allowlist `key_id` pro aktualizaci modulu
+
+Rotace klíče už znamená, že keyring může legitimně obsahovat více než jeden klíč, a modul jich může obsahovat více i z druhého důvodu: může dodávat klíč nižší důvěry, který podepisuje *jiný* feed. Fingerprint feed je přesně takový případ. Modul může nést úzce vymezený klíč, jehož jediným úkolem je podepisovat fingerprint feed, sedící ve stejném keyringu hned vedle release klíče, který podepisuje modul samotný.
+
+To nastoluje otázku, kterou samotný příběh rotace nezodpovídá: jakmile v keyringu žijí dva klíče, *který* z nich smí podepsat **aktualizaci modulu**? Aktualizace modulu je to nejmocnější, oč může manifest požádat, protože přepisuje soubory, které zařízení spouští jako root. Ověřovač dříve vybral pubkey pojmenovaný `key_id` manifestu a přijal jakýkoli klíč, který náhodou byl v keyringu přítomen. Takže klíč fingerprint feedu nižší důvěry, kdyby unikl, by mohl podepsat manifest aktualizace modulu a zařízení by ho ctilo. To je obejití kořene důvěry: klíč určený pro jeden úzce vymezený úkol by mohl pohánět plnou flashless root aktualizaci.
+
+Oprava připíná přijímané `key_id` aktualizace modulu na fail-closed **allowlist**, kontrolovanou **dříve**, než je pubkey vůbec vybrán. Konfigurační klíč je `key_id` a engine ho vyhodnocuje takto:
+
+- **Keyring s jediným klíčem automaticky připne tento jeden klíč.** Běžný případ nepotřebuje žádnou konfiguraci: pokud keyring obsahuje přesně jeden klíč, tento klíč *je* allowlist a nic jiného nemůže podepsat aktualizaci modulu.
+- **Keyring s více klíči musí nastavit `key_id`.** Ve chvíli, kdy se objeví druhý klíč, engine odmítá hádat. Selže fail-closed s "multiple keys in keyring; config must pin key_id", dokud konfigurace nepojmenuje klíč (nebo klíče, oddělené čárkami během okna rotace), který smí podepisovat aktualizace modulu.
+
+Protože kontrola běží před výběrem pubkey, manifest pojmenující klíč, který je přítomen, ale není na allowlistu, je odmítnut, aniž by ověřovač ten klíč kdy načetl. Vyhodnocená množina se zrcadlí do `vdlu-verify` skrze `VDLU_KEYID_ALLOW`, takže štíhlý kontrolér na zařízení vynucuje totéž připnutí a oba se nemohou rozcházet. To platí v **obou** profilech: `hardened` i `trusted` oba konzultují allowlist, protože allowlist rozhoduje, *který klíč* je platným kořenem aktualizace modulu, nikoli *zda* je podpis vyžadován.
+
+Fingerprint feed si drží vlastní samostatný připnutý kořen důvěry, `FEED_KEY_ID`. Je to odlišný kořen s odlišným úkolem, nikdy nedosažitelný skrze výše uvedenou cestu aktualizace modulu, takže připnutí allowlistu aktualizace modulu se ho nedotkne a uniklý klíč feedu stále nemůže podepsat aktualizaci modulu. Tato změna zvýšila `ENGINE_VERSION` na 4.
+
+---
+
 ## Co uzavírá tools-manifest
 
 Štíhlý bootstrap fetche stáhne statické `curl` při prvním použití pro moduly, které nedodávají vlastní. Protože ten binární soubor běží jako root, jeho vlastní podpis manifestu (ed25519-mini) a jeho hash jsou **povinné v jakémkoli profilu**, včetně `trusted`, dříve než se kdy nainstaluje nebo spustí. Webview je jen transport; důvěra pochází z podpisu a kontroly hashe na zařízení, nikdy z faktu, že stažení uspělo.
@@ -124,6 +141,7 @@ I když vlastní feed, nebo sedí na drátě jako plný MITM, útočník nemůž
 - **Smazat mimo modul.** Záznamy `delete[]` procházejí stejnou validací cest.
 - **Vložit příkaz.** Žádná hodnota manifestu se neinterpoluje do shellu nebo `awk system()`; `sha256` musí být čistý 64-hex nebo je celý manifest zamítnut.
 - **Dodat nepodepsaný kód veřejné instalaci.** `hardened` činí podpis povinným a profil je fail-closed inverze, takže žádný překlep nebo zkomolená hodnota to nesníží.
+- **Podepsat aktualizaci modulu klíčem nižší důvěry.** `key_id` aktualizace modulu je připnut na fail-closed allowlist, kontrolovanou dříve, než je pubkey vybrán, takže uniklý klíč fingerprint feedu sdílející keyring nemůže podepsat plnou root aktualizaci.
 - **Servírovat zde podepsaný feed jiného modulu.** Podepsané pole `module` se musí rovnat tomuto `MODID`.
 - **Vrátit vás zpět.** Downgrade je v `hardened` zablokován.
 - **Poškodit blob nezjištěně.** Každý stažený blob se znovu zahashuje proti manifestovému `sha256` v obou profilech; neshoda po třech pokusech fázi přeruší, aniž by se cokoli aplikovalo.

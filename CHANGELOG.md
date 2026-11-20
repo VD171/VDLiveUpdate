@@ -4,6 +4,12 @@ Notable changes to the VDLU engine. Entries track ENGINE_VERSION, the on-device 
 signed manifest declares via `engine_min`.
 
 ## Unreleased
+- Docs: add `docs/SECURITY.md` - the security policy and trust-model summary (supported versions, private
+  vulnerability reporting, the `key_id` allowlist, the fail-closed guarantees, and the hardening caps) - in
+  English plus all 21 translations.
+- Docs: translate `docs/QUICKSTART.md` (the module adoption checklist) into all 21 languages.
+- Docs(de): restore proper German umlauts (ä/ö/ü/ß) in `docs/de/ENGINE.md`, `docs/de/INTERFACES.md`, and
+  `docs/de/PRODUCER.md`, which a prior pass had transliterated to ae/oe/ue/ss.
 - Public release: English README and dev docs, Apache-2.0 LICENSE, third-party NOTICE.
 - Wiki is now repo-managed: page sources live in `wiki/` (see `wiki/README.md`), `.github/scripts/gen_wiki.sh`
   assembles the published pages, and `.github/workflows/wiki-sync.yml` publishes them to the GitHub Wiki on

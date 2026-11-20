@@ -53,7 +53,7 @@ Manifest adalah deskripsi lengkap dari satu rilis: setiap file dalam tree target
 | `built` | Timestamp build ISO 8601. Menghormati `SOURCE_DATE_EPOCH` untuk reproduksibilitas. |
 | `engine_min` | Versi engine minimum yang dibutuhkan untuk menerapkan manifest ini. |
 | `channel` | Channel rilis (misalnya `stable`). |
-| `key_id` | Key mana dalam keyring perangkat yang menandatangani manifest ini. Memilih public key untuk verifikasi. |
+| `key_id` | Key mana dalam keyring perangkat yang menandatangani manifest ini. Memilih public key untuk verifikasi, dan harus ada dalam allowlist update-modul engine (lihat [[Security and Trust Model]]); key yang sekadar ada di keyring tetapi tidak di-allowlist ditolak sebelum pubkey-nya dimuat. |
 | `files[]` | Tree target **lengkap** (bukan diff). Setiap entri: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Path yang hadir di rilis sebelumnya tetapi hilang sekarang, untuk dihapus perangkat. |
 | `sig` | Signature ed25519, base64. Lihat kanonikalisasi di bawah. |

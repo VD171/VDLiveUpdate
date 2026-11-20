@@ -51,7 +51,7 @@ Genereer een nieuw sleutelpaar met `vdlu-keygen`, voeg de nieuwe RAUWE publieke 
 de keyring van het apparaat naast de vorige, en begin met signeren met de nieuwe
 `key_id`. Het apparaat kiest `<keyring>/<key_id>.pub` aan de hand van de `key_id` van het manifest,
 zodat geen engine-wijziging nodig is. Zowel de huidige als de vorige publieke sleutel meeleveren
-betekent dat een geroteerde sleutel oudere installaties nooit brickt. Zie [[Security and Trust Model]].
+betekent dat een geroteerde sleutel oudere installaties nooit brickt. Omdat een rotatie meer dan één sleutel in de keyring laat, moet je ook vastpinnen welke sleutel een module-update mag signeren: stel de `key_id`-config in (kommagescheiden tijdens het rotatievenster). Een keyring met één sleutel pint automatisch vast en heeft geen config nodig. Zie [[Security and Trust Model]].
 
 ## hardened vs trusted - welke gebruik ik?
 

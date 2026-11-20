@@ -84,6 +84,8 @@ Es schreibt drei Dateien:
 
 Der rohe 32-Byte-öffentliche-Schlüssel ist das, was der Geräteverifizierer liest (er trägt kein `openssl`, kann also die PEM nicht lesen). Du bettest `<id>.pub.raw` in das Modul als `vdlu/keyring/<id>.pub` ein. Die PEM ist nur für den PC-seitigen Gebrauch. Diese Trennung, und wie die Schlüsselrotation funktioniert, wird in [[Security and Trust Model]] erklärt.
 
+> **Ein Keyring mit mehreren Schlüsseln muss `key_id` fixieren.** Wenn der Keyring des Moduls mehr als einen Schlüssel mitliefert (zum Beispiel den Release-Schlüssel plus einen weniger vertrauenswürdigen Fingerprint-Feed-Schlüssel), wird die Engine nicht raten, welcher ein Modul-Update signieren darf. Setze die `key_id`-Konfig auf den Schlüssel, oder die kommagetrennten Schlüssel während eines Rotationsfensters, der Updates signieren darf; ein Keyring mit einem einzigen Schlüssel fixiert automatisch und braucht keine Konfig. Dies ist die Modul-Update-Allowlist, behandelt in [[Security and Trust Model]].
+
 > Die private `.pem` ist das eine Geheimnis im gesamten System. Halte sie von jedem Gerät fern und aus jedem Repository-Push heraus. Siehe den CI-Hinweis unten.
 
 ---
@@ -131,20 +133,20 @@ Nach dem Entfernen pushe den kleineren Feed zu deinem Host. Verteile das Schreib
 Ein typisches Release, von Anfang bis Ende:
 
 ```sh
-# einmalig: einen Signaturschluessel erstellen. Die .pem von jedem Geraet und jedem Repo-Push fernhalten.
+# einmalig: einen Signaturschlüssel erstellen. Die .pem von jedem Gerät und jedem Repo-Push fernhalten.
 vdlu-keygen release-2026 ./keys
 
 # jedes Release: den finalen ausgelieferten Baum packen (post-whitelist, derselbe Baum, den das .zip ausliefert)
 vdlu-pack ./module_tree ./out demo 106 --version-name v106 --channel stable \
           --prev ./prev/manifest.json
 
-# das Manifest an Ort und Stelle signieren (lokal, privater Schluessel verlaesst nie deine Maschine)
+# das Manifest an Ort und Stelle signieren (lokal, privater Schlüssel verlässt nie deine Maschine)
 vdlu-sign ./out/manifest.json ./keys/release-2026.pem release-2026
 
-# veroeffentliche ./out/{manifest.json,blobs/} zu deiner Quelle (GitHub Pages, rsync, ...).
+# veröffentliche ./out/{manifest.json,blobs/} zu deiner Quelle (GitHub Pages, rsync, ...).
 # gelegentlich: Waisen-Blobs entfernen
 vdlu-gc ./feed --keep-last 3            # zuerst Trockenlauf
-vdlu-gc ./feed --keep-last 3 --apply    # dann loeschen
+vdlu-gc ./feed --keep-last 3 --apply    # dann löschen
 ```
 
 Für das vollständige durchgearbeitete Beispiel der Übernahme von VDLU in ein Modul siehe [[Quick Start]]. Für die On-wire-Form all dessen, was der Producer ausgibt, siehe [[Feed Format]]. Für die Begründung hinter der Schlüsselbehandlung und was aus dem Feed herausgehalten wird, siehe [[Security and Trust Model]].

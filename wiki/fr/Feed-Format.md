@@ -53,7 +53,7 @@ Le manifeste est la description complète d'une release : chaque fichier de l'ar
 | `built` | Horodatage de build ISO 8601. Respecte `SOURCE_DATE_EPOCH` pour la reproductibilité. |
 | `engine_min` | La version minimale du moteur requise pour appliquer ce manifeste. |
 | `channel` | Canal de release (par exemple `stable`). |
-| `key_id` | Quelle clé du keyring de l'appareil a signé ce manifeste. Sélectionne la clé publique pour la vérification. |
+| `key_id` | Quelle clé du keyring de l'appareil a signé ce manifeste. Sélectionne la clé publique pour la vérification, et doit figurer dans la liste d'autorisation de mise à jour de module du moteur (voir [[Security and Trust Model]]) ; une clé simplement présente dans le keyring mais non autorisée est rejetée avant que sa clé publique ne soit chargée. |
 | `files[]` | L'arborescence cible **complète** (pas un diff). Chaque entrée : `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Chemins présents dans la release précédente mais disparus maintenant, pour que l'appareil les supprime. |
 | `sig` | La signature ed25519, base64. Voir la canonicalisation ci-dessous. |

@@ -84,6 +84,8 @@ Het schrijft drie bestanden:
 
 De rauwe publieke sleutel van 32 bytes is wat de verifier op het apparaat leest (die draagt geen `openssl`, dus kan de PEM niet lezen). Je bedt `<id>.pub.raw` in de module in als `vdlu/keyring/<id>.pub`. De PEM is alleen voor pc-zijdig gebruik. Deze splitsing, en hoe sleutelrotatie werkt, wordt uitgelegd in [[Security and Trust Model]].
 
+> **Een keyring met meerdere sleutels moet `key_id` vastpinnen.** Als de keyring van de module meer dan één sleutel meelevert (bijvoorbeeld de release-sleutel plus een fingerprint-feed-sleutel met lager vertrouwen), gokt de engine niet welke een module-update mag signeren. Stel de `key_id`-config in op de sleutel, of de kommagescheiden sleutels tijdens een rotatievenster, die updates mag signeren; een keyring met één sleutel pint automatisch vast en heeft geen config nodig. Dit is de allowlist voor module-updates, behandeld in [[Security and Trust Model]].
+
 > De private `.pem` is het enige geheim in het hele systeem. Houd hem van elk apparaat en buiten elke repository-push. Zie de CI-noot hieronder.
 
 ---

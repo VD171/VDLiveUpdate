@@ -110,6 +110,23 @@ Lorsqu'une clé de signature est tournée, le keyring livre **à la fois la clé
 
 ---
 
+## La liste d'autorisation des `key_id` de mise à jour de module
+
+La rotation de clé signifie déjà que le keyring peut légitimement contenir plus d'une clé, et un module peut en contenir plus d'une pour une seconde raison : il peut livrer une clé de moindre confiance qui signe un feed *différent*. Le feed de fingerprint est exactement ce cas. Un module peut porter une clé étroite dont le seul rôle est de signer un feed de fingerprint, logée dans le même keyring juste à côté de la clé de release qui signe le module lui-même.
+
+Cela soulève une question à laquelle l'histoire de la rotation seule ne répond pas : une fois que deux clés vivent dans le keyring, *laquelle* d'entre elles est autorisée à signer une **mise à jour de module** ? Une mise à jour de module est la chose la plus puissante qu'un manifeste puisse demander, car elle réécrit des fichiers que l'appareil exécute en tant que root. Le vérificateur choisissait autrefois la clé publique nommée par le `key_id` du manifeste et acceptait n'importe quelle clé qui se trouvait présente dans le keyring. Ainsi la clé de moindre confiance du feed de fingerprint, si elle fuitait, pouvait signer un manifeste de mise à jour de module et l'appareil l'honorerait. C'est un contournement de la racine de confiance : une clé destinée à un rôle étroit pouvait piloter une mise à jour root complète sans flashage.
+
+Le correctif épingle le `key_id` de mise à jour de module accepté à une **liste d'autorisation** fail-closed, vérifiée **avant** que la clé publique ne soit même sélectionnée. La clé de config est `key_id`, et le moteur la résout ainsi :
+
+- **Un keyring à clé unique épingle automatiquement cette seule clé.** Le cas courant n'a besoin d'aucune config : si le keyring contient exactement une clé, cette clé *est* la liste d'autorisation, et rien d'autre ne peut signer une mise à jour de module.
+- **Un keyring à plusieurs clés doit définir `key_id`.** Dès qu'une seconde clé apparaît, le moteur refuse de deviner. Il échoue en mode fermé avec "multiple keys in keyring; config must pin key_id" jusqu'à ce que la config nomme la clé (ou les clés, séparées par des virgules pendant une fenêtre de rotation) qui peut signer les mises à jour de module.
+
+Parce que la vérification s'exécute avant la sélection de la clé publique, un manifeste nommant une clé présente mais non autorisée est rejeté sans que le vérificateur ne charge jamais cette clé. L'ensemble résolu est répercuté dans `vdlu-verify` via `VDLU_KEYID_ALLOW`, de sorte que le vérificateur mince sur l'appareil applique le même épinglage et que les deux ne peuvent pas diverger. Cela vaut dans les **deux** profils : `hardened` et `trusted` consultent tous deux la liste d'autorisation, car la liste d'autorisation décide *quelle clé* est une racine valide de mise à jour de module, non pas *si* une signature est requise.
+
+Le feed de fingerprint garde sa propre racine de confiance épinglée séparée, `FEED_KEY_ID`. C'est une racine distincte avec un rôle distinct, jamais atteignable par le chemin de mise à jour de module ci-dessus, de sorte qu'épingler la liste d'autorisation de mise à jour de module n'y touche pas et qu'une clé de feed fuitée ne peut toujours pas signer une mise à jour de module. Ce changement a fait passer `ENGINE_VERSION` à 4.
+
+---
+
 ## Ce que le manifeste d'outils ferme
 
 L'amorçage mince du fetch télécharge un `curl` statique à la première utilisation pour les modules qui ne livrent pas le leur. Parce que ce binaire s'exécute en tant que root, la signature de son propre manifeste (ed25519-mini) et son hachage sont **obligatoires dans tout profil**, y compris `trusted`, avant qu'il ne soit installé ou exécuté. La webview n'est que du transport ; la confiance vient de la vérification de signature et de hachage sur l'appareil, jamais du fait qu'un téléchargement a réussi.
@@ -124,6 +141,7 @@ Même en possédant le feed, ou en étant assis sur le fil comme un MITM complet
 - **Supprimer hors du module.** Les entrées de `delete[]` passent la même validation de chemin.
 - **Injecter une commande.** Aucune valeur du manifeste n'est interpolée dans un shell ou `awk system()` ; `sha256` doit être hex pur de 64 sinon le manifeste entier est rejeté.
 - **Livrer du code non signé à une installation publique.** `hardened` rend la signature obligatoire, et le profil est fail-closed par inversion, de sorte qu'aucune faute de frappe ou valeur malmenée ne dégrade cela.
+- **Signer une mise à jour de module avec une clé de moindre confiance.** Le `key_id` de mise à jour de module est épinglé à une liste d'autorisation fail-closed, vérifiée avant que la clé publique ne soit sélectionnée, de sorte qu'une clé de feed de fingerprint fuitée partageant le keyring ne peut pas signer une mise à jour root complète.
 - **Servir ici le feed signé d'un autre module.** Le champ signé `module` doit égaler ce `MODID`.
 - **Vous ramener en arrière.** Le downgrade est bloqué dans `hardened`.
 - **Corrompre un blob sans être détecté.** Chaque blob téléchargé est re-haché contre le `sha256` du manifeste dans les deux profils ; un désaccord après trois essais interrompt la phase sans rien appliquer.

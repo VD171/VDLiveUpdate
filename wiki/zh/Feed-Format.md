@@ -53,7 +53,7 @@
 | `built` | ISO 8601 构建时间戳。为可复现性尊重 `SOURCE_DATE_EPOCH`。 |
 | `engine_min` | 应用此清单所需的最低引擎版本。 |
 | `channel` | 发布通道（例如 `stable`）。 |
-| `key_id` | 设备 keyring 中的哪个密钥签署了此清单。为验证选择公钥。 |
+| `key_id` | 设备 keyring 中的哪个密钥签署了此清单。为验证选择公钥，并且必须在引擎的模块更新允许列表中（见 [[Security and Trust Model]]）；一个仅存在于 keyring 中但不在允许列表里的密钥，会在其 pubkey 被加载之前就被拒绝。 |
 | `files[]` | **完整**的目标目录树（不是 diff）。每个条目：`path`、`sha256`、`size`、`mode`、`enc`（`raw`/`gz`）、`class`（`live`/`soft`/`reboot`）。 |
 | `delete[]` | 存在于上一版本、如今已不在的路径，供设备移除。 |
 | `sig` | ed25519 签名，base64。见下面的规范化。 |

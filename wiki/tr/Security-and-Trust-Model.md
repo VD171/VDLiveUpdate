@@ -110,6 +110,23 @@ Bir imzalama anahtarı döndürüldüğünde, keyring **hem mevcut hem de öncek
 
 ---
 
+## Modül güncellemesi key_id izin listesi
+
+Anahtar döndürme zaten keyring'in meşru olarak birden fazla anahtar tutabileceği anlamına gelir ve bir modül ikinci bir nedenle birden fazla tutabilir: *farklı* bir feed'i imzalayan daha düşük güvenli bir anahtar gönderebilir. Parmak izi feed'i tam olarak bu durumdur. Bir modül, tek işi bir parmak izi feed'ini imzalamak olan dar bir anahtar taşıyabilir; bu anahtar, modülün kendisini imzalayan release anahtarının hemen yanında aynı keyring'de oturur.
+
+Bu, yalnızca döndürme hikâyesinin yanıtlamadığı bir soru doğurur: keyring'de iki anahtar yaşamaya başladığında, bunlardan *hangisinin* bir **modül güncellemesi** imzalamasına izin verilir? Bir modül güncellemesi, bir manifestonun isteyebileceği en güçlü şeydir, çünkü cihazın root olarak çalıştırdığı dosyaları yeniden yazar. Doğrulayıcı eskiden manifestonun `key_id`'sinin adlandırdığı pubkey'i seçer ve keyring'de rastgele bulunan herhangi bir anahtarı kabul ederdi. Yani daha düşük güvenli parmak izi feed'i anahtarı, sızdırılırsa, bir modül güncelleme manifestosunu imzalayabilir ve cihaz buna uyardı. Bu bir güven kökü atlatmasıdır: dar tek bir iş için tasarlanmış bir anahtar, tam bir flashless root güncellemesini sürebilir.
+
+Düzeltme, kabul edilen modül güncelleme `key_id`'sini, pubkey seçilmeden **önce** denetlenen fail-closed bir **izin listesine** sabitler. Yapılandırma anahtarı `key_id`'dir ve motor onu şöyle çözer:
+
+- **Tek anahtarlı bir keyring o anahtarı otomatik olarak sabitler.** Yaygın durum hiçbir yapılandırmaya ihtiyaç duymaz: keyring tam olarak bir anahtar tutuyorsa, o anahtar izin listesinin *kendisidir* ve başka hiçbir şey bir modül güncellemesi imzalayamaz.
+- **Çok anahtarlı bir keyring `key_id` ayarlamalıdır.** İkinci bir anahtar belirir belirmez, motor tahmin etmeyi reddeder. Yapılandırma, modül güncellemelerini imzalayabilecek anahtarı (veya bir döndürme penceresi sırasında virgülle ayrılmış anahtarları) adlandırana kadar "multiple keys in keyring; config must pin key_id" ile kapalı başarısız olur.
+
+Denetim pubkey seçiminden önce çalıştığı için, keyring'de bulunan ama izin listesinde olmayan bir anahtarı adlandıran bir manifesto, doğrulayıcı o anahtarı hiç yüklemeden reddedilir. Çözülen küme `VDLU_KEYID_ALLOW` aracılığıyla `vdlu-verify`'a yansıtılır, böylece ince cihaz üstü denetleyici aynı sabitlemeyi uygular ve ikisi anlaşmazlığa düşemez. Bu, **her iki** profilde de geçerlidir: `hardened` ve `trusted` her ikisi de izin listesine danışır, çünkü izin listesi bir imzanın gerekli olup *olmadığına* değil, *hangi anahtarın* geçerli bir modül güncelleme kökü olduğuna karar verir.
+
+Parmak izi feed'i kendi ayrı sabitlenmiş güven kökünü, `FEED_KEY_ID`'yi korur. Bu, farklı bir işe sahip farklı bir köktür, yukarıdaki modül güncelleme yolu üzerinden asla erişilemez, bu yüzden modül güncelleme izin listesini sabitlemek ona dokunmaz ve sızdırılmış bir feed anahtarı hâlâ bir modül güncellemesi imzalayamaz. Bu değişiklik `ENGINE_VERSION`'ı 4'e yükseltti.
+
+---
+
 ## Araç manifestosunun kapattığı şey
 
 İnce fetch önyükleyicisi, kendi curl'lerini göndermeyen modüller için ilk kullanımda statik bir `curl` indirir. Bu ikili kök olarak çalıştığı için, kendi manifesto imzası (ed25519-mini) ve hash'i, kurulmadan veya çalıştırılmadan önce `trusted` dahil **herhangi bir profilde zorunludur**. Webview yalnızca taşımadır; güven cihaz üzerindeki imza ve hash kontrolünden gelir, asla bir indirmenin başarılı olması gerçeğinden değil.
@@ -124,6 +141,7 @@ Feed'e sahip olsa veya tam bir MITM olarak hat üzerinde otursa bile, bir saldı
 - **Modülün dışında silmek.** `delete[]` girdileri aynı yol doğrulamasını geçer.
 - **Bir komut enjekte etmek.** Hiçbir manifesto değeri bir kabuğa veya `awk system()`'e enterpole edilmez; `sha256` saf 64-hex olmalı yoksa tüm manifesto reddedilir.
 - **Herkese açık bir kuruluma imzasız kod göndermek.** `hardened` imzayı zorunlu kılar ve profil tersine çevirme yoluyla hata durumunda kapalıdır, bu yüzden hiçbir yazım hatası veya bozulmuş değer onu düşürmez.
+- **Bir modül güncellemesini daha düşük güvenli bir anahtarla imzalamak.** Modül güncelleme `key_id`'si, pubkey seçilmeden önce denetlenen fail-closed bir izin listesine sabitlenmiştir, bu yüzden keyring'i paylaşan sızdırılmış bir parmak izi feed'i anahtarı tam bir root güncellemesi imzalayamaz.
 - **Burada başka bir modülün imzalı feed'ini sunmak.** İmzalı `module` alanı bu `MODID`'ye eşit olmalıdır.
 - **Sizi geri almak.** Alt sürüm `hardened`'da engellenir.
 - **Bir blob'u fark edilmeden bozmak.** İndirilen her blob her iki profilde de manifesto `sha256`'sına karşı yeniden hashlenir; üç denemeden sonra bir uyuşmazlık, hiçbir şey uygulanmadan aşamayı iptal eder.

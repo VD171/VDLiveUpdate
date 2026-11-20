@@ -53,7 +53,7 @@ The manifest is the complete description of one release: every file in the targe
 | `built` | ISO 8601 build timestamp. Honors `SOURCE_DATE_EPOCH` for reproducibility. |
 | `engine_min` | The minimum engine version required to apply this manifest. |
 | `channel` | Release channel (for example `stable`). |
-| `key_id` | Which key in the device keyring signed this manifest. Selects the public key for verification. |
+| `key_id` | Which key in the device keyring signed this manifest. Selects the public key for verification, and must be in the engine's module-update allowlist (see [[Security and Trust Model]]); a key merely present in the keyring but not allowlisted is rejected before its pubkey is loaded. |
 | `files[]` | The **complete** target tree (not a diff). Each entry: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Paths present in the previous release but gone now, for the device to remove. |
 | `sig` | The ed25519 signature, base64. See the canonicalization below. |

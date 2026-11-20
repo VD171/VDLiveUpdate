@@ -51,7 +51,7 @@ Wygeneruj nową parę kluczy za pomocą `vdlu-keygen`, dodaj nowy surowy 32-bajt
 keyringa urządzenia obok poprzedniego i zacznij podpisywać nowym
 `key_id`. Urządzenie wybiera `<keyring>/<key_id>.pub` po `key_id` manifestu,
 więc nie jest potrzebna żadna zmiana silnika. Dostarczanie zarówno bieżącego, jak i poprzedniego klucza publicznego
-oznacza, że zrotowany klucz nigdy nie unieruchamia starszych instalacji. Zobacz [[Security and Trust Model]].
+oznacza, że zrotowany klucz nigdy nie unieruchamia starszych instalacji. Ponieważ rotacja pozostawia w keyringu więcej niż jeden klucz, musisz także przypiąć, który klucz może podpisać aktualizację modułu: ustaw konfigurację `key_id` (rozdzielone przecinkami podczas okna rotacji). Keyring z jednym kluczem przypina automatycznie i nie potrzebuje konfiguracji. Zobacz [[Security and Trust Model]].
 
 ## hardened vs trusted - którego używam?
 

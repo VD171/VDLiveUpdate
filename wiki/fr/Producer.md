@@ -84,6 +84,8 @@ Il écrit trois fichiers :
 
 La clé publique de 32 octets bruts est ce que le vérificateur de l'appareil lit (il n'embarque pas d'`openssl`, donc il ne peut pas lire le PEM). Vous embarquez `<id>.pub.raw` dans le module sous `vdlu/keyring/<id>.pub`. Le PEM est pour un usage côté PC uniquement. Cette séparation, et le fonctionnement de la rotation de clé, sont expliqués dans [[Security and Trust Model]].
 
+> **Un keyring à plusieurs clés doit épingler `key_id`.** Si le keyring du module livre plus d'une clé (par exemple la clé de release plus une clé de feed de fingerprint de moindre confiance), le moteur ne devinera pas laquelle peut signer une mise à jour de module. Définissez la config `key_id` sur la clé, ou les clés séparées par des virgules pendant une fenêtre de rotation, qui est autorisée à signer les mises à jour ; un keyring à clé unique s'épingle automatiquement et n'a besoin d'aucune config. C'est la liste d'autorisation de mise à jour de module, couverte dans [[Security and Trust Model]].
+
 > Le `.pem` privé est le seul secret de tout le système. Gardez-le hors de tout appareil et hors de tout push de dépôt. Voir la note CI ci-dessous.
 
 ---

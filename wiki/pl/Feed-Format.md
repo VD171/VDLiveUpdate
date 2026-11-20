@@ -53,7 +53,7 @@ Manifest to kompletny opis jednego wydania: każdy plik w docelowym drzewie, co 
 | `built` | Znacznik czasu budowania ISO 8601. Honoruje `SOURCE_DATE_EPOCH` dla reprodukowalności. |
 | `engine_min` | Minimalna wersja silnika wymagana do zastosowania tego manifestu. |
 | `channel` | Kanał wydania (na przykład `stable`). |
-| `key_id` | Który klucz w keyringu urządzenia podpisał ten manifest. Wybiera klucz publiczny do weryfikacji. |
+| `key_id` | Który klucz w keyringu urządzenia podpisał ten manifest. Wybiera klucz publiczny do weryfikacji i musi znajdować się na liście dozwolonych aktualizacji modułu silnika (zobacz [[Security and Trust Model]]); klucz jedynie obecny w keyringu, ale nie na liście dozwolonych, jest odrzucany, zanim jego pubkey zostanie załadowany. |
 | `files[]` | **Kompletne** docelowe drzewo (nie diff). Każdy wpis: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Ścieżki obecne w poprzednim wydaniu, ale już nieobecne teraz, do usunięcia przez urządzenie. |
 | `sig` | Podpis ed25519, base64. Zobacz kanonikalizację poniżej. |

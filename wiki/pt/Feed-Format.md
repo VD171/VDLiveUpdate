@@ -53,7 +53,7 @@ O manifesto é a descrição completa de um release: todo arquivo na árvore alv
 | `built` | Timestamp de build ISO 8601. Respeita `SOURCE_DATE_EPOCH` para reprodutibilidade. |
 | `engine_min` | A versão mínima do motor necessária para aplicar este manifesto. |
 | `channel` | Canal de release (por exemplo `stable`). |
-| `key_id` | Qual chave no keyring do dispositivo assinou este manifesto. Seleciona a chave pública para verificação. |
+| `key_id` | Qual chave no keyring do dispositivo assinou este manifesto. Seleciona a chave pública para verificação, e deve estar na lista de permissão de atualização de módulo do motor (veja [[Security and Trust Model]]); uma chave meramente presente no keyring mas não na lista de permissão é rejeitada antes de sua pubkey ser carregada. |
 | `files[]` | A árvore alvo **completa** (não um diff). Cada entrada: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Caminhos presentes no release anterior mas sumidos agora, para o dispositivo remover. |
 | `sig` | A assinatura ed25519, base64. Veja a canonicalização abaixo. |

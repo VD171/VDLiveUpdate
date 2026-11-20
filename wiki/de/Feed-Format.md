@@ -53,7 +53,7 @@ Das Manifest ist die vollständige Beschreibung eines Release: jede Datei im Zie
 | `built` | ISO-8601-Build-Zeitstempel. Respektiert `SOURCE_DATE_EPOCH` für Reproduzierbarkeit. |
 | `engine_min` | Die minimale Engine-Version, die erforderlich ist, um dieses Manifest anzuwenden. |
 | `channel` | Release-Kanal (zum Beispiel `stable`). |
-| `key_id` | Welcher Schlüssel im Geräte-Keyring dieses Manifest signierte. Wählt den öffentlichen Schlüssel für die Prüfung aus. |
+| `key_id` | Welcher Schlüssel im Geräte-Keyring dieses Manifest signierte. Wählt den öffentlichen Schlüssel für die Prüfung aus, und muss in der Modul-Update-Allowlist der Engine stehen (siehe [[Security and Trust Model]]); ein Schlüssel, der lediglich im Keyring vorhanden, aber nicht in der Allowlist ist, wird abgelehnt, bevor sein Pubkey geladen wird. |
 | `files[]` | Der **vollständige** Zielbaum (kein Diff). Jeder Eintrag: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Pfade, die im vorherigen Release vorhanden waren, aber jetzt fort sind, damit das Gerät sie entfernt. |
 | `sig` | Die ed25519-Signatur, base64. Siehe die Kanonisierung unten. |

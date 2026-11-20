@@ -51,7 +51,7 @@ Generera ett nytt nyckelpar med `vdlu-keygen`, lägg till den nya RÅA 32-byte p
 enhetens nyckelring vid sidan av den föregående, och börja signera med det nya
 `key_id`. Enheten väljer `<keyring>/<key_id>.pub` efter manifestets `key_id`,
 så ingen motorändring behövs. Att leverera både den aktuella och föregående publika nyckeln
-betyder att en roterad nyckel aldrig tegelstenar äldre installationer. Se [[Security and Trust Model]].
+betyder att en roterad nyckel aldrig tegelstenar äldre installationer. Eftersom en rotation lämnar mer än en nyckel i nyckelringen måste du också nåla fast vilken nyckel som får signera en moduluppdatering: sätt `key_id`-konfigurationen (kommaseparerad under rotationsfönstret). En nyckelring med en enda nyckel nålar fast automatiskt och behöver ingen konfiguration. Se [[Security and Trust Model]].
 
 ## hardened vs trusted - vilken använder jag?
 

@@ -51,7 +51,7 @@ Buat keypair baru dengan `vdlu-keygen`, tambahkan RAW 32-byte public key baru ke
 keyring perangkat di samping yang sebelumnya, dan mulai menandatangani dengan `key_id`
 baru. Perangkat memilih `<keyring>/<key_id>.pub` berdasarkan `key_id` manifest,
 jadi tidak ada perubahan engine yang dibutuhkan. Mengirim baik public key saat ini maupun sebelumnya
-berarti key yang dirotasi tidak pernah mem-brick instalasi lama. Lihat [[Security and Trust Model]].
+berarti key yang dirotasi tidak pernah mem-brick instalasi lama. Karena sebuah rotasi meninggalkan lebih dari satu key di keyring, Anda juga harus mengunci key mana yang boleh menandatangani update modul: setel config `key_id` (dipisah koma selama jendela rotasi). Keyring satu-key otomatis mengunci dan tidak butuh config. Lihat [[Security and Trust Model]].
 
 ## hardened vs trusted - mana yang saya pakai?
 

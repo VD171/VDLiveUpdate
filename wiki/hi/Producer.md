@@ -84,6 +84,8 @@ vdlu-keygen <id> <out_dir>
 
 raw 32-byte public key वही है जो device verifier पढ़ता है (यह कोई `openssl` नहीं ढोता, तो यह PEM नहीं पढ़ सकता)। आप `<id>.pub.raw` को module में `vdlu/keyring/<id>.pub` के रूप में embed करते हैं। PEM सिर्फ PC-side इस्तेमाल के लिए है। यह विभाजन, और key rotation कैसे काम करता है, वह [[Security and Trust Model]] में समझाया गया है।
 
+> **एक multi-key keyring को `key_id` pin करना ही होगा।** यदि module की keyring एक से अधिक key भेजती है (उदाहरण के लिए release key के साथ एक कम-trust वाली fingerprint-feed key), तो engine अनुमान नहीं लगाएगा कि कौन सी एक module update sign कर सकती है। `key_id` config को उस key पर सेट करें, या rotation window के दौरान comma से अलग की गई keys पर, जिसे updates sign करने की अनुमति है; एक single-key keyring अपने आप pin हो जाती है और किसी config की ज़रूरत नहीं। यह module-update allowlist है, जो [[Security and Trust Model]] में कवर की गई है।
+
 > private `.pem` पूरे सिस्टम का एकमात्र रहस्य है। इसे हर device से दूर और हर repository push से बाहर रखें। नीचे CI note देखें।
 
 ---

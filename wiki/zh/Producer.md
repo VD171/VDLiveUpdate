@@ -84,6 +84,8 @@ vdlu-keygen <id> <out_dir>
 
 原始 32 字节公钥是设备校验器所读取的东西（它不携带 `openssl`，因此无法读取 PEM）。你把 `<id>.pub.raw` 内嵌进模块，作为 `vdlu/keyring/<id>.pub`。PEM 仅供 PC 端使用。这种拆分，以及密钥轮换（key rotation）如何工作，在 [[Security and Trust Model]] 中有解释。
 
+> **多密钥 keyring 必须钉定 `key_id`。**如果模块的 keyring 交付不止一个密钥（例如 release 密钥加上一个较低信任的指纹 feed 密钥），引擎不会猜测哪一个可以签名一次模块更新。把 `key_id` 配置设为被允许签名更新的那个密钥，或在轮换窗口期内以逗号分隔的多个密钥；单密钥 keyring 会自动钉定且无需配置。这就是模块更新允许列表，在 [[Security and Trust Model]] 中有讲述。
+
 > 私有的 `.pem` 是整个系统中唯一的秘密。把它从每台设备上、从每次仓库推送中排除出去。见下面关于 CI 的说明。
 
 ---

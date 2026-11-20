@@ -51,7 +51,7 @@ Genera un nuevo par de claves con `vdlu-keygen`, agrega la nueva clave pública 
 keyring del dispositivo junto a la anterior, y empieza a firmar con el nuevo
 `key_id`. El dispositivo elige `<keyring>/<key_id>.pub` por el `key_id` del manifiesto,
 de modo que no se necesita ningún cambio del motor. Enviar tanto la clave pública actual como la anterior
-significa que una clave rotada nunca deja inservibles las instalaciones antiguas. Ver [[Security and Trust Model]].
+significa que una clave rotada nunca deja inservibles las instalaciones antiguas. Como una rotación deja más de una clave en el keyring, también debes fijar qué clave puede firmar una actualización de módulo: establece la configuración `key_id` (separada por comas durante la ventana de rotación). Un keyring de una sola clave fija automáticamente y no necesita configuración. Ver [[Security and Trust Model]].
 
 ## hardened vs trusted - ¿cuál uso?
 

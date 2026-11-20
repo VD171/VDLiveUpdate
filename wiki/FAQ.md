@@ -51,7 +51,10 @@ Generate a new keypair with `vdlu-keygen`, add the new RAW 32-byte public key to
 the device keyring alongside the previous one, and start signing with the new
 `key_id`. The device picks `<keyring>/<key_id>.pub` by the manifest's `key_id`,
 so no engine change is needed. Shipping both the current and previous public key
-means a rotated key never bricks older installs. See [[Security and Trust Model]].
+means a rotated key never bricks older installs. Because a rotation leaves more
+than one key in the keyring, you must also pin which key may sign a module update:
+set the `key_id` config (comma-separated during the rotation window). A single-key
+keyring auto-pins and needs no config. See [[Security and Trust Model]].
 
 ## hardened vs trusted - which do I use?
 

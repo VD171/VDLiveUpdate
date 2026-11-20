@@ -51,7 +51,7 @@ Erzeuge ein neues Schlüsselpaar mit `vdlu-keygen`, füge den neuen ROHEN 32-Byt
 Geräte-Keyring neben dem vorherigen hinzu und beginne mit dem neuen `key_id` zu signieren.
 Das Gerät wählt `<keyring>/<key_id>.pub` nach dem `key_id` des Manifests,
 sodass keine Engine-Änderung nötig ist. Sowohl den aktuellen als auch den vorherigen öffentlichen Schlüssel auszuliefern
-bedeutet, dass ein rotierter Schlüssel nie ältere Installationen kaputt macht. Siehe [[Security and Trust Model]].
+bedeutet, dass ein rotierter Schlüssel nie ältere Installationen kaputt macht. Weil eine Rotation mehr als einen Schlüssel im Keyring hinterlässt, musst du auch fixieren, welcher Schlüssel ein Modul-Update signieren darf: setze die `key_id`-Konfig (kommagetrennt während des Rotationsfensters). Ein Keyring mit einem einzigen Schlüssel fixiert automatisch und braucht keine Konfig. Siehe [[Security and Trust Model]].
 
 ## hardened vs trusted - welches verwende ich?
 

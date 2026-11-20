@@ -84,6 +84,8 @@ Zapisuje trzy pliki:
 
 Surowy 32-bajtowy klucz publiczny jest tym, co odczytuje weryfikator na urządzeniu (nie niesie `openssl`, więc nie może odczytać PEM). Osadzasz `<id>.pub.raw` w module jako `vdlu/keyring/<id>.pub`. PEM jest tylko do użytku po stronie PC. Ten podział i to, jak działa rotacja kluczy, są wyjaśnione w [[Security and Trust Model]].
 
+> **Keyring z wieloma kluczami musi przypiąć `key_id`.** Jeśli keyring modułu dostarcza więcej niż jeden klucz (na przykład klucz wydania plus klucz kanału fingerprint o niższym zaufaniu), silnik nie będzie zgadywać, który może podpisać aktualizację modułu. Ustaw konfigurację `key_id` na klucz, lub rozdzielone przecinkami klucze podczas okna rotacji, który może podpisywać aktualizacje; keyring z jednym kluczem przypina automatycznie i nie potrzebuje konfiguracji. To jest lista dozwolonych aktualizacji modułu, omówiona w [[Security and Trust Model]].
+
 > Prywatny `.pem` to jedyny sekret w całym systemie. Trzymaj go z dala od każdego urządzenia i poza każdym pushem do repozytorium. Zobacz uwagę o CI poniżej.
 
 ---

@@ -51,7 +51,7 @@ Tạo một cặp khóa mới với `vdlu-keygen`, thêm khóa công khai THÔ 3
 keyring thiết bị bên cạnh khóa trước đó, và bắt đầu ký với `key_id` mới. Thiết bị chọn
 `<keyring>/<key_id>.pub` theo `key_id` của manifest, nên không cần thay đổi engine.
 Ship cả khóa công khai hiện tại lẫn khóa trước đó nghĩa là một khóa đã luân chuyển
-không bao giờ làm hỏng (brick) các bản cài cũ. Xem [[Security and Trust Model]].
+không bao giờ làm hỏng (brick) các bản cài cũ. Vì một lần luân chuyển để lại nhiều hơn một khóa trong keyring, bạn cũng phải ghim khóa nào có thể ký một cập nhật module: đặt cấu hình `key_id` (phân tách bằng dấu phẩy trong cửa sổ luân chuyển). Một keyring một khóa tự động ghim và không cần cấu hình. Xem [[Security and Trust Model]].
 
 ## hardened so với trusted - tôi dùng cái nào?
 

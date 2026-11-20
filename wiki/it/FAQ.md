@@ -51,7 +51,7 @@ Genera una nuova coppia di chiavi con `vdlu-keygen`, aggiungi la nuova chiave pu
 keyring del dispositivo accanto a quella precedente, e inizia a firmare con il nuovo
 `key_id`. Il dispositivo sceglie `<keyring>/<key_id>.pub` in base al `key_id` del manifest,
 quindi non serve alcuna modifica all'engine. Spedire sia la chiave pubblica corrente che quella precedente
-significa che una chiave ruotata non bricka mai le installazioni più vecchie. Vedi [[Security and Trust Model]].
+significa che una chiave ruotata non bricka mai le installazioni più vecchie. Poiché una rotazione lascia più di una chiave nel keyring, devi anche vincolare quale chiave può firmare un aggiornamento di modulo: imposta la config `key_id` (separate da virgola durante la finestra di rotazione). Un keyring a chiave singola si vincola automaticamente e non richiede alcuna config. Vedi [[Security and Trust Model]].
 
 ## hardened vs trusted - quale uso?
 

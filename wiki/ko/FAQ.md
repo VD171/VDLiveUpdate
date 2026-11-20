@@ -51,7 +51,7 @@ activate" 배너를 보여 줍니다. [[Reboot Handling]]을 참조하세요.
 이전 것과 나란히 기기 keyring에 추가한 다음, 새
 `key_id`로 서명하기 시작합니다. 기기는 매니페스트의 `key_id`로 `<keyring>/<key_id>.pub`를
 고르므로, 엔진 변경이 필요 없습니다. 현재와 이전 공개 키를 모두 배포하는 것은
-회전된 키가 오래된 설치를 절대 벽돌로 만들지 않음을 뜻합니다. [[Security and Trust Model]]을 참조하세요.
+회전된 키가 오래된 설치를 절대 벽돌로 만들지 않음을 뜻합니다. 회전은 keyring에 둘 이상의 키를 남기므로, 어느 키가 모듈 업데이트에 서명할 수 있는지도 고정해야 합니다: `key_id` config를 설정하세요(회전 기간 동안 쉼표로 구분). 단일 키 keyring은 자동 고정되어 config가 필요 없습니다. [[Security and Trust Model]]을 참조하세요.
 
 ## hardened와 trusted - 어느 것을 쓰나요?
 

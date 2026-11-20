@@ -84,6 +84,8 @@ Escribe tres archivos:
 
 La clave pública de 32 bytes en crudo es lo que el verificador del dispositivo lee (no lleva `openssl`, así que no puede leer el PEM). Embebes `<id>.pub.raw` en el módulo como `vdlu/keyring/<id>.pub`. El PEM es solo para uso del lado PC. Esta división, y cómo funciona la rotación de claves, se explica en [[Security and Trust Model]].
 
+> **Un keyring de varias claves debe fijar `key_id`.** Si el keyring del módulo envía más de una clave (por ejemplo la clave de release más una clave de feed de fingerprint de menor confianza), el motor no adivinará cuál puede firmar una actualización de módulo. Establece la configuración `key_id` en la clave, o las claves separadas por comas durante una ventana de rotación, que está permitida para firmar actualizaciones; un keyring de una sola clave fija automáticamente y no necesita configuración. Esta es la allowlist de actualización de módulo, cubierta en [[Security and Trust Model]].
+
 > El `.pem` privado es el único secreto en todo el sistema. Mantenlo fuera de todo dispositivo y fuera de todo push a repositorio. Ver la nota de CI abajo.
 
 ---

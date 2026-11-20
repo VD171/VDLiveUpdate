@@ -84,6 +84,8 @@ Det skriver tre filer:
 
 Den råa 32-byte publika nyckeln är det enhetens verifierare läser (den bär ingen `openssl`, så den kan inte läsa PEM). Du bäddar in `<id>.pub.raw` i modulen som `vdlu/keyring/<id>.pub`. PEM är endast för PC-sidans bruk. Denna uppdelning, och hur nyckelrotation fungerar, förklaras i [[Security and Trust Model]].
 
+> **En nyckelring med flera nycklar måste nåla fast `key_id`.** Om modulens nyckelring levererar mer än en nyckel (till exempel release-nyckeln plus en fingeravtrycksflödesnyckel med lägre förtroende) gissar inte motorn vilken som får signera en moduluppdatering. Sätt `key_id`-konfigurationen till nyckeln, eller de kommaseparerade nycklarna under ett rotationsfönster, som får signera uppdateringar; en nyckelring med en enda nyckel nålar fast automatiskt och behöver ingen konfiguration. Detta är moduluppdateringstillåtlistan, som behandlas i [[Security and Trust Model]].
+
 > Den privata `.pem` är den enda hemligheten i hela systemet. Håll den borta från varje enhet och utanför varje repository-push. Se CI-anteckningen nedan.
 
 ---

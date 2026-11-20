@@ -53,7 +53,7 @@ Il manifest è la descrizione completa di una release: ogni file nell'albero tar
 | `built` | Timestamp di build ISO 8601. Rispetta `SOURCE_DATE_EPOCH` per la riproducibilità. |
 | `engine_min` | La versione minima dell'engine richiesta per applicare questo manifest. |
 | `channel` | Canale di release (per esempio `stable`). |
-| `key_id` | Quale chiave nel keyring del dispositivo ha firmato questo manifest. Seleziona la chiave pubblica per la verifica. |
+| `key_id` | Quale chiave nel keyring del dispositivo ha firmato questo manifest. Seleziona la chiave pubblica per la verifica, e deve essere nell'allowlist di aggiornamento modulo dell'engine (vedi [[Security and Trust Model]]); una chiave meramente presente nel keyring ma non in allowlist viene rifiutata prima che la sua pubkey venga caricata. |
 | `files[]` | L'albero target **completo** (non un diff). Ogni voce: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Path presenti nella release precedente ma ora spariti, da rimuovere per il dispositivo. |
 | `sig` | La firma ed25519, base64. Vedi la canonicalizzazione più sotto. |

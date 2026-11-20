@@ -84,6 +84,8 @@ Ia menulis tiga file:
 
 Raw 32-byte public key adalah yang dibaca verifier perangkat (ia tidak membawa `openssl`, jadi ia tidak dapat membaca PEM). Anda menanamkan `<id>.pub.raw` ke dalam modul sebagai `vdlu/keyring/<id>.pub`. PEM hanya untuk penggunaan sisi PC. Pemisahan ini, dan bagaimana rotasi key bekerja, dijelaskan di [[Security and Trust Model]].
 
+> **Keyring banyak-key wajib mengunci `key_id`.** Jika keyring modul mengirim lebih dari satu key (misalnya release key plus key feed fingerprint berkepercayaan-lebih-rendah), engine tidak akan menebak yang mana yang boleh menandatangani update modul. Setel config `key_id` ke key, atau key-key yang dipisah koma selama jendela rotasi, yang diizinkan menandatangani update; keyring satu-key otomatis mengunci dan tidak butuh config. Ini adalah allowlist update-modul, dibahas di [[Security and Trust Model]].
+
 > `.pem` private adalah satu-satunya rahasia dalam seluruh sistem. Jaga agar tetap jauh dari setiap perangkat dan di luar setiap push repository. Lihat catatan CI di bawah.
 
 ---

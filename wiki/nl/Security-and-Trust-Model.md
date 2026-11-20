@@ -110,6 +110,23 @@ Wanneer een signeringssleutel wordt geroteerd, levert de keyring **zowel de huid
 
 ---
 
+## De key_id-allowlist voor module-updates
+
+Sleutelrotatie betekent al dat de keyring legitiem meer dan één sleutel kan bevatten, en een module kan er om een tweede reden meer dan één bevatten: hij kan een sleutel met lager vertrouwen meeleveren die een *andere* feed signeert. De fingerprint-feed is precies dat geval. Een module kan een smalle sleutel dragen wiens enige taak is een fingerprint-feed te signeren, pal naast de release-sleutel die de module zelf signeert in dezelfde keyring.
+
+Dat roept een vraag op die het rotatieverhaal alleen niet beantwoordt: zodra twee sleutels in de keyring leven, *welke* van hen mag een **module-update** signeren? Een module-update is het krachtigste dat een manifest kan vragen, want het herschrijft bestanden die het apparaat als root draait. De verifier koos vroeger de pubkey die door de `key_id` van het manifest werd genoemd en accepteerde elke sleutel die toevallig in de keyring aanwezig was. Dus de fingerprint-feed-sleutel met lager vertrouwen kon, als die lekte, een module-update-manifest signeren en het apparaat zou het honoreren. Dat is een omzeiling van de vertrouwenswortel: een sleutel bedoeld voor één smalle taak kon een volledige flashless root-update aandrijven.
+
+De fix pint de geaccepteerde module-update-`key_id` vast op een fail-closed **allowlist**, gecontroleerd **voordat** de pubkey ooit wordt geselecteerd. De config-sleutel is `key_id`, en de engine lost die zo op:
+
+- **Een keyring met één sleutel pint die ene sleutel automatisch vast.** Het gangbare geval heeft helemaal geen config nodig: als de keyring precies één sleutel bevat, *is* die sleutel de allowlist, en niets anders kan een module-update signeren.
+- **Een keyring met meerdere sleutels moet `key_id` instellen.** Op het moment dat een tweede sleutel verschijnt, weigert de engine te gokken. Hij faalt gesloten met "multiple keys in keyring; config must pin key_id" totdat de config de sleutel noemt (of sleutels, kommagescheiden tijdens een rotatievenster) die module-updates mag signeren.
+
+Omdat de controle vóór de pubkey-selectie loopt, wordt een manifest dat een sleutel noemt die aanwezig maar niet op de allowlist staat, afgewezen zonder dat de verifier die sleutel ooit laadt. De opgeloste set wordt via `VDLU_KEYID_ALLOW` naar `vdlu-verify` gespiegeld, zodat de slanke controleur op het apparaat dezelfde pin afdwingt en de twee niet kunnen verschillen. Dit geldt in **beide** profielen: zowel `hardened` als `trusted` raadplegen de allowlist, want de allowlist beslist *welke sleutel* een geldige module-update-wortel is, niet *of* een handtekening vereist is.
+
+De fingerprint-feed houdt zijn eigen aparte vastgepinde vertrouwenswortel, `FEED_KEY_ID`. Het is een aparte wortel met een aparte taak, nooit bereikbaar via het module-update-pad hierboven, dus het vastpinnen van de module-update-allowlist raakt die niet en een gelekte feed-sleutel kan nog steeds geen module-update signeren. Deze wijziging bracht `ENGINE_VERSION` naar 4.
+
+---
+
 ## Wat het tools-manifest afsluit
 
 De slanke fetch-bootstrap downloadt bij eerste gebruik een statische `curl` voor modules die niet hun eigen meeleveren. Omdat dat binary als root draait, zijn zijn eigen manifest-handtekening (ed25519-mini) en zijn hash **verplicht in elk profiel**, inclusief `trusted`, voordat het ooit wordt geinstalleerd of uitgevoerd. De webview is slechts transport; vertrouwen komt uit de handtekening- en hashcontrole op het apparaat, nooit uit het feit dat een download slaagde.
@@ -124,6 +141,7 @@ Zelfs met bezit van de feed, of zittend op de draad als een volledige MITM, kan 
 - **Buiten de module verwijderen.** `delete[]`-entries passeren dezelfde padvalidatie.
 - **Een commando injecteren.** Geen manifestwaarde wordt in een shell of `awk system()` geinterpoleerd; `sha256` moet pure 64-hex zijn of het hele manifest wordt afgewezen.
 - **Ongesigneerde code naar een publieke installatie leveren.** `hardened` maakt de handtekening verplicht, en het profiel is fail-closed door inversie, zodat geen typefout of verminkte waarde dat downgradet.
+- **Een module-update signeren met een sleutel met lager vertrouwen.** De module-update-`key_id` is vastgepind op een fail-closed allowlist, gecontroleerd voordat de pubkey wordt geselecteerd, zodat een gelekte fingerprint-feed-sleutel die de keyring deelt geen volledige root-update kan signeren.
 - **De gesigneerde feed van een andere module hier serveren.** Het gesigneerde `module`-veld moet gelijk zijn aan deze `MODID`.
 - **Je terugrollen.** Downgrade is geblokkeerd in `hardened`.
 - **Een blob onopgemerkt corrumperen.** Elke gedownloade blob wordt in beide profielen herhasht tegen de manifest-`sha256`; een mismatch breekt na drie pogingen de fase af met niets toegepast.

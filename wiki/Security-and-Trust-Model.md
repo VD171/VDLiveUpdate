@@ -110,6 +110,23 @@ When a signing key is rotated, the keyring ships **both the current and the prev
 
 ---
 
+## The module-update key_id allowlist
+
+Key rotation already means the keyring can legitimately hold more than one key, and a module can hold more than one for a second reason: it may ship a lower-trust key that signs a *different* feed. The fingerprint feed is exactly that case. A module can carry a narrow key whose only job is to sign a fingerprint feed, sitting in the same keyring right next to the release key that signs the module itself.
+
+That raises a question the rotation story alone does not answer: once two keys live in the keyring, *which* of them is allowed to sign a **module update**? A module update is the most powerful thing a manifest can ask for, because it rewrites files the device runs as root. The verifier used to pick the pubkey named by the manifest's `key_id` and accept any key that happened to be present in the keyring. So the lower-trust fingerprint-feed key, if it leaked, could sign a module-update manifest and the device would honour it. That is a trust-root bypass: a key meant for one narrow job could drive a full flashless root update.
+
+The fix pins the accepted module-update `key_id` to a fail-closed **allowlist**, checked **before** the pubkey is ever selected. The config key is `key_id`, and the engine resolves it like this:
+
+- **A single-key keyring auto-pins that one key.** The common case needs no config at all: if the keyring holds exactly one key, that key *is* the allowlist, and nothing else can sign a module update.
+- **A multi-key keyring must set `key_id`.** The moment a second key appears, the engine refuses to guess. It fails closed with "multiple keys in keyring; config must pin key_id" until the config names the key (or keys, comma-separated during a rotation window) that may sign module updates.
+
+Because the check runs before pubkey selection, a manifest naming a key that is present but not allowlisted is rejected without the verifier ever loading that key. The resolved set is mirrored into `vdlu-verify` through `VDLU_KEYID_ALLOW`, so the slim on-device checker enforces the same pin and the two cannot disagree. This holds in **both** profiles: `hardened` and `trusted` both consult the allowlist, because the allowlist decides *which key* is a valid module-update root, not *whether* a signature is required.
+
+The fingerprint feed keeps its own separate pinned trust root, `FEED_KEY_ID`. It is a distinct root with a distinct job, never reachable through the module-update path above, so pinning the module-update allowlist does not touch it and a leaked feed key still cannot sign a module update. This change bumped `ENGINE_VERSION` to 4.
+
+---
+
 ## What the tools-manifest closes
 
 The slim fetch bootstrap downloads a static `curl` on first use for modules that do not ship their own. Because that binary runs as root, its own manifest signature (ed25519-mini) and its hash are **mandatory in any profile**, including `trusted`, before it is ever installed or executed. The webview is only transport; trust comes from the on-device signature and hash check, never from the fact that a download succeeded.
@@ -124,6 +141,7 @@ Even owning the feed, or sitting on the wire as a full MITM, an attacker cannot:
 - **Delete outside the module.** `delete[]` entries pass the same path validation.
 - **Inject a command.** No manifest value is interpolated into a shell or `awk system()`; `sha256` must be pure 64-hex or the whole manifest is rejected.
 - **Ship unsigned code to a public install.** `hardened` makes the signature mandatory, and the profile is fail-closed by inversion, so no typo or mangled value downgrades that.
+- **Sign a module update with a lower-trust key.** The module-update `key_id` is pinned to a fail-closed allowlist, checked before the pubkey is selected, so a leaked fingerprint-feed key sharing the keyring cannot sign a full root update.
 - **Serve another module's signed feed here.** The signed `module` field must equal this `MODID`.
 - **Roll you back.** Downgrade is blocked in `hardened`.
 - **Corrupt a blob undetected.** Every downloaded blob is re-hashed against the manifest `sha256` in both profiles; a mismatch after three tries aborts the phase with nothing applied.

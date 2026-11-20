@@ -1,3 +1,7 @@
+> **Languages:** English · [العربية](ar/QUICKSTART.md) · [Čeština](cs/QUICKSTART.md) · [Deutsch](de/QUICKSTART.md) · [Español](es/QUICKSTART.md) · [فارسی](fa/QUICKSTART.md) · [Français](fr/QUICKSTART.md) · [हिन्दी](hi/QUICKSTART.md) · [Bahasa Indonesia](id/QUICKSTART.md) · [Italiano](it/QUICKSTART.md) · [日本語](ja/QUICKSTART.md) · [한국어](ko/QUICKSTART.md) · [Nederlands](nl/QUICKSTART.md) · [Polski](pl/QUICKSTART.md) · [Português](pt/QUICKSTART.md) · [Русский](ru/QUICKSTART.md) · [Svenska](sv/QUICKSTART.md) · [ไทย](th/QUICKSTART.md) · [Türkçe](tr/QUICKSTART.md) · [Українська](uk/QUICKSTART.md) · [Tiếng Việt](vi/QUICKSTART.md) · [中文](zh/QUICKSTART.md)
+
+---
+
 # VDLU adoption quickstart
 
 A copy-paste checklist for vendoring **VDLiveUpdate** into a module. VDLU is not a

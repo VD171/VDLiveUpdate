@@ -110,6 +110,23 @@ Cuando una clave de firma se rota, el keyring envía **tanto la clave pública e
 
 ---
 
+## La allowlist de `key_id` de actualización de módulo
+
+La rotación de clave ya significa que el keyring puede legítimamente contener más de una clave, y un módulo puede contener más de una por una segunda razón: puede enviar una clave de menor confianza que firma un feed *diferente*. El feed de fingerprint es exactamente ese caso. Un módulo puede llevar una clave acotada cuyo único trabajo es firmar un feed de fingerprint, situada en el mismo keyring justo al lado de la clave de release que firma el módulo mismo.
+
+Eso plantea una pregunta que la historia de la rotación por sí sola no responde: una vez que dos claves viven en el keyring, ¿*cuál* de ellas puede firmar una **actualización de módulo**? Una actualización de módulo es lo más poderoso que un manifiesto puede pedir, porque reescribe archivos que el dispositivo ejecuta como root. El verificador solía tomar la pubkey nombrada por el `key_id` del manifiesto y aceptar cualquier clave que resultara estar presente en el keyring. Así que la clave de feed de fingerprint, de menor confianza, si se filtrara, podría firmar un manifiesto de actualización de módulo y el dispositivo lo honraría. Eso es un bypass de la raíz de confianza: una clave pensada para un único trabajo acotado podría impulsar una actualización de root completa sin flasheo.
+
+La corrección fija el `key_id` de actualización de módulo aceptado a una **allowlist** a prueba de fallos, comprobada **antes** de que se seleccione la pubkey. La clave de configuración es `key_id`, y el motor la resuelve así:
+
+- **Un keyring de una sola clave fija automáticamente esa única clave.** El caso común no necesita ninguna configuración: si el keyring contiene exactamente una clave, esa clave *es* la allowlist, y nada más puede firmar una actualización de módulo.
+- **Un keyring de varias claves debe establecer `key_id`.** En el momento en que aparece una segunda clave, el motor se niega a adivinar. Falla a prueba de fallos con "multiple keys in keyring; config must pin key_id" hasta que la configuración nombra la clave (o las claves, separadas por comas durante una ventana de rotación) que puede firmar actualizaciones de módulo.
+
+Como la comprobación se ejecuta antes de la selección de la pubkey, un manifiesto que nombra una clave que está presente pero no en la allowlist se rechaza sin que el verificador llegue a cargar esa clave. El conjunto resuelto se refleja en `vdlu-verify` a través de `VDLU_KEYID_ALLOW`, de modo que el comprobador delgado en el dispositivo aplica la misma fijación y los dos no pueden discrepar. Esto se cumple en **ambos** perfiles: `hardened` y `trusted` consultan ambos la allowlist, porque la allowlist decide *qué clave* es una raíz válida de actualización de módulo, no *si* se requiere una firma.
+
+El feed de fingerprint conserva su propia raíz de confianza fijada por separado, `FEED_KEY_ID`. Es una raíz distinta con un trabajo distinto, nunca alcanzable a través de la ruta de actualización de módulo anterior, de modo que fijar la allowlist de actualización de módulo no la toca y una clave de feed filtrada sigue sin poder firmar una actualización de módulo. Este cambio subió `ENGINE_VERSION` a 4.
+
+---
+
 ## Lo que cierra el manifiesto de herramientas
 
 El arranque delgado de fetch descarga un `curl` estático en el primer uso para los módulos que no envían el suyo propio. Como ese binario corre como root, la firma de su propio manifiesto (ed25519-mini) y su hash son **obligatorios en cualquier perfil**, incluido `trusted`, antes de que se instale o ejecute. El webview es solo transporte; la confianza viene de la comprobación de firma y hash en el dispositivo, nunca del hecho de que una descarga tuvo éxito.
@@ -124,6 +141,7 @@ Incluso poseyendo el feed, o sentado en el cable como un MITM completo, un ataca
 - **Eliminar fuera del módulo.** Las entradas de `delete[]` pasan la misma validación de ruta.
 - **Inyectar un comando.** Ningún valor del manifiesto se interpola en un shell o `awk system()`; `sha256` debe ser hex puro de 64 o el manifiesto entero se rechaza.
 - **Enviar código sin firmar a una instalación pública.** `hardened` hace la firma obligatoria, y el perfil es a prueba de fallos por inversión, de modo que ningún typo o valor mutilado degrada eso.
+- **Firmar una actualización de módulo con una clave de menor confianza.** El `key_id` de actualización de módulo está fijado a una allowlist a prueba de fallos, comprobada antes de que se seleccione la pubkey, de modo que una clave de feed de fingerprint filtrada que comparte el keyring no puede firmar una actualización de root completa.
 - **Servir aquí el feed firmado de otro módulo.** El campo firmado `module` debe igualar este `MODID`.
 - **Hacerte retroceder.** El downgrade está bloqueado en `hardened`.
 - **Corromper un blob sin ser detectado.** Cada blob descargado se vuelve a hashear contra el `sha256` del manifiesto en ambos perfiles; un desajuste tras tres intentos aborta la fase sin aplicar nada.

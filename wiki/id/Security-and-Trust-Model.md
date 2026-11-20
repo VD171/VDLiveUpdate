@@ -110,6 +110,23 @@ Ketika sebuah signing key dirotasi, keyring mengirim **baik raw public key saat 
 
 ---
 
+## Allowlist `key_id` update-modul
+
+Rotasi key sudah berarti keyring secara sah bisa memuat lebih dari satu key, dan sebuah modul bisa memuat lebih dari satu karena alasan kedua: ia bisa mengirim sebuah key berkepercayaan-lebih-rendah yang menandatangani feed yang *berbeda*. Feed fingerprint persis kasus itu. Sebuah modul bisa membawa key sempit yang satu-satunya tugasnya menandatangani feed fingerprint, duduk di keyring yang sama tepat di samping release key yang menandatangani modul itu sendiri.
+
+Itu memunculkan pertanyaan yang tidak dijawab oleh cerita rotasi saja: begitu dua key hidup di keyring, *yang mana* dari keduanya yang boleh menandatangani sebuah **update modul**? Update modul adalah hal paling kuat yang bisa diminta sebuah manifest, karena ia menulis ulang file yang dijalankan perangkat sebagai root. Verifier dulu memilih pubkey yang disebut oleh `key_id` manifest dan menerima key apa pun yang kebetulan ada di keyring. Jadi key berkepercayaan-lebih-rendah milik feed fingerprint, jika bocor, bisa menandatangani manifest update modul dan perangkat akan menghormatinya. Itu adalah bypass trust-root: sebuah key yang dimaksudkan untuk satu tugas sempit bisa menggerakkan update root penuh tanpa flash.
+
+Perbaikannya mengunci `key_id` update-modul yang diterima ke sebuah **allowlist** fail-closed, diperiksa **sebelum** pubkey pernah dipilih. Key config-nya adalah `key_id`, dan engine me-resolve-nya seperti ini:
+
+- **Keyring satu-key otomatis mengunci satu key itu.** Kasus umum sama sekali tidak butuh config: jika keyring memuat tepat satu key, key itu *adalah* allowlist-nya, dan tidak ada yang lain yang bisa menandatangani update modul.
+- **Keyring banyak-key wajib menyetel `key_id`.** Saat sebuah key kedua muncul, engine menolak menebak. Ia fail-closed dengan "multiple keys in keyring; config must pin key_id" sampai config menyebut key (atau key-key, dipisah koma selama jendela rotasi) yang boleh menandatangani update modul.
+
+Karena pemeriksaan berjalan sebelum pemilihan pubkey, sebuah manifest yang menyebut key yang ada tetapi tidak di-allowlist ditolak tanpa verifier pernah memuat key itu. Himpunan yang di-resolve dicerminkan ke `vdlu-verify` melalui `VDLU_KEYID_ALLOW`, sehingga checker ramping di perangkat menegakkan pin yang sama dan keduanya tidak bisa berbeda. Ini berlaku di **kedua** profil: `hardened` dan `trusted` sama-sama berkonsultasi dengan allowlist, karena allowlist memutuskan *key mana* yang merupakan root update-modul yang valid, bukan *apakah* sebuah signature diperlukan.
+
+Feed fingerprint mempertahankan trust root ter-pin-nya sendiri yang terpisah, `FEED_KEY_ID`. Ia adalah root berbeda dengan tugas berbeda, tidak pernah terjangkau melalui jalur update-modul di atas, sehingga mengunci allowlist update-modul tidak menyentuhnya dan key feed yang bocor tetap tidak bisa menandatangani update modul. Perubahan ini menaikkan `ENGINE_VERSION` ke 4.
+
+---
+
 ## Apa yang ditutup tools-manifest
 
 Bootstrap fetch yang ramping mengunduh `curl` statis pada penggunaan pertama untuk modul yang tidak mengirim `curl`-nya sendiri. Karena biner itu berjalan sebagai root, signature manifest-nya sendiri (ed25519-mini) dan hash-nya **wajib dalam profil apa pun**, termasuk `trusted`, sebelum ia pernah dipasang atau dieksekusi. Webview hanyalah transport; trust datang dari pemeriksaan signature dan hash di perangkat, tidak pernah dari fakta bahwa sebuah download berhasil.
@@ -124,6 +141,7 @@ Bahkan dengan memiliki feed, atau duduk di kabel sebagai MITM penuh, penyerang t
 - **Menghapus di luar modul.** Entri `delete[]` lolos validasi path yang sama.
 - **Menyuntikkan perintah.** Tidak ada nilai manifest yang diinterpolasi ke dalam shell atau `awk system()`; `sha256` harus 64-hex murni atau seluruh manifest ditolak.
 - **Mengirim kode tak-bertanda-tangan ke instalasi publik.** `hardened` membuat signature wajib, dan profil fail-closed melalui inversi, jadi tidak ada salah ketik atau nilai yang dikacaukan yang men-downgrade itu.
+- **Menandatangani update modul dengan key berkepercayaan-lebih-rendah.** `key_id` update-modul dikunci ke allowlist fail-closed, diperiksa sebelum pubkey dipilih, sehingga key feed fingerprint yang bocor yang berbagi keyring tidak bisa menandatangani update root penuh.
 - **Menyajikan feed yang ditandatangani milik modul lain di sini.** Field `module` yang ditandatangani harus sama dengan `MODID` ini.
 - **Memutar Anda kembali.** Downgrade diblokir dalam `hardened`.
 - **Merusak sebuah blob tanpa terdeteksi.** Setiap blob yang diunduh di-re-hash terhadap `sha256` manifest dalam kedua profil; ketidakcocokan setelah tiga percobaan membatalkan fase tanpa apa pun yang diterapkan.

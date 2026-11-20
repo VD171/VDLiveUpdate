@@ -84,6 +84,8 @@ Zapíše tři soubory:
 
 Syrový 32-bajtový veřejný klíč je to, co čte ověřovač na zařízení (nenese `openssl`, takže PEM přečíst nemůže). Vložíte `<id>.pub.raw` do modulu jako `vdlu/keyring/<id>.pub`. PEM je jen pro použití na straně PC. Toto rozdělení a jak funguje rotace klíčů, je vysvětleno v [[Security and Trust Model]].
 
+> **Keyring s více klíči musí připnout `key_id`.** Pokud keyring modulu dodává více než jeden klíč (například release klíč plus klíč fingerprint feedu nižší důvěry), engine nebude hádat, který smí podepsat aktualizaci modulu. Nastavte konfiguraci `key_id` na klíč, nebo klíče oddělené čárkami během okna rotace, kterému je povoleno podepisovat aktualizace; keyring s jediným klíčem se připne automaticky a nepotřebuje konfiguraci. Toto je allowlist aktualizace modulu, popsaný v [[Security and Trust Model]].
+
 > Privátní `.pem` je jediné tajemství v celém systému. Držte ho mimo každé zařízení a mimo každý push do repozitáře. Viz poznámku o CI níže.
 
 ---

@@ -53,7 +53,7 @@ manifest एक release का पूरा विवरण है: target tree 
 | `built` | ISO 8601 build timestamp। reproducibility के लिए `SOURCE_DATE_EPOCH` का सम्मान करता है। |
 | `engine_min` | इस manifest को लागू करने के लिए आवश्यक न्यूनतम engine version। |
 | `channel` | Release channel (उदाहरण के लिए `stable`)। |
-| `key_id` | device keyring में कौन सी key ने इस manifest को sign किया। verification के लिए public key चुनता है। |
+| `key_id` | device keyring में कौन सी key ने इस manifest को sign किया। verification के लिए public key चुनता है, और engine की module-update allowlist में होनी चाहिए (देखें [[Security and Trust Model]]); एक key जो keyring में बस मौजूद है पर allowlisted नहीं है, उसकी pubkey load होने से पहले ही अस्वीकार हो जाती है। |
 | `files[]` | **पूरा** target tree (एक diff नहीं)। हर entry: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`)। |
 | `delete[]` | पिछली release में मौजूद paths जो अब चले गए, device के हटाने के लिए। |
 | `sig` | ed25519 signature, base64। नीचे canonicalization देखें। |

@@ -110,6 +110,23 @@ Wenn ein Signaturschlüssel rotiert wird, liefert der Keyring **sowohl den aktue
 
 ---
 
+## Die Modul-Update-`key_id`-Allowlist
+
+Schlüsselrotation bedeutet bereits, dass der Keyring legitim mehr als einen Schlüssel halten kann, und ein Modul kann aus einem zweiten Grund mehr als einen halten: es kann einen weniger vertrauenswürdigen Schlüssel mitliefern, der einen *anderen* Feed signiert. Der Fingerprint-Feed ist genau dieser Fall. Ein Modul kann einen eng begrenzten Schlüssel tragen, dessen einzige Aufgabe es ist, einen Fingerprint-Feed zu signieren, und der im selben Keyring direkt neben dem Release-Schlüssel sitzt, der das Modul selbst signiert.
+
+Das wirft eine Frage auf, die die Rotationsgeschichte allein nicht beantwortet: sobald zwei Schlüssel im Keyring leben, *welcher* von ihnen darf ein **Modul-Update** signieren? Ein Modul-Update ist das Mächtigste, worum ein Manifest bitten kann, weil es Dateien neu schreibt, die das Gerät als root ausführt. Der Verifizierer wählte früher den Pubkey, der durch das `key_id` des Manifests benannt war, und akzeptierte jeden Schlüssel, der zufällig im Keyring vorhanden war. Der weniger vertrauenswürdige Fingerprint-Feed-Schlüssel könnte also, wenn er geleakt würde, ein Modul-Update-Manifest signieren und das Gerät würde es honorieren. Das ist eine Umgehung der Vertrauenswurzel: ein Schlüssel, der für eine einzige eng begrenzte Aufgabe gedacht ist, könnte ein vollständiges flashless Root-Update antreiben.
+
+Die Korrektur fixiert das akzeptierte Modul-Update-`key_id` auf eine fail-closed **Allowlist**, die geprüft wird, **bevor** der Pubkey je ausgewählt wird. Der Konfig-Schlüssel ist `key_id`, und die Engine löst ihn so auf:
+
+- **Ein Keyring mit einem einzigen Schlüssel fixiert diesen einen Schlüssel automatisch.** Der häufige Fall braucht gar keine Konfig: wenn der Keyring genau einen Schlüssel hält, *ist* dieser Schlüssel die Allowlist, und nichts anderes kann ein Modul-Update signieren.
+- **Ein Keyring mit mehreren Schlüsseln muss `key_id` setzen.** In dem Moment, in dem ein zweiter Schlüssel auftaucht, weigert sich die Engine zu raten. Sie fällt fail-closed mit "multiple keys in keyring; config must pin key_id", bis die Konfig den Schlüssel (oder die Schlüssel, kommagetrennt während eines Rotationsfensters) benennt, der Modul-Updates signieren darf.
+
+Weil die Prüfung vor der Pubkey-Auswahl läuft, wird ein Manifest, das einen Schlüssel benennt, der vorhanden, aber nicht in der Allowlist ist, abgelehnt, ohne dass der Verifizierer diesen Schlüssel je lädt. Die aufgelöste Menge wird über `VDLU_KEYID_ALLOW` in `vdlu-verify` gespiegelt, sodass der schlanke geräteseitige Checker dieselbe Fixierung durchsetzt und die beiden nicht uneinig sein können. Das gilt in **beiden** Profilen: `hardened` und `trusted` konsultieren beide die Allowlist, weil die Allowlist entscheidet, *welcher Schlüssel* eine gültige Modul-Update-Wurzel ist, nicht *ob* eine Signatur erforderlich ist.
+
+Der Fingerprint-Feed behält seine eigene separate fixierte Vertrauenswurzel, `FEED_KEY_ID`. Sie ist eine eigenständige Wurzel mit einer eigenständigen Aufgabe, nie über den obigen Modul-Update-Pfad erreichbar, sodass das Fixieren der Modul-Update-Allowlist sie nicht berührt und ein geleakter Feed-Schlüssel dennoch kein Modul-Update signieren kann. Diese Änderung hob `ENGINE_VERSION` auf 4 an.
+
+---
+
 ## Was das Tools-Manifest schließt
 
 Der schlanke Fetch-Bootstrap lädt bei der ersten Nutzung ein statisches `curl` für Module herunter, die kein eigenes mitliefern. Weil dieses Binary als root läuft, ist seine eigene Manifest-Signatur (ed25519-mini) und sein Hash in jedem Profil **Pflicht**, einschließlich `trusted`, bevor es je installiert oder ausgeführt wird. Die Webview ist nur Transport; Vertrauen kommt aus der geräteseitigen Signatur- und Hash-Prüfung, nie aus der Tatsache, dass ein Download gelang.
@@ -124,6 +141,7 @@ Selbst wenn er den Feed besitzt oder als voller MITM auf der Leitung sitzt, kann
 - **Außerhalb des Moduls löschen.** `delete[]`-Einträge bestehen dieselbe Pfadvalidierung.
 - **Einen Befehl injizieren.** Kein Manifest-Wert wird in eine Shell oder `awk system()` interpoliert; `sha256` muss reines 64-Hex sein oder das gesamte Manifest wird abgelehnt.
 - **Unsignierten Code an eine öffentliche Installation ausliefern.** `hardened` macht die Signatur zur Pflicht, und das Profil ist durch Inversion fail-closed, sodass kein Tippfehler oder verstümmelter Wert das herabstuft.
+- **Ein Modul-Update mit einem weniger vertrauenswürdigen Schlüssel signieren.** Das Modul-Update-`key_id` ist auf eine fail-closed Allowlist fixiert, geprüft bevor der Pubkey ausgewählt wird, sodass ein geleakter Fingerprint-Feed-Schlüssel, der sich den Keyring teilt, kein vollständiges Root-Update signieren kann.
 - **Den signierten Feed eines anderen Moduls hier servieren.** Das signierte `module`-Feld muss dieser `MODID` entsprechen.
 - **Dich zurückrollen.** Downgrade ist in `hardened` blockiert.
 - **Einen Blob unbemerkt beschädigen.** Jeder heruntergeladene Blob wird in beiden Profilen erneut gegen den Manifest-`sha256` gehasht; eine Nichtübereinstimmung nach drei Versuchen bricht die Phase ab, ohne dass etwas angewendet wird.

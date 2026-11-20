@@ -53,7 +53,7 @@ El manifiesto es la descripción completa de una release: cada archivo en el ár
 | `built` | Marca de tiempo de build ISO 8601. Respeta `SOURCE_DATE_EPOCH` para reproducibilidad. |
 | `engine_min` | La versión mínima del motor requerida para aplicar este manifiesto. |
 | `channel` | Canal de release (por ejemplo `stable`). |
-| `key_id` | Qué clave en el keyring del dispositivo firmó este manifiesto. Selecciona la clave pública para la verificación. |
+| `key_id` | Qué clave en el keyring del dispositivo firmó este manifiesto. Selecciona la clave pública para la verificación, y debe estar en la allowlist de actualización de módulo del motor (ver [[Security and Trust Model]]); una clave meramente presente en el keyring pero no en la allowlist se rechaza antes de que su pubkey se cargue. |
 | `files[]` | El árbol de destino **completo** (no un diff). Cada entrada: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Rutas presentes en la release anterior pero ausentes ahora, para que el dispositivo las elimine. |
 | `sig` | La firma ed25519, base64. Ver la canonicalización abajo. |

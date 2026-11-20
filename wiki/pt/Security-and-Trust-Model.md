@@ -110,6 +110,23 @@ Quando uma chave de assinatura é rotacionada, o keyring traz **tanto a chave p�
 
 ---
 
+## A lista de permissão de key_id para atualização de módulo
+
+A rotação de chave já significa que o keyring pode legitimamente conter mais de uma chave, e um módulo pode conter mais de uma por um segundo motivo: ele pode trazer uma chave de menor confiança que assina um feed *diferente*. O feed de fingerprint é exatamente esse caso. Um módulo pode carregar uma chave estreita cujo único trabalho é assinar um feed de fingerprint, sentada no mesmo keyring bem ao lado da chave de release que assina o próprio módulo.
+
+Isso levanta uma questão que a história da rotação sozinha não responde: uma vez que duas chaves vivem no keyring, *qual* delas tem permissão para assinar uma **atualização de módulo**? Uma atualização de módulo é a coisa mais poderosa que um manifesto pode pedir, porque reescreve arquivos que o dispositivo executa como root. O verificador costumava pegar a pubkey nomeada pelo `key_id` do manifesto e aceitar qualquer chave que por acaso estivesse presente no keyring. Então a chave de feed de fingerprint de menor confiança, se vazasse, poderia assinar um manifesto de atualização de módulo e o dispositivo o honraria. Isso é um bypass da raiz de confiança: uma chave destinada a um trabalho estreito poderia conduzir uma atualização root flashless completa.
+
+A correção fixa o `key_id` de atualização de módulo aceito a uma **lista de permissão** fail-closed, conferida **antes** de a pubkey sequer ser selecionada. A chave de config é `key_id`, e o motor a resolve assim:
+
+- **Um keyring de chave única fixa essa única chave automaticamente.** O caso comum não precisa de config nenhuma: se o keyring contém exatamente uma chave, essa chave *é* a lista de permissão, e nada mais pode assinar uma atualização de módulo.
+- **Um keyring de múltiplas chaves deve definir `key_id`.** No momento em que uma segunda chave aparece, o motor se recusa a adivinhar. Ele falha fechado com "multiple keys in keyring; config must pin key_id" até que a config nomeie a chave (ou chaves, separadas por vírgula durante uma janela de rotação) que pode assinar atualizações de módulo.
+
+Como a checagem roda antes da seleção da pubkey, um manifesto que nomeia uma chave que está presente mas não na lista de permissão é rejeitado sem o verificador jamais carregar essa chave. O conjunto resolvido é espelhado para o `vdlu-verify` através do `VDLU_KEYID_ALLOW`, então o checador enxuto no dispositivo impõe a mesma fixação e os dois não podem divergir. Isso vale em **ambos** os perfis: tanto `hardened` quanto `trusted` consultam a lista de permissão, porque a lista de permissão decide *qual chave* é uma raiz de atualização de módulo válida, não *se* uma assinatura é exigida.
+
+O feed de fingerprint mantém sua própria raiz de confiança fixada separada, `FEED_KEY_ID`. É uma raiz distinta com um trabalho distinto, nunca alcançável pelo caminho de atualização de módulo acima, então fixar a lista de permissão de atualização de módulo não a toca e uma chave de feed vazada ainda não pode assinar uma atualização de módulo. Essa mudança elevou `ENGINE_VERSION` para 4.
+
+---
+
 ## O que o tools-manifest fecha
 
 O bootstrap enxuto de fetch baixa um `curl` estático no primeiro uso para módulos que não trazem o seu próprio. Como esse binário roda como root, sua própria assinatura de manifesto (ed25519-mini) e seu hash são **obrigatórios em qualquer perfil**, incluindo `trusted`, antes de ele ser instalado ou executado. A webview é apenas transporte; a confiança vem da assinatura e da checagem de hash no dispositivo, nunca do fato de que um download teve sucesso.
@@ -124,6 +141,7 @@ Mesmo sendo dono do feed, ou sentado no fio como um MITM completo, um atacante n
 - **Deletar fora do módulo.** Entradas de `delete[]` passam pela mesma validação de caminho.
 - **Injetar um comando.** Nenhum valor de manifesto é interpolado em um shell ou `awk system()`; `sha256` deve ser hex puro de 64 ou o manifesto inteiro é rejeitado.
 - **Enviar código não assinado para uma instalação pública.** O `hardened` torna a assinatura obrigatória, e o perfil é fail-closed por inversão, então nenhum typo ou valor adulterado rebaixa isso.
+- **Assinar uma atualização de módulo com uma chave de menor confiança.** O `key_id` de atualização de módulo é fixado a uma lista de permissão fail-closed, conferida antes de a pubkey ser selecionada, então uma chave de feed de fingerprint vazada compartilhando o keyring não pode assinar uma atualização root completa.
 - **Servir o feed assinado de outro módulo aqui.** O campo assinado `module` deve ser igual a este `MODID`.
 - **Revertê-lo.** Downgrade é bloqueado em `hardened`.
 - **Corromper um blob sem detecção.** Todo blob baixado é re-hasheado contra o `sha256` do manifesto em ambos os perfis; uma divergência depois de três tentativas aborta a fase sem nada aplicado.

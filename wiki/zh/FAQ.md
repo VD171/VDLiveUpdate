@@ -48,7 +48,7 @@ activate" 横幅。参见 [[Reboot Handling]]。
 用 `vdlu-keygen` 生成一对新密钥，把新的原始 32 字节公钥添加到
 设备 keyring 中、与先前的并列，并开始用新的 `key_id` 签名。设备按
 清单的 `key_id` 挑选 `<keyring>/<key_id>.pub`，因此无需改动引擎。
-交付当前和先前两个公钥意味着一个被轮换的密钥永远不会砖掉较旧的安装。
+交付当前和先前两个公钥意味着一个被轮换的密钥永远不会砖掉较旧的安装。由于一次轮换会在 keyring 中留下不止一个密钥，你还必须钉定哪个密钥可以签名一次模块更新：设置 `key_id` 配置（在轮换窗口期内以逗号分隔）。单密钥 keyring 会自动钉定且无需配置。
 参见 [[Security and Trust Model]]。
 
 ## hardened 对比 trusted - 我该用哪个？

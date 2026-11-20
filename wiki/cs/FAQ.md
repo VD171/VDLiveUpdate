@@ -51,7 +51,7 @@ Vygenerujte nový pár klíčů pomocí `vdlu-keygen`, přidejte nový SYROVÝ 3
 keyringu zařízení vedle předchozího a začněte podepisovat novým `key_id`.
 Zařízení vybírá `<keyring>/<key_id>.pub` podle `key_id` manifestu,
 takže není potřeba žádná změna enginu. Dodávání jak aktuálního, tak předchozího veřejného klíče
-znamená, že rotovaný klíč nikdy nezabije starší instalace. Viz [[Security and Trust Model]].
+znamená, že rotovaný klíč nikdy nezabije starší instalace. Protože rotace ponechává v keyringu více než jeden klíč, musíte také připnout, který klíč smí podepsat aktualizaci modulu: nastavte konfiguraci `key_id` (oddělenou čárkami během okna rotace). Keyring s jediným klíčem se připne automaticky a nepotřebuje konfiguraci. Viz [[Security and Trust Model]].
 
 ## hardened vs trusted - který použiji?
 

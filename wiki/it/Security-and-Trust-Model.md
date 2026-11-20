@@ -110,6 +110,23 @@ Quando una chiave di firma viene ruotata, il keyring spedisce **sia la chiave pu
 
 ---
 
+## L'allowlist dei `key_id` di aggiornamento modulo
+
+La rotazione della chiave significa già che il keyring può legittimamente contenere più di una chiave, e un modulo può contenerne più di una per una seconda ragione: può spedire una chiave a minore fiducia che firma un feed *diverso*. Il feed di fingerprint è esattamente questo caso. Un modulo può portare una chiave ristretta il cui unico compito è firmare un feed di fingerprint, sistemata nello stesso keyring proprio accanto alla chiave di release che firma il modulo stesso.
+
+Questo solleva una domanda a cui la sola storia della rotazione non risponde: una volta che due chiavi vivono nel keyring, *quale* di esse è autorizzata a firmare un **aggiornamento di modulo**? Un aggiornamento di modulo è la cosa più potente che un manifest possa chiedere, perché riscrive file che il dispositivo esegue come root. Il verificatore un tempo sceglieva la pubkey nominata dal `key_id` del manifest e accettava qualsiasi chiave che risultasse presente nel keyring. Così la chiave a minore fiducia del feed di fingerprint, se trapelasse, potrebbe firmare un manifest di aggiornamento modulo e il dispositivo lo onorerebbe. Questo è un bypass della radice di fiducia: una chiave pensata per un compito ristretto potrebbe pilotare un aggiornamento root completo senza flash.
+
+La correzione vincola il `key_id` di aggiornamento modulo accettato a una **allowlist** fail-closed, controllata **prima** che la pubkey venga mai selezionata. La chiave di config è `key_id`, e l'engine la risolve così:
+
+- **Un keyring a chiave singola vincola automaticamente quell'unica chiave.** Il caso comune non richiede alcuna config: se il keyring contiene esattamente una chiave, quella chiave *è* l'allowlist, e nient'altro può firmare un aggiornamento di modulo.
+- **Un keyring a più chiavi deve impostare `key_id`.** Nel momento in cui appare una seconda chiave, l'engine rifiuta di indovinare. Fallisce in modo chiuso con "multiple keys in keyring; config must pin key_id" finché la config non nomina la chiave (o le chiavi, separate da virgola durante una finestra di rotazione) che può firmare gli aggiornamenti di modulo.
+
+Poiché il controllo gira prima della selezione della pubkey, un manifest che nomina una chiave presente ma non in allowlist viene rifiutato senza che il verificatore carichi mai quella chiave. L'insieme risolto viene rispecchiato in `vdlu-verify` tramite `VDLU_KEYID_ALLOW`, così il verificatore leggero sul dispositivo applica lo stesso vincolo e i due non possono divergere. Questo vale in **entrambi** i profili: sia `hardened` che `trusted` consultano l'allowlist, perché l'allowlist decide *quale chiave* è una radice valida di aggiornamento modulo, non *se* una firma è richiesta.
+
+Il feed di fingerprint mantiene la propria radice di fiducia vincolata separata, `FEED_KEY_ID`. È una radice distinta con un compito distinto, mai raggiungibile tramite il percorso di aggiornamento modulo di cui sopra, così vincolare l'allowlist di aggiornamento modulo non la tocca e una chiave di feed trapelata continua a non poter firmare un aggiornamento di modulo. Questa modifica ha portato `ENGINE_VERSION` a 4.
+
+---
+
 ## Cosa chiude il tools-manifest
 
 Il bootstrap di fetch leggero scarica un `curl` statico al primo uso per i moduli che non ne spediscono uno proprio. Poiché quel binario gira come root, la firma del suo stesso manifest (ed25519-mini) e il suo hash sono **obbligatori in qualsiasi profilo**, incluso `trusted`, prima che venga mai installato o eseguito. La webview è solo trasporto; la fiducia viene dal controllo di firma e hash sul dispositivo, mai dal fatto che un download sia riuscito.
@@ -124,6 +141,7 @@ Anche possedendo il feed, o sedendo sul filo come MITM completo, un attaccante n
 - **Cancellare fuori dal modulo.** Le voci `delete[]` passano la stessa validazione di path.
 - **Iniettare un comando.** Nessun valore del manifest viene interpolato in una shell o in `awk system()`; `sha256` deve essere esadecimale puro a 64 cifre o l'intero manifest viene rifiutato.
 - **Spedire codice non firmato a un'installazione pubblica.** `hardened` rende la firma obbligatoria, e il profilo è fail-closed per inversione, così nessun typo o valore manomesso lo declassa.
+- **Firmare un aggiornamento di modulo con una chiave a minore fiducia.** Il `key_id` di aggiornamento modulo è vincolato a una allowlist fail-closed, controllata prima che la pubkey venga selezionata, così una chiave di feed di fingerprint trapelata che condivide il keyring non può firmare un aggiornamento root completo.
 - **Servire qui il feed firmato di un altro modulo.** Il campo `module` firmato deve essere uguale a questo `MODID`.
 - **Riportarti indietro.** Il downgrade è bloccato in `hardened`.
 - **Corrompere un blob non rilevato.** Ogni blob scaricato viene ri-hashato rispetto allo `sha256` del manifest in entrambi i profili; una non corrispondenza dopo tre tentativi aborta la fase senza nulla applicato.

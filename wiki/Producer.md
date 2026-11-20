@@ -84,6 +84,8 @@ It writes three files:
 
 The raw 32-byte public key is what the device verifier reads (it carries no `openssl`, so it cannot read the PEM). You embed `<id>.pub.raw` into the module as `vdlu/keyring/<id>.pub`. The PEM is for PC-side use only. This split, and how key rotation works, is explained in [[Security and Trust Model]].
 
+> **A multi-key keyring must pin `key_id`.** If the module's keyring ships more than one key (for example the release key plus a lower-trust fingerprint-feed key), the engine will not guess which one may sign a module update. Set the `key_id` config to the key, or the comma-separated keys during a rotation window, that is allowed to sign updates; a single-key keyring auto-pins and needs no config. This is the module-update allowlist, covered in [[Security and Trust Model]].
+
 > The private `.pem` is the one secret in the whole system. Keep it off every device and out of every repository push. See the CI note below.
 
 ---

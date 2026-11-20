@@ -84,6 +84,8 @@ Nó ghi ba tệp:
 
 Khóa công khai thô 32 byte là thứ bộ xác minh trên thiết bị đọc (nó không mang theo `openssl`, nên nó không thể đọc PEM). Bạn nhúng `<id>.pub.raw` vào module dưới dạng `vdlu/keyring/<id>.pub`. PEM chỉ để dùng phía PC. Sự phân tách này, và cách luân chuyển khóa (key rotation) hoạt động, được giải thích trong [[Security and Trust Model]].
 
+> **Một keyring nhiều khóa phải ghim `key_id`.** Nếu keyring của module ship nhiều hơn một khóa (ví dụ khóa release cộng với một khóa feed fingerprint có độ tin cậy thấp hơn), engine sẽ không đoán khóa nào có thể ký một cập nhật module. Đặt cấu hình `key_id` thành khóa, hoặc các khóa phân tách bằng dấu phẩy trong một cửa sổ luân chuyển, được phép ký các bản cập nhật; một keyring một khóa tự động ghim và không cần cấu hình. Đây là danh sách cho phép cập nhật module, được trình bày trong [[Security and Trust Model]].
+
 > `.pem` riêng là bí mật duy nhất trong cả hệ thống. Giữ nó khỏi mọi thiết bị và khỏi mọi lần push repository. Xem ghi chú về CI bên dưới.
 
 ---

@@ -53,7 +53,7 @@ Manifest là mô tả đầy đủ của một bản phát hành: mọi tệp tr
 | `built` | Dấu thời gian build ISO 8601. Tôn trọng `SOURCE_DATE_EPOCH` để tái lập. |
 | `engine_min` | Phiên bản engine tối thiểu cần để áp dụng manifest này. |
 | `channel` | Kênh phát hành (ví dụ `stable`). |
-| `key_id` | Khóa nào trong keyring thiết bị đã ký manifest này. Chọn khóa công khai để xác minh. |
+| `key_id` | Khóa nào trong keyring thiết bị đã ký manifest này. Chọn khóa công khai để xác minh, và phải nằm trong danh sách cho phép cập nhật module của engine (xem [[Security and Trust Model]]); một khóa chỉ hiện diện trong keyring nhưng không nằm trong danh sách cho phép sẽ bị từ chối trước khi pubkey của nó được nạp. |
 | `files[]` | Cây đích **đầy đủ** (không phải một diff). Mỗi mục: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Các đường dẫn có mặt trong bản phát hành trước nhưng giờ đã mất, để thiết bị gỡ bỏ. |
 | `sig` | Chữ ký ed25519, base64. Xem việc chuẩn tắc hóa bên dưới. |

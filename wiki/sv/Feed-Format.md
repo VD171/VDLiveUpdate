@@ -53,7 +53,7 @@ Manifestet är den fullständiga beskrivningen av en release: varje fil i måltr
 | `built` | ISO 8601-byggtidsstämpel. Respekterar `SOURCE_DATE_EPOCH` för reproducerbarhet. |
 | `engine_min` | Den minsta motorversion som krävs för att tillämpa detta manifest. |
 | `channel` | Releasekanal (till exempel `stable`). |
-| `key_id` | Vilken nyckel i enhetens nyckelring som signerade detta manifest. Väljer den publika nyckeln för verifiering. |
+| `key_id` | Vilken nyckel i enhetens nyckelring som signerade detta manifest. Väljer den publika nyckeln för verifiering, och måste finnas i motorns moduluppdateringstillåtlista (se [[Security and Trust Model]]); en nyckel som bara finns i nyckelringen men inte är tillåtlistad förkastas innan dess pubnyckel laddas. |
 | `files[]` | Det **fullständiga** målträdet (inte en diff). Varje post: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Sökvägar som fanns i föregående release men är borta nu, för enheten att ta bort. |
 | `sig` | ed25519-signaturen, base64. Se kanoniseringen nedan. |

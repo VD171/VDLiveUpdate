@@ -53,7 +53,7 @@ Manifest je úplný popis jednoho vydání: každý soubor v cílovém stromu, c
 | `built` | Časové razítko buildu ISO 8601. Respektuje `SOURCE_DATE_EPOCH` pro reprodukovatelnost. |
 | `engine_min` | Minimální verze enginu požadovaná k aplikaci tohoto manifestu. |
 | `channel` | Kanál vydání (například `stable`). |
-| `key_id` | Který klíč v keyringu zařízení podepsal tento manifest. Vybírá veřejný klíč pro ověření. |
+| `key_id` | Který klíč v keyringu zařízení podepsal tento manifest. Vybírá veřejný klíč pro ověření, a musí být v allowlistu aktualizace modulu enginu (viz [[Security and Trust Model]]); klíč pouze přítomný v keyringu, ale ne na allowlistu, je odmítnut dříve, než je jeho pubkey načten. |
 | `files[]` | **Úplný** cílový strom (ne diff). Každý záznam: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Cesty přítomné v předchozím vydání, ale nyní pryč, aby je zařízení odstranilo. |
 | `sig` | ed25519 podpis, base64. Viz kanonizaci níže. |

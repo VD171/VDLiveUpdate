@@ -51,7 +51,7 @@ binary का इस्तेमाल करता है, जो एक RAW 32
 device keyring में पिछली के साथ जोड़ें, और नई `key_id` से sign करना शुरू करें।
 device manifest की `key_id` से `<keyring>/<key_id>.pub` चुनता है,
 तो किसी engine change की ज़रूरत नहीं। मौजूदा और पिछली दोनों public key भेजने
-का मतलब है कि एक rotated key कभी पुराने installs को brick नहीं करती। देखें [[Security and Trust Model]]।
+का मतलब है कि एक rotated key कभी पुराने installs को brick नहीं करती। चूँकि एक rotation keyring में एक से अधिक key छोड़ देती है, आपको यह भी pin करना होगा कि कौन सी key एक module update sign कर सकती है: `key_id` config सेट करें (rotation window के दौरान comma से अलग)। एक single-key keyring अपने आप pin हो जाती है और किसी config की ज़रूरत नहीं। देखें [[Security and Trust Model]]।
 
 ## hardened बनाम trusted - मैं कौन सा इस्तेमाल करूँ?
 

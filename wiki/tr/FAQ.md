@@ -52,7 +52,7 @@ Cihazda, imza doğrulaması, HAM 32 baytlık bir açık anahtar okuyan ince göm
 öncekinin yanına cihaz keyring'ine ekleyin ve yeni `key_id` ile imzalamaya başlayın.
 Cihaz, manifestonun `key_id`'siyle `<keyring>/<key_id>.pub`'u seçer, bu yüzden motor
 değişikliği gerekmez. Hem mevcut hem de önceki açık anahtarı göndermek, döndürülmüş bir
-anahtarın eski kurulumları asla tuğlalaştırmaması anlamına gelir. Bkz. [[Security and Trust Model]].
+anahtarın eski kurulumları asla tuğlalaştırmaması anlamına gelir. Bir döndürme keyring'de birden fazla anahtar bıraktığı için, bir modül güncellemesini hangi anahtarın imzalayabileceğini de sabitlemeniz gerekir: `key_id` yapılandırmasını ayarlayın (döndürme penceresi sırasında virgülle ayrılmış). Tek anahtarlı bir keyring otomatik olarak sabitler ve hiçbir yapılandırmaya ihtiyaç duymaz. Bkz. [[Security and Trust Model]].
 
 ## hardened vs trusted - hangisini kullanırım?
 

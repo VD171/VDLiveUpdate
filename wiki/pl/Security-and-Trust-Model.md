@@ -110,6 +110,23 @@ Gdy klucz podpisujący jest rotowany, keyring dostarcza **zarówno bieżący, ja
 
 ---
 
+## Lista dozwolonych key_id dla aktualizacji modułu
+
+Rotacja klucza już oznacza, że keyring może legalnie zawierać więcej niż jeden klucz, a moduł może zawierać więcej niż jeden z drugiego powodu: może dostarczać klucz o niższym zaufaniu, który podpisuje *inny* kanał. Kanał fingerprint to dokładnie ten przypadek. Moduł może nieść wąski klucz, którego jedynym zadaniem jest podpisywanie kanału fingerprint, siedzący w tym samym keyringu tuż obok klucza wydania, który podpisuje sam moduł.
+
+To rodzi pytanie, na które sama historia rotacji nie odpowiada: gdy w keyringu żyją dwa klucze, *który* z nich może podpisać **aktualizację modułu**? Aktualizacja modułu to najpotężniejsza rzecz, o jaką manifest może poprosić, ponieważ przepisuje pliki, które urządzenie uruchamia jako root. Weryfikator wybierał wcześniej pubkey wskazany przez `key_id` manifestu i akceptował dowolny klucz, który akurat był obecny w keyringu. Więc klucz kanału fingerprint o niższym zaufaniu, gdyby wyciekł, mógłby podpisać manifest aktualizacji modułu, a urządzenie by to uhonorowało. To jest obejście korzenia zaufania: klucz przeznaczony do jednego wąskiego zadania mógł napędzić pełną bezflashową aktualizację roota.
+
+Poprawka przypina akceptowany `key_id` aktualizacji modułu do fail-closed **listy dozwolonych**, sprawdzanej **zanim** pubkey zostanie w ogóle wybrany. Kluczem konfiguracji jest `key_id`, a silnik rozwiązuje go tak:
+
+- **Keyring z jednym kluczem automatycznie przypina ten jeden klucz.** Powszechny przypadek nie potrzebuje żadnej konfiguracji: jeśli keyring zawiera dokładnie jeden klucz, to ten klucz *jest* listą dozwolonych i nic innego nie może podpisać aktualizacji modułu.
+- **Keyring z wieloma kluczami musi ustawić `key_id`.** W chwili, gdy pojawia się drugi klucz, silnik odmawia zgadywania. Zawodzi w trybie zamkniętym z komunikatem "multiple keys in keyring; config must pin key_id", dopóki konfiguracja nie wskaże klucza (lub kluczy, rozdzielonych przecinkami podczas okna rotacji), który może podpisywać aktualizacje modułu.
+
+Ponieważ sprawdzenie odbywa się przed wyborem pubkey, manifest wskazujący klucz, który jest obecny, ale nie na liście dozwolonych, jest odrzucany bez ładowania tego klucza przez weryfikator. Rozwiązany zestaw jest odzwierciedlany w `vdlu-verify` przez `VDLU_KEYID_ALLOW`, więc oszczędny kontroler na urządzeniu wymusza to samo przypięcie i oba nie mogą się różnić. Obowiązuje to w **obu** profilach: zarówno `hardened`, jak i `trusted` konsultują listę dozwolonych, ponieważ lista dozwolonych decyduje, *który klucz* jest prawidłowym korzeniem aktualizacji modułu, a nie *czy* podpis jest wymagany.
+
+Kanał fingerprint zachowuje własny, oddzielny przypięty korzeń zaufania, `FEED_KEY_ID`. To odrębny korzeń z odrębnym zadaniem, nigdy nieosiągalny przez powyższą ścieżkę aktualizacji modułu, więc przypięcie listy dozwolonych aktualizacji modułu go nie dotyka, a wyciekły klucz kanału wciąż nie może podpisać aktualizacji modułu. Ta zmiana podniosła `ENGINE_VERSION` do 4.
+
+---
+
 ## Co zamyka manifest narzędzi
 
 Oszczędny bootstrap pobierania pobiera statyczny `curl` przy pierwszym użyciu dla modułów, które nie dostarczają własnego. Ponieważ ten plik binarny działa jako root, jego własny podpis manifestu (ed25519-mini) i jego skrót są **obowiązkowe w każdym profilu**, łącznie z `trusted`, zanim kiedykolwiek zostanie zainstalowany lub wykonany. Webview jest tylko transportem; zaufanie pochodzi z podpisu i kontroli skrótu na urządzeniu, nigdy z faktu, że pobieranie się powiodło.
@@ -124,6 +141,7 @@ Nawet posiadając kanał lub siedząc na łączu jako pełny MITM, atakujący ni
 - **Usunąć poza modułem.** Wpisy `delete[]` przechodzą tę samą walidację ścieżki.
 - **Wstrzyknąć polecenie.** Żadna wartość manifestu nie jest interpolowana do powłoki ani `awk system()`; `sha256` musi być czystym 64-znakowym szesnastkowym, albo cały manifest jest odrzucany.
 - **Dostarczyć niepodpisany kod do publicznej instalacji.** `hardened` czyni podpis obowiązkowym, a profil jest fail-closed przez inwersję, więc żadna literówka ani zniekształcona wartość tego nie obniży.
+- **Podpisać aktualizację modułu kluczem o niższym zaufaniu.** `key_id` aktualizacji modułu jest przypięty do fail-closed listy dozwolonych, sprawdzanej przed wyborem pubkey, więc wyciekły klucz kanału fingerprint współdzielący keyring nie może podpisać pełnej aktualizacji roota.
 - **Podać tutaj podpisany kanał innego modułu.** Podpisane pole `module` musi równać się temu `MODID`.
 - **Cofnąć Cię.** Cofnięcie wersji jest zablokowane w `hardened`.
 - **Uszkodzić blob niewykryty.** Każdy pobrany blob jest ponownie haszowany względem `sha256` manifestu w obu profilach; niezgodność po trzech próbach przerywa fazę bez zastosowania czegokolwiek.

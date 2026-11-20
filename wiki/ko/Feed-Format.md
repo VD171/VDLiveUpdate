@@ -53,7 +53,7 @@
 | `built` | ISO 8601 빌드 타임스탬프. 재현성을 위해 `SOURCE_DATE_EPOCH`를 존중합니다. |
 | `engine_min` | 이 매니페스트를 적용하는 데 필요한 최소 엔진 버전. |
 | `channel` | 릴리스 채널(예: `stable`). |
-| `key_id` | 기기 keyring의 어느 키가 이 매니페스트에 서명했는지. 검증용 공개 키를 선택합니다. |
+| `key_id` | 기기 keyring의 어느 키가 이 매니페스트에 서명했는지. 검증용 공개 키를 선택합니다. 그리고 엔진의 모듈 업데이트 허용 목록에 있어야 합니다([[Security and Trust Model]] 참조). keyring에 단지 존재하지만 허용 목록에 없는 키는 그 pubkey가 로드되기 전에 거부됩니다. |
 | `files[]` | **완전한** 대상 트리(diff 아님). 각 항목: `path`, `sha256`, `size`, `mode`, `enc`(`raw`/`gz`), `class`(`live`/`soft`/`reboot`). |
 | `delete[]` | 이전 릴리스에는 있었지만 지금은 사라진 경로로, 기기가 제거할 것. |
 | `sig` | ed25519 서명, base64. 아래 정규화를 참조. |

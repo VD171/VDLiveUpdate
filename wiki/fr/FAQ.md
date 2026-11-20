@@ -51,7 +51,7 @@ Générez une nouvelle paire de clés avec `vdlu-keygen`, ajoutez la nouvelle cl
 keyring de l'appareil à côté de la précédente, et commencez à signer avec le nouveau
 `key_id`. L'appareil choisit `<keyring>/<key_id>.pub` par le `key_id` du manifeste,
 de sorte qu'aucun changement de moteur n'est nécessaire. Livrer à la fois la clé publique courante et la précédente
-signifie qu'une clé tournée ne brique jamais les anciennes installations. Voir [[Security and Trust Model]].
+signifie qu'une clé tournée ne brique jamais les anciennes installations. Parce qu'une rotation laisse plus d'une clé dans le keyring, vous devez aussi épingler quelle clé peut signer une mise à jour de module : définissez la config `key_id` (séparées par des virgules pendant la fenêtre de rotation). Un keyring à clé unique s'épingle automatiquement et n'a besoin d'aucune config. Voir [[Security and Trust Model]].
 
 ## hardened vs trusted - lequel utiliser ?
 

@@ -5,16 +5,16 @@
 # Beitragen zu VDLiveUpdate
 
 VDLU ist eine flashlose, inkrementelle Selbst-Update-Engine, die in KernelSU/APatch/Magisk-Module eingebettet wird.
-Beitraege sind willkommen.
+Beiträge sind willkommen.
 
 - Lies zuerst [INTERFACES.md](INTERFACES.md): es ist der Nahtvertrag zwischen den Komponenten (das Gesetz der
-  Konvergenz). Behandle es als unveraenderlich, sofern eine Aenderung nicht ueber Engine, Producer und WebUI koordiniert wird.
+  Konvergenz). Behandle es als unveränderlich, sofern eine Änderung nicht über Engine, Producer und WebUI koordiniert wird.
 - Teste Ende zu Ende vor einem PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, dann die Engine
   (`check` / `run` / `boot`). Auch `sh -n engine/*.sh` und `node --check webui/vdlu.js`.
 - Sicherheit ist nicht verhandelbar: jedes Manifestfeld ist feindlicher Input und `validate_plan()` bleibt
-  fail-closed; der private Signierschluessel beruehrt nie CI oder ein Geraet.
-- POSIX sh auf dem Geraet (keine Bashismen ueber `local` hinaus, kein `jq`); halte Kommentare knapp.
-- Eine logische Aenderung pro PR; sage, was sich geaendert hat und warum.
+  fail-closed; der private Signierschlüssel berührt nie CI oder ein Gerät.
+- POSIX sh auf dem Gerät (keine Bashismen über `local` hinaus, kein `jq`); halte Kommentare knapp.
+- Eine logische Änderung pro PR; sage, was sich geändert hat und warum.
 
 ## Kontakte
 

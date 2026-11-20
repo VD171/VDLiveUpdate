@@ -53,7 +53,7 @@ Het manifest is de complete beschrijving van één release: elk bestand in de do
 | `built` | ISO 8601-build-tijdstempel. Respecteert `SOURCE_DATE_EPOCH` voor reproduceerbaarheid. |
 | `engine_min` | De minimale engine-versie vereist om dit manifest toe te passen. |
 | `channel` | Release-kanaal (bijvoorbeeld `stable`). |
-| `key_id` | Welke sleutel in de keyring van het apparaat dit manifest signeerde. Selecteert de publieke sleutel voor verificatie. |
+| `key_id` | Welke sleutel in de keyring van het apparaat dit manifest signeerde. Selecteert de publieke sleutel voor verificatie, en moet op de module-update-allowlist van de engine staan (zie [[Security and Trust Model]]); een sleutel die slechts in de keyring aanwezig is maar niet op de allowlist staat, wordt afgewezen voordat zijn pubkey wordt geladen. |
 | `files[]` | De **complete** doelboom (geen diff). Elke entry: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Paden aanwezig in de vorige release maar nu weg, voor het apparaat om te verwijderen. |
 | `sig` | De ed25519-handtekening, base64. Zie de canonicalisatie hieronder. |

@@ -84,6 +84,8 @@ vdlu-keygen <id> <out_dir>
 
 Ham 32 baytlık açık anahtar, cihaz doğrulayıcısının okuduğu şeydir (`openssl` taşımaz, bu yüzden PEM'i okuyamaz). `<id>.pub.raw`'ı modüle `vdlu/keyring/<id>.pub` olarak gömersiniz. PEM yalnızca PC tarafı kullanım içindir. Bu ayrım ve anahtar döndürmenin (key rotation) nasıl çalıştığı [[Security and Trust Model]] içinde açıklanmıştır.
 
+> **Çok anahtarlı bir keyring `key_id`'yi sabitlemelidir.** Modülün keyring'i birden fazla anahtar gönderiyorsa (örneğin release anahtarı artı daha düşük güvenli bir parmak izi feed'i anahtarı), motor hangisinin bir modül güncellemesi imzalayabileceğini tahmin etmez. `key_id` yapılandırmasını, güncellemeleri imzalamasına izin verilen anahtara veya bir döndürme penceresi sırasında virgülle ayrılmış anahtarlara ayarlayın; tek anahtarlı bir keyring otomatik olarak sabitler ve hiçbir yapılandırmaya ihtiyaç duymaz. Bu, [[Security and Trust Model]] içinde ele alınan modül güncelleme izin listesidir.
+
 > Özel `.pem`, tüm sistemdeki tek sırdır. Onu her cihazdan uzak ve her depo (repository) gönderiminin dışında tutun. Aşağıdaki CI notuna bakın.
 
 ---

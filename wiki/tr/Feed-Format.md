@@ -53,7 +53,7 @@ Manifesto, bir yayının tam açıklamasıdır: hedef ağaçtaki her dosya, neyi
 | `built` | ISO 8601 yapı zaman damgası. Yeniden üretilebilirlik için `SOURCE_DATE_EPOCH`'a uyar. |
 | `engine_min` | Bu manifestoyu uygulamak için gereken minimum motor sürümü. |
 | `channel` | Yayın kanalı (örneğin `stable`). |
-| `key_id` | Cihaz keyring'indeki hangi anahtarın bu manifestoyu imzaladığı. Doğrulama için açık anahtarı seçer. |
+| `key_id` | Cihaz keyring'indeki hangi anahtarın bu manifestoyu imzaladığı. Doğrulama için açık anahtarı seçer ve motorun modül güncelleme izin listesinde olmalıdır (bkz. [[Security and Trust Model]]); yalnızca keyring'de bulunan ama izin listesinde olmayan bir anahtar, pubkey'i yüklenmeden reddedilir. |
 | `files[]` | **Tüm** hedef ağaç (bir fark değil). Her girdi: `path`, `sha256`, `size`, `mode`, `enc` (`raw`/`gz`), `class` (`live`/`soft`/`reboot`). |
 | `delete[]` | Önceki yayında bulunan ancak şimdi gitmiş olan yollar, cihazın kaldırması için. |
 | `sig` | ed25519 imzası, base64. Aşağıdaki kanonikleştirmeye bakın. |

@@ -51,7 +51,7 @@ Gere um novo par de chaves com `vdlu-keygen`, adicione a nova chave pública RAW
 keyring do dispositivo ao lado da anterior, e comece a assinar com o novo
 `key_id`. O dispositivo escolhe `<keyring>/<key_id>.pub` pelo `key_id` do manifesto,
 então nenhuma mudança no motor é necessária. Enviar tanto a chave pública atual quanto a anterior
-significa que uma chave rotacionada nunca brica instalações antigas. Veja [[Security and Trust Model]].
+significa que uma chave rotacionada nunca brica instalações antigas. Como uma rotação deixa mais de uma chave no keyring, você também deve fixar qual chave pode assinar uma atualização de módulo: defina a config `key_id` (separada por vírgula durante a janela de rotação). Um keyring de chave única fixa automaticamente e não precisa de config. Veja [[Security and Trust Model]].
 
 ## hardened vs trusted - qual eu uso?
 

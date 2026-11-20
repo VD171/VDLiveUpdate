@@ -110,6 +110,23 @@ Khi một khóa ký được luân chuyển, keyring ship **cả khóa công kha
 
 ---
 
+## Danh sách cho phép key_id của cập nhật module
+
+Việc luân chuyển khóa vốn đã có nghĩa là keyring có thể chính đáng giữ nhiều hơn một khóa, và một module có thể giữ nhiều hơn một vì một lý do thứ hai: nó có thể ship một khóa có độ tin cậy thấp hơn để ký một feed *khác*. Feed fingerprint chính là trường hợp đó. Một module có thể mang một khóa hẹp mà công việc duy nhất của nó là ký một feed fingerprint, nằm trong cùng keyring ngay cạnh khóa release vốn ký chính module đó.
+
+Điều đó đặt ra một câu hỏi mà riêng câu chuyện luân chuyển không trả lời được: một khi hai khóa cùng sống trong keyring, *khóa nào* trong số đó được phép ký một **cập nhật module**? Một cập nhật module là thứ mạnh nhất mà một manifest có thể yêu cầu, vì nó viết lại các tệp mà thiết bị chạy như root. Bộ xác minh trước đây chọn pubkey được `key_id` của manifest nêu tên và chấp nhận bất kỳ khóa nào tình cờ hiện diện trong keyring. Vậy nên khóa feed fingerprint có độ tin cậy thấp hơn, nếu bị rò rỉ, có thể ký một manifest cập nhật module và thiết bị sẽ tôn trọng nó. Đó là một sự vượt qua gốc tin cậy: một khóa dành cho một công việc hẹp duy nhất lại có thể lái một bản cập nhật root flashless đầy đủ.
+
+Bản sửa ghim `key_id` cập nhật module được chấp nhận vào một **danh sách cho phép** fail-closed, được kiểm tra **trước** khi pubkey từng được chọn. Khóa cấu hình là `key_id`, và engine phân giải nó như sau:
+
+- **Một keyring một khóa tự động ghim khóa đó.** Trường hợp phổ biến hoàn toàn không cần cấu hình: nếu keyring giữ đúng một khóa, khóa đó *chính là* danh sách cho phép, và không gì khác có thể ký một cập nhật module.
+- **Một keyring nhiều khóa phải đặt `key_id`.** Ngay khoảnh khắc một khóa thứ hai xuất hiện, engine từ chối đoán. Nó fail-closed với "multiple keys in keyring; config must pin key_id" cho đến khi cấu hình nêu tên khóa (hoặc các khóa, phân tách bằng dấu phẩy trong một cửa sổ luân chuyển) được phép ký các cập nhật module.
+
+Vì lần kiểm tra chạy trước khi chọn pubkey, một manifest nêu tên một khóa có hiện diện nhưng không nằm trong danh sách cho phép sẽ bị từ chối mà bộ xác minh không bao giờ nạp khóa đó. Tập hợp đã phân giải được phản chiếu vào `vdlu-verify` thông qua `VDLU_KEYID_ALLOW`, nên bộ kiểm tra gọn nhẹ trên thiết bị thực thi cùng một lần ghim và hai bên không thể bất đồng. Điều này đúng ở **cả hai** profile: cả `hardened` lẫn `trusted` đều tham vấn danh sách cho phép, vì danh sách cho phép quyết định *khóa nào* là một gốc cập nhật module hợp lệ, chứ không phải *liệu* có cần một chữ ký hay không.
+
+Feed fingerprint giữ gốc tin cậy được ghim riêng của chính nó, `FEED_KEY_ID`. Đó là một gốc riêng biệt với một công việc riêng biệt, không bao giờ với tới được qua đường cập nhật module ở trên, nên việc ghim danh sách cho phép cập nhật module không chạm vào nó và một khóa feed bị rò rỉ vẫn không thể ký một cập nhật module. Thay đổi này đã nâng `ENGINE_VERSION` lên 4.
+
+---
+
 ## Những gì tools-manifest đóng lại
 
 Bootstrap fetch gọn nhẹ tải một `curl` tĩnh ở lần dùng đầu tiên cho các module không ship `curl` của riêng chúng. Vì nhị phân đó chạy như root, chữ ký manifest của riêng nó (ed25519-mini) và hash của nó là **bắt buộc ở mọi profile**, kể cả `trusted`, trước khi nó từng được cài hay thực thi. Webview chỉ là phương tiện vận chuyển; tin cậy đến từ chữ ký và lần kiểm tra hash trên thiết bị, không bao giờ từ việc một lần tải đã thành công.
@@ -124,6 +141,7 @@ Ngay cả khi sở hữu feed, hoặc ngồi trên đường truyền như một
 - **Xóa ra ngoài module.** Các mục `delete[]` vượt qua cùng một xác thực đường dẫn.
 - **Chèn một lệnh.** Không giá trị manifest nào bị nội suy vào một shell hoặc `awk system()`; `sha256` phải là hex 64 ký tự thuần hoặc toàn bộ manifest bị từ chối.
 - **Ship mã chưa ký tới một bản cài công khai.** `hardened` khiến chữ ký là bắt buộc, và profile fail-closed bằng cách đảo ngược, nên không lỗi gõ hay giá trị băm nát nào hạ cấp điều đó.
+- **Ký một cập nhật module bằng một khóa có độ tin cậy thấp hơn.** `key_id` cập nhật module được ghim vào một danh sách cho phép fail-closed, được kiểm tra trước khi pubkey được chọn, nên một khóa feed fingerprint bị rò rỉ dùng chung keyring không thể ký một bản cập nhật root đầy đủ.
 - **Phục vụ feed đã ký của một module khác ở đây.** Trường `module` đã ký phải bằng `MODID` này.
 - **Cuốn bạn lùi lại.** Hạ cấp bị chặn trong `hardened`.
 - **Làm hỏng một blob mà không bị phát hiện.** Mọi blob đã tải đều được băm lại so với `sha256` của manifest ở cả hai profile; một lần không khớp sau ba lần thử sẽ hủy pha này mà không áp dụng gì.

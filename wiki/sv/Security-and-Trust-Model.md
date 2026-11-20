@@ -110,6 +110,23 @@ När en signeringsnyckel roteras levererar nyckelringen **både den aktuella och
 
 ---
 
+## Tillåtlistan för moduluppdaterings-key_id
+
+Nyckelrotation betyder redan att nyckelringen legitimt kan hålla mer än en nyckel, och en modul kan hålla fler än en av ett andra skäl: den kan leverera en nyckel med lägre förtroende som signerar ett *annat* flöde. Fingeravtrycksflödet är precis det fallet. En modul kan bära en smal nyckel vars enda uppgift är att signera ett fingeravtrycksflöde, sittande i samma nyckelring precis bredvid release-nyckeln som signerar själva modulen.
+
+Det väcker en fråga som rotationsberättelsen ensam inte besvarar: när väl två nycklar bor i nyckelringen, *vilken* av dem får signera en **moduluppdatering**? En moduluppdatering är det mäktigaste ett manifest kan begära, eftersom den skriver om filer som enheten kör som root. Verifieraren brukade välja pubnyckeln som manifestets `key_id` namnger och acceptera vilken nyckel som helst som råkade finnas i nyckelringen. Så fingeravtrycksflödets nyckel med lägre förtroende kunde, om den läckte, signera ett moduluppdateringsmanifest och enheten skulle hedra det. Det är en förbigång av förtroenderoten: en nyckel avsedd för en enda smal uppgift kunde driva en full flashless root-uppdatering.
+
+Fixet nålar fast det accepterade moduluppdaterings-`key_id` till en fail-closed **tillåtlista**, kontrollerad **innan** pubnyckeln ens väljs. Konfigurationsnyckeln är `key_id`, och motorn löser upp den så här:
+
+- **En nyckelring med en enda nyckel nålar automatiskt fast den nyckeln.** Det vanliga fallet behöver ingen konfiguration alls: om nyckelringen håller exakt en nyckel *är* den nyckeln tillåtlistan, och inget annat kan signera en moduluppdatering.
+- **En nyckelring med flera nycklar måste sätta `key_id`.** I samma stund en andra nyckel dyker upp vägrar motorn gissa. Den fallerar stängt med "multiple keys in keyring; config must pin key_id" tills konfigurationen namnger nyckeln (eller nycklarna, kommaseparerade under ett rotationsfönster) som får signera moduluppdateringar.
+
+Eftersom kontrollen körs innan pubnyckelvalet, förkastas ett manifest som namnger en nyckel som finns men inte är tillåtlistad utan att verifieraren någonsin laddar den nyckeln. Den upplösta mängden speglas in i `vdlu-verify` genom `VDLU_KEYID_ALLOW`, så den slimmade kontrollen på enheten tvingar samma fastnålning och de två kan inte vara oense. Detta gäller i **båda** profilerna: `hardened` och `trusted` konsulterar båda tillåtlistan, eftersom tillåtlistan avgör *vilken nyckel* som är en giltig moduluppdateringsrot, inte *om* en signatur krävs.
+
+Fingeravtrycksflödet behåller sin egen separata fastnålade förtroenderot, `FEED_KEY_ID`. Det är en distinkt rot med en distinkt uppgift, aldrig nåbar genom moduluppdateringsvägen ovan, så att nåla fast moduluppdateringstillåtlistan rör den inte och en läckt flödesnyckel kan fortfarande inte signera en moduluppdatering. Denna ändring höjde `ENGINE_VERSION` till 4.
+
+---
+
 ## Vad verktygsmanifestet stänger
 
 Den slimmade hämtningsstartaren laddar ner en statisk `curl` vid första användningen för moduler som inte levererar sin egen. Eftersom den binären körs som root är dess egen manifestsignatur (ed25519-mini) och dess hash **obligatoriska i varje profil**, inklusive `trusted`, innan den någonsin installeras eller körs. Webviewen är bara transport; förtroende kommer från signatur- och hash-kontrollen på enheten, aldrig från det faktum att en nedladdning lyckades.
@@ -124,6 +141,7 @@ Den slimmade hämtningsstartaren laddar ner en statisk `curl` vid första använ
 - **Ta bort utanför modulen.** `delete[]`-poster klarar samma sökvägsvalidering.
 - **Injicera ett kommando.** Inget manifestvärde interpoleras in i ett skal eller `awk system()`; `sha256` måste vara ren 64-hex eller så förkastas hela manifestet.
 - **Skicka osignerad kod till en publik installation.** `hardened` gör signaturen obligatorisk, och profilen är fail-closed genom inversion, så inget stavfel eller förvanskat värde nedgraderar det.
+- **Signera en moduluppdatering med en nyckel med lägre förtroende.** Moduluppdateringens `key_id` är fastnålat till en fail-closed-tillåtlista, kontrollerad innan pubnyckeln väljs, så en läckt fingeravtrycksflödesnyckel som delar nyckelringen kan inte signera en full root-uppdatering.
 - **Servera en annan moduls signerade flöde här.** Det signerade `module`-fältet måste vara lika med detta `MODID`.
 - **Rulla tillbaka dig.** Nedgradering är blockerad i `hardened`.
 - **Korrumpera en blob oupptäckt.** Varje nedladdad blob omhashas mot manifestets `sha256` i båda profilerna; en avvikelse efter tre försök avbryter fasen utan att något tillämpas.

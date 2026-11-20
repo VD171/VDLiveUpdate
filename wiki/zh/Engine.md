@@ -86,6 +86,8 @@ vdlu-verify <manifest.json> <keyring_dir>
 
 让它精简的是它使用**设备上没有 `openssl`**。它把 keyring 公钥读为一个**原始 32 字节**文件，将清单规范化（去掉了 `sig` 字段的清单文本），用 toybox `sha256sum` 对其哈希，base64 解码签名，并把原始密钥、消息和 64 字节签名交给内嵌的 `ed25519-mini` 二进制。该校验器在进行验证之前还会拒绝任何畸形内容：缺失或为空的 `key_id` 或 `sig`、含有路径分隔符的 `key_id`、不恰好是 32 字节的公钥，或者不恰好是 64 字节的签名。
 
+在它选择一个密钥之前，引擎就强制执行一个 **`key_id` 允许列表**：清单的 `key_id` 必须是配置允许签名一次*模块更新*的密钥，而一个仅存在于 keyring 中但不在允许列表里的密钥，会在其 pubkey 被加载之前就被拒绝。单密钥 keyring 无需配置即自动钉定那一个密钥；多密钥 keyring 必须钉定 `key_id`，否则引擎故障即关闭。被允许的集合以 `VDLU_KEYID_ALLOW` 向下传给 `vdlu-verify`，并在两个配置档中都适用。这阻止一个较低信任的密钥（例如一个与之共享 keyring 的指纹 feed 密钥）签名一次完整的 root 更新；独立的指纹 feed 保留它自己钉定的密钥 `FEED_KEY_ID`。完整叙述见 [[Security and Trust Model]]。
+
 该规范化与 producer 的签名器逐字节相同，这正是让一个签名能跨工具验证的原因。对应的私钥从不接触任何设备或 CI；只有原始公钥被内嵌。完整的信任叙述、两个配置档，以及为什么 `hardened` 通过反向判断实现故障即关闭，见 [[Security and Trust Model]]。
 
 引擎在 diff 阶段调用 `vdlu-verify`。在 `hardened` 配置档下，一次验证失败会中止整个更新；在 `trusted` 下，验证是尽力而为（best-effort），但每个 blob 的哈希始终仍会被校验，因此无论哪个配置档，被损坏的内容都会被抓住。

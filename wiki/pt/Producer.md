@@ -84,6 +84,8 @@ Ele grava três arquivos:
 
 A chave pública bruta de 32 bytes é o que o verificador do dispositivo lê (ele não carrega `openssl`, então não consegue ler o PEM). Você embarca `<id>.pub.raw` no módulo como `vdlu/keyring/<id>.pub`. O PEM é só para uso do lado do PC. Essa divisão, e como a rotação de chaves funciona, é explicada em [[Security and Trust Model]].
 
+> **Um keyring de múltiplas chaves deve fixar `key_id`.** Se o keyring do módulo traz mais de uma chave (por exemplo a chave de release mais uma chave de feed de fingerprint de menor confiança), o motor não vai adivinhar qual pode assinar uma atualização de módulo. Defina a config `key_id` para a chave, ou as chaves separadas por vírgula durante uma janela de rotação, que tem permissão para assinar atualizações; um keyring de chave única fixa automaticamente e não precisa de config. Esta é a lista de permissão de atualização de módulo, coberta em [[Security and Trust Model]].
+
 > A `.pem` privada é o único segredo em todo o sistema. Mantenha-a fora de todo dispositivo e de todo push de repositório. Veja a nota de CI abaixo.
 
 ---
