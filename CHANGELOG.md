@@ -5,6 +5,9 @@ signed manifest declares via `engine_min`.
 
 ## Unreleased
 - Public release: English README and dev docs, Apache-2.0 LICENSE, third-party NOTICE.
+- Wiki is now repo-managed: page sources live in `wiki/` (see `wiki/README.md`), `.github/scripts/gen_wiki.sh`
+  assembles the published pages, and `.github/workflows/wiki-sync.yml` publishes them to the GitHub Wiki on
+  every push to `main` (no-op when unchanged).
 
 ## ENGINE_VERSION 4 - 2026-11-19
 - **Trust root:** module-update signing key is now pinned to a fail-closed ALLOWLIST. `verify_manifest`

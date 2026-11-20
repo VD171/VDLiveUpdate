@@ -1,0 +1,60 @@
+# ======================================================================
+#  VDLiveUpdate  ::  Flashless incremental self-update engine for KernelSU / APatch / Magisk modules
+#  Publish the repo-managed wiki/ source to the GitHub Wiki on every push to main.
+#
+#  Copyright (C) 2026  VD171
+#  SPDX-License-Identifier: Apache-2.0
+#
+#  Site           : https://vd171.ru
+#  Site           : https://vd.priv8.ru
+#  Source         : https://github.com/VD171/VDLiveUpdate
+#  GitHub         : @VD171 https://github.com/VD171
+#  XDA-Developers : @VD171 https://xdaforums.com/m/vd171.4699873/
+#  Telegram       : @VD_Priv8 https://t.me/VD_Priv8
+#  Channel        : @Priv8_VD https://t.me/Priv8_VD
+#  Discord        : @VD.Priv8 https://discord.com/users/1296831918989639721
+#  E-mail         : vd.priv8@pm.me
+# ======================================================================
+
+# wiki/ is the source of truth. This assembles the published pages from it and copies them into
+# the separate VDLiveUpdate.wiki.git. Runs on every push to main; the "no change -> no commit"
+# guard keeps it a no-op when wiki/ did not change. Initialize the Wiki once (create any page in
+# the web UI) before the first run, or the wiki clone has no repo to pull.
+
+name: Wiki sync
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Assemble wiki/ and sync into the Wiki
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-clone
+          bash .github/scripts/gen_wiki.sh wiki wiki-clone
+          cd wiki-clone
+          git add -A
+          if git diff --cached --quiet; then
+            echo "wiki already up to date"
+          else
+            git commit -m "wiki: sync @ ${GITHUB_SHA}"
+            git push
+          fi
