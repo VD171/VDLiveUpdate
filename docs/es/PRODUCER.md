@@ -131,6 +131,8 @@ de `keygen`), NO PEM - `ed25519-mini` lee 32 bytes raw. Entrega la pubkey raw ac
 el engine. El keyring es **estable** entre releases (solo la rotación de clave lo cambia): un re-vendor debe
 **verificar-no-copiar** y nunca sobrescribirlo con el `.pub` PEM del PC-side.
 
+**Los keyrings multiclave DEBEN fijar la clave del módulo.** El engine restringe qué `key_id` puede firmar un MODULE-UPDATE a la allowlist `key_id` de la config (INTERFACES §5/§6), comprobada fail-closed antes de seleccionar la pubkey. Un keyring de una clave es seguro por defecto (esa única clave se acepta). Pero un módulo cuyo keyring lleva TAMBIÉN una clave de menor confianza - p. ej. una clave de fingerprint-feed junto a la clave de release - es rechazado hasta que su `config` declare la clave del módulo, p. ej. `key_id=vd-2026` (separadas por comas para rotación, p. ej. `key_id=vd-2026,vd-2027`). Esto impide que una clave de menor confianza filtrada firme una actualización root flashless.
+
 `vdlu-pack` **excluye el keyring y los binarios de `verify/` del feed** (la raíz de confianza es solo-flash, nunca servida por la red), junto con `baseline.json`, el andamiaje del instalador (`META-INF/`, `customize.sh`), la compuerta de flash `.vd/`, los `update.json`/`update-mmrl.json` rellenados por CI, y los compañeros `.sha256` por archivo. Solo el contenido propio del módulo es actualizable por el feed, así que un manifiesto nunca puede reescribir el ancla de confianza en el dispositivo.
 
 <!-- doc-footer -->

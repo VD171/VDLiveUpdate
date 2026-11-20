@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -136,6 +139,7 @@ Engine `97baf887`+ (`file://` ніколи не контролюється).
   бінарник `ed25519-mini` (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=валідний/1=невалідний/2=usage).
   rc!=0 = відхилення. **`profile=hardened` ⇒ verify обов'язковий; збій = abort.**
   `profile=trusted` ⇒ verify є best-effort (джерело вже довірене через SSH), але геш кожного блоба ЗАВЖДИ перевіряється.
+- **Allowlist ключа module-update (fail-closed, перед вибором pubkey):** `key_id` маніфесту має бути прийнятим ключем MODULE-UPDATE, перш ніж буде вибрано `<key_id>.pub` - `key_id` з config (§5) і є цією allowlist. Keyring може НЕСТИ й ключ нижчої довіри (напр., ключ fingerprint-feed, автоматизований, інший акаунт); без allowlist маніфест, підписаний цим ключем, пройшов би перевірку і застосував би повне flashless root-оновлення в разі витоку. `verify_manifest` застосовує це в ОБОХ profiles і передає розв'язану множину до `vdlu-verify` через env `VDLU_KEYID_ALLOW` (щоб окремий верифікатор погоджувався). Невстановлене є безпечним за замовчуванням (keyring з одним ключем: лише той ключ; багатоключовий keyring: відхилено, доки `key_id` не закріплено). Корінь довіри fingerprint-feed - це ОКРЕМИЙ шлях із власним закріпленим ключем, і він не зачіпається.
 - `producer/vdlu-keygen <id> <out>` → генерує `<id>.pem` (priv) + `<id>.pub` (PEM, для інструментів на ПК) +
   `<id>.pub.raw` (**RAW 32B** = `<id>.pub` компактного keyring на пристрої). openssl `genpkey -algorithm ed25519`.
 

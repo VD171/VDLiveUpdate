@@ -65,6 +65,7 @@ check/boot 时恢复（WebUI 显示一个蓝色 info toast“等待 X 网络”�
   wakelock - 省电。中途崩溃/网络/重启 → `resume`/`boot` 继续。
 - **profile=hardened** ⇒ 使用前在清单上强制 `vdlu-verify`；失败 = abort；降级被阻止
   （单调版本）。**trusted** ⇒ verify 尽力而为，但每个 blob 的哈希始终被检查。
+- **module-update 密钥 allowlist（两个 profiles）：** `verify_manifest` 在 pubkey 选取之前，fail-closed 地拒绝任何 `key_id` 不在已配置 `key_id` allowlist（见 INTERFACES §5/§6）中的清单，因此仅仅待在 keyring 中的较低信任密钥（例如一个 fingerprint-feed 密钥）绝不能签署 flashless root 更新。未设置时默认安全：单密钥 keyring = 仅那一个密钥；多密钥 keyring = 在 `key_id` 被固定前拒绝。
 - 优雅降级：缺少二进制 / 网络中断 / 磁盘已满 → stderr 上一个清晰的错误 + journal 中的
   `state:ERROR`，而不损坏模块。
 
@@ -80,7 +81,7 @@ JSON 都健壮。`sh` 用 `grep`/`cut` 消费它；逐文件计划在第 2 个 `
 
 | 文件 | 角色 |
 |---|---|
-| `config` | key=value（`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…；见 INTERFACES §5） |
+| `config` | key=value（`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…；见 INTERFACES §5） |
 | `current.json` | 当前 ACTIVE 版本的清单（diff 基准）；缺失 = 从未更新过 |
 | `target.json` | 在途事务的固定清单（存在 = 活动事务）；`DONE` 时变为 `current.json` |
 | `plan.tsv` / `plan.del` | 计划 + 逐文件进度（st）/ 要删除的路径 |

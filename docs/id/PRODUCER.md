@@ -129,6 +129,8 @@ memilih `<keyring>/<key_id>.pub` (mentah) adalah keseluruhan mekanisme rotasi - 
 **stabil** lintas release (hanya rotasi kunci yang mengubahnya): sebuah re-vendor harus **verifikasi-bukan-salin**, dan tidak pernah
 menimpanya dengan `.pub` PEM sisi-PC.
 
+**Keyring multi-kunci WAJIB mem-pin kunci modul.** Engine membatasi `key_id` mana yang boleh menandatangani MODULE-UPDATE ke allowlist `key_id` config (INTERFACES §5/§6), diperiksa fail-closed sebelum pubkey dipilih. Keyring kunci tunggal aman-secara-default (satu kunci itu diterima). Tetapi sebuah modul yang keyring-nya JUGA membawa kunci kepercayaan lebih rendah - mis. kunci fingerprint-feed di samping kunci release - ditolak sampai `config`-nya mendeklarasikan kunci modul, mis. `key_id=vd-2026` (dipisah koma untuk rotasi, mis. `key_id=vd-2026,vd-2027`). Ini mencegah kunci kepercayaan lebih rendah yang bocor menandatangani pembaruan flashless root.
+
 `vdlu-pack` **mengecualikan keyring dan biner `verify/` dari feed** (akar kepercayaan bersifat hanya-flash, tidak pernah disajikan lewat kabel), bersama `baseline.json`, scaffolding installer (`META-INF/`, `customize.sh`), gerbang flash `.vd/`, `update.json`/`update-mmrl.json` yang diisi CI, dan pendamping `.sha256` per file. Hanya konten milik modul itu sendiri yang dapat diperbarui lewat feed, sehingga sebuah manifest tidak pernah dapat menulis ulang jangkar kepercayaan di perangkat.
 
 <!-- doc-footer -->

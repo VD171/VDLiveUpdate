@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -136,6 +139,7 @@ Engine `97baf887`+ (`file://` को कभी नियंत्रित न�
   `ed25519-mini` बाइनरी (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=वैध/1=अमान्य/2=उपयोग)।
   rc!=0 = अस्वीकार। **`profile=hardened` ⇒ verify अनिवार्य; विफलता = abort।**
   `profile=trusted` ⇒ verify best-effort है (स्रोत पहले से SSH के माध्यम से विश्वसनीय), लेकिन हर blob का हैश हमेशा जाँचा जाता है।
+- **module-update कुंजी allowlist (fail-closed, pubkey चयन से पहले):** manifest का `key_id` एक स्वीकृत MODULE-UPDATE कुंजी होना चाहिए, इससे पहले कि `<key_id>.pub` चुना जाए - config का `key_id` (§5) वही allowlist है। keyring एक कम-भरोसे वाली कुंजी भी रख सकता है (जैसे एक fingerprint-feed कुंजी, स्वचालित, अलग खाता); allowlist के बिना, उस कुंजी से हस्ताक्षरित manifest लीक होने पर सत्यापित हो जाएगा और एक पूर्ण flashless root अपडेट लागू कर देगा। `verify_manifest` इसे दोनों profiles में लागू करता है और हल किए गए सेट को env `VDLU_KEYID_ALLOW` के माध्यम से `vdlu-verify` को देता है (ताकि standalone verifier भी सहमत हो)। अनसेट डिफ़ॉल्ट-सुरक्षित है (एकल-कुंजी keyring: केवल वही कुंजी; बहु-कुंजी keyring: `key_id` पिन होने तक अस्वीकृत)। fingerprint-feed trust root एक अलग पथ है जिसकी अपनी पिन की गई कुंजी है और यह प्रभावित नहीं होता।
 - `producer/vdlu-keygen <id> <out>` -> `<id>.pem` (priv) + `<id>.pub` (PEM, PC पर tooling के लिए) +
   `<id>.pub.raw` (**RAW 32B** = डिवाइस पर slim keyring का `<id>.pub`) उत्पन्न करता है। openssl `genpkey -algorithm ed25519`।
 

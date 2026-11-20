@@ -65,6 +65,7 @@ check/boot kế tiếp (WebUI hiện một toast info xanh "đang chờ mạng X
   wakelock - an toàn pin. Một crash/mạng/khởi động lại giữa chừng → `resume`/`boot` tiếp tục.
 - **profile=hardened** ⇒ `vdlu-verify` bắt buộc trên manifest TRƯỚC khi dùng; thất bại = abort; downgrade bị chặn
   (phiên bản đơn điệu). **trusted** ⇒ verify là best-effort, nhưng băm của mỗi blob LUÔN được kiểm tra.
+- **allowlist khóa module-update (cả hai profiles):** `verify_manifest` từ chối, fail-closed, bất kỳ manifest nào có `key_id` không nằm trong allowlist `key_id` đã cấu hình (xem INTERFACES §5/§6) TRƯỚC khi pubkey được chọn, nên một khóa tin cậy thấp hơn chỉ nằm trong keyring (ví dụ một khóa fingerprint-feed) không bao giờ có thể ký một bản cập nhật flashless root. An toàn mặc định khi chưa đặt: keyring một khóa = chỉ một khóa đó; keyring nhiều khóa = bị từ chối cho đến khi `key_id` được ghim.
 - Suy giảm uyển chuyển: thiếu binary / mạng sập / đĩa đầy → một lỗi rõ ràng trên stderr + `state:ERROR` trong
   journal, mà không làm hỏng module.
 
@@ -80,7 +81,7 @@ in đẹp. `sh` tiêu thụ nó với `grep`/`cut`; kế hoạch theo từng t�
 
 | tệp | vai trò |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; xem INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; xem INTERFACES §5) |
 | `current.json` | manifest của phiên bản ĐANG HOẠT ĐỘNG (cơ sở diff); vắng mặt = chưa bao giờ cập nhật |
 | `target.json` | manifest được ghim của giao dịch đang bay (hiện diện = giao dịch đang hoạt động); trở thành `current.json` khi `DONE` |
 | `plan.tsv` / `plan.del` | kế hoạch + tiến độ theo từng tệp (st) / các path cần xóa |

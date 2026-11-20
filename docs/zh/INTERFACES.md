@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -135,6 +138,7 @@ Engine `97baf887`+（`file://` 从不被控制）。
   `ed25519-mini` 二进制（CLI `ed25519-mini <pub32> <msg> <sig64>`，rc 0=有效/1=无效/2=usage）。
   rc!=0 = 拒绝。**`profile=hardened` ⇒ verify 强制；失败 = abort。**
   `profile=trusted` ⇒ verify 是尽力而为（来源已经通过 SSH 受信），但每个 blob 的哈希始终被检查。
+- **module-update 密钥 allowlist（fail-closed，在 pubkey 选取之前）：** 清单的 `key_id` 必须是已接受的 MODULE-UPDATE 密钥，才会选取 `<key_id>.pub` - config 的 `key_id`（§5）就是这个 allowlist。keyring 也可能携带一个较低信任的密钥（例如一个 fingerprint-feed 密钥，自动化，不同账户）；没有 allowlist，由该密钥签名的清单一旦泄露便会通过验证并应用一次完整的 flashless root 更新。`verify_manifest` 在两个 profiles 中都强制执行，并通过 env `VDLU_KEYID_ALLOW` 将解析出的集合传给 `vdlu-verify`（使独立 verifier 保持一致）。未设置时默认安全（单密钥 keyring：仅该密钥；多密钥 keyring：在 `key_id` 被固定前拒绝）。fingerprint-feed 信任根是一条独立路径，有自己固定的密钥，不受影响。
 - `producer/vdlu-keygen <id> <out>` → 生成 `<id>.pem`（priv）+ `<id>.pub`（PEM，用于 PC 上的工具）+
   `<id>.pub.raw`（**RAW 32B** = 设备上精简 keyring 的 `<id>.pub`）。openssl `genpkey -algorithm ed25519`。
 

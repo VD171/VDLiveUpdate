@@ -129,6 +129,8 @@ som väljer `<keyring>/<key_id>.pub` (rå) är hela rotationsmekanismen - ingen 
 **stabil** över releaser (bara nyckelrotation ändrar den): en om-vendoring måste **verifiera-inte-kopiera** den, och aldrig
 skriva över den med den PC-sidiga `.pub` PEM:en.
 
+**Keyringar med flera nycklar MÅSTE nåla fast modulnyckeln.** Engine begränsar vilken `key_id` som får signera en MODULE-UPDATE till configens `key_id`-allowlist (INTERFACES §5/§6), kontrollerad fail-closed innan pubnyckeln väljs. En keyring med en nyckel är standardsäker (den enda nyckeln accepteras). Men en modul vars keyring OCKSÅ bär en nyckel med lägre tillit - t.ex. en fingerprint-feed-nyckel vid sidan av release-nyckeln - avvisas tills dess `config` deklarerar modulnyckeln, t.ex. `key_id=vd-2026` (kommaseparerade för rotation, t.ex. `key_id=vd-2026,vd-2027`). Detta hindrar en läckt nyckel med lägre tillit från att signera en flashless root-uppdatering.
+
 `vdlu-pack` **exkluderar keyringen och `verify/`-binärerna från flödet** (tillitsroten är endast flash, serveras aldrig över nätet), vid sidan av `baseline.json`, installerarställningen (`META-INF/`, `customize.sh`), `.vd/`-flashgrinden, de CI-fyllda `update.json`/`update-mmrl.json` och de per-fil `.sha256`-följeslagarna. Endast modulens eget innehåll är flödesuppdaterbart, så ett manifest kan aldrig skriva om tillitsankaret på enheten.
 
 <!-- doc-footer -->

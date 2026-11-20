@@ -129,6 +129,13 @@ picking `<keyring>/<key_id>.pub` (raw) is the whole rotation mechanism - no engi
 **stable** across releases (only key rotation changes it): a re-vendor must **verify-not-copy** it, and never
 overwrite it with the PC-side `.pub` PEM.
 
+**Multi-key keyrings MUST pin the module key.** The engine restricts which `key_id` may sign a MODULE-UPDATE
+to the config `key_id` allowlist (INTERFACES §5/§6), checked fail-closed before the pubkey is selected. A
+single-key keyring is default-safe (that one key is accepted). But a module whose keyring ALSO carries a
+lower-trust key - e.g. a fingerprint-feed key alongside the release key - is rejected until its `config`
+declares the module key, e.g. `key_id=vd-2026` (comma-separated for rotation, e.g. `key_id=vd-2026,vd-2027`).
+This stops a leaked lower-trust key from signing a flashless root update.
+
 `vdlu-pack` **excludes the keyring and the `verify/` binaries from the feed** (the trust root is flash-only,
 never served over the wire), alongside `baseline.json`, the installer scaffolding (`META-INF/`,
 `customize.sh`), the `.vd/` flash gate, the CI-filled `update.json`/`update-mmrl.json`, and the per-file

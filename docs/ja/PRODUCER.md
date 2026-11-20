@@ -127,6 +127,8 @@ keyring は `<key_id>.pub` ファイルのディレクトリで、それぞれ *
 リリースをまたいで**安定**している (鍵のローテーションだけが変更する): 再同梱は**コピーではなく検証**すべきであり、
 決して PC 側の `.pub` PEM で上書きしてはならない。
 
+**複数鍵の keyring はモジュール鍵を固定しなければならない。** エンジンは、MODULE-UPDATE に署名できる `key_id` を config の `key_id` allowlist (INTERFACES §5/§6) に制限し、pubkey が選択される前に fail-closed でチェックする。単一鍵の keyring はデフォルトで安全 (その 1 つの鍵が受理される)。しかし keyring が信頼の低い鍵も保持するモジュール - 例: release 鍵と並んで fingerprint-feed の鍵がある場合 - は、その `config` がモジュール鍵を宣言するまで拒否される。例: `key_id=vd-2026` (ローテーション用にカンマ区切り、例: `key_id=vd-2026,vd-2027`)。これにより、漏洩した信頼の低い鍵が flashless root 更新に署名するのを防ぐ。
+
 `vdlu-pack` は**keyring と `verify/` バイナリをフィードから除外する** (信頼ルートはフラッシュ専用で、決してワイヤ越しに配信されない)。`baseline.json`、インストーラの足場 (`META-INF/`、`customize.sh`)、`.vd/` フラッシュゲート、CI が埋める `update.json`/`update-mmrl.json`、そしてファイルごとの `.sha256` 伴走ファイルも同様である。フィードで更新できるのはモジュール自身のコンテンツだけなので、manifest がデバイス上の信頼アンカーを書き換えることは決してできない。
 
 <!-- doc-footer -->

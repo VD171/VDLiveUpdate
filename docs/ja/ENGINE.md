@@ -65,6 +65,7 @@ check/boot で再開する (WebUI はエラーではなく青い情報トース�
   バッテリーに優しい。途中でのクラッシュ/ネットワーク/reboot → `resume`/`boot` が続行する。
 - **profile=hardened** ⇒ 使用**前に** manifest に対する `vdlu-verify` が必須。失敗 = 中止。ダウングレードはブロック
   (単調なバージョン)。**trusted** ⇒ 検証はベストエフォートだが、すべての blob のハッシュは**常に**チェックされる。
+- **module-update 鍵の allowlist (両方の profiles):** `verify_manifest` は、`key_id` が設定済みの `key_id` allowlist (INTERFACES §5/§6 参照) にない manifest を、pubkey が選択される前に fail-closed で拒否する。そのため、単に keyring に置かれているだけの信頼の低い鍵 (例: fingerprint-feed の鍵) が flashless root 更新に署名することは決してできない。未設定時はデフォルトで安全: 単一鍵の keyring = その 1 つの鍵のみ。複数鍵の keyring = `key_id` が固定されるまで拒否。
 - 優雅に劣化する: バイナリ欠落 / ネットワーク不通 / ディスクフル → stderr に明確なエラー + journal の `state:ERROR`。
   モジュールは壊さない。
 
@@ -80,7 +81,7 @@ JSON に対して堅牢。`sh` は `grep`/`cut` でそれを消費する。フ�
 
 | ファイル | 役割 |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…。INTERFACES §5 参照) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…。INTERFACES §5 参照) |
 | `current.json` | ACTIVE バージョンの manifest (diff ベース)。不在 = 一度も更新されていない |
 | `target.json` | 進行中トランザクションのピン留め manifest (存在 = アクティブなトランザクション)。`DONE` で `current.json` になる |
 | `plan.tsv` / `plan.del` | plan + ファイルごとの進捗 (st) / 削除するパス |

@@ -94,6 +94,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -138,6 +141,7 @@ asla geçitlenmez).
   `ed25519-mini` ikilisi (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=geçerli/1=geçersiz/2=kullanım).
   rc!=0 = reddet. **`profile=hardened` ⇒ verify zorunlu; başarısızlık = iptal.**
   `profile=trusted` ⇒ verify en-iyi-çaba (kaynak SSH aracılığıyla zaten güvenilir), ancak her blob'un hash'i HER ZAMAN kontrol edilir.
+- **module-update anahtar allowlist'i (fail-closed, pubkey seçiminden önce):** manifestin `key_id`'si, `<key_id>.pub` seçilmeden önce kabul edilmiş bir MODULE-UPDATE anahtarı olmalıdır - config'in `key_id`'si (§5) bu allowlist'tir. Bir keyring, daha düşük güvenli bir anahtarı DA taşıyabilir (ör. bir fingerprint-feed anahtarı, otomatik, farklı hesap); allowlist olmadan, o anahtarla imzalanmış bir manifest sızarsa doğrulanır ve tam bir flashless root güncellemesi uygular. `verify_manifest` bunu HER İKİ profiles'ta da uygular ve çözümlenen kümeyi `VDLU_KEYID_ALLOW` env'i aracılığıyla `vdlu-verify`'a geçirir (böylece bağımsız doğrulayıcı da uyumludur). Ayarlanmamış hali varsayılan-güvenlidir (tek anahtarlı keyring: yalnızca o anahtar; çok anahtarlı keyring: `key_id` sabitlenene kadar reddedilir). Fingerprint-feed güven kökü, kendi sabitlenmiş anahtarıyla AYRI bir yoldur ve etkilenmez.
 - `producer/vdlu-keygen <id> <out>` → `<id>.pem` (priv) + `<id>.pub` (PEM, PC'deki araçlar için) +
   `<id>.pub.raw` (**HAM 32B** = cihazdaki ince keyring'in `<id>.pub`'u) üretir. openssl `genpkey -algorithm ed25519`.
 

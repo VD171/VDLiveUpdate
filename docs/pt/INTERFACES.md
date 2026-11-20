@@ -94,6 +94,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -137,6 +140,7 @@ check/boot na rede certa). `net_policy` **supera** `allow_metered` (que nunca fo
   binário `ed25519-mini` embarcado (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=válido/1=inválido/2=uso).
   rc!=0 = rejeita. **`profile=hardened` ⇒ verify obrigatório; falha = aborta.**
   `profile=trusted` ⇒ verify é best-effort (fonte já confiável via SSH), mas o hash de todo blob é SEMPRE conferido.
+- **Allowlist de chave de module-update (fail-closed, antes da seleção da pubkey):** o `key_id` do manifesto precisa ser uma chave MODULE-UPDATE aceita antes de `<key_id>.pub` ser selecionada - o `key_id` da config (§5) é essa allowlist. Um keyring pode TAMBÉM carregar uma chave de menor confiança (ex.: uma chave de fingerprint-feed, automatizada, de outra conta); sem a allowlist, um manifesto assinado por essa chave verificaria e aplicaria uma atualização root flashless completa se vazasse. O `verify_manifest` impõe isso em AMBOS os profiles e passa o conjunto resolvido ao `vdlu-verify` pela env `VDLU_KEYID_ALLOW` (para o verificador standalone concordar). Não-definido é seguro por padrão (keyring de chave única: só aquela chave; keyring multi-chave: rejeitado até `key_id` ser fixado). A raiz de confiança do fingerprint-feed é um caminho SEPARADO, com sua própria chave fixada, e não é afetada.
 - `producer/vdlu-keygen <id> <out>` → gera `<id>.pem` (priv) + `<id>.pub` (PEM, para tooling no PC) +
   `<id>.pub.raw` (**RAW 32B** = o `<id>.pub` do keyring enxuto no device). openssl `genpkey -algorithm ed25519`.
 

@@ -64,6 +64,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   없다 - 배터리 안전. 중간의 크래시/네트워크/reboot → `resume`/`boot`이 계속한다.
 - **profile=hardened** ⇒ 사용 **전에** manifest에 대한 `vdlu-verify` 필수. 실패 = 중단. 다운그레이드 차단
   (단조 버전). **trusted** ⇒ 검증은 best-effort이지만, 모든 blob의 해시는 **항상** 검사된다.
+- **module-update 키 allowlist (두 profiles 모두):** `verify_manifest`는 `key_id`가 구성된 `key_id` allowlist (INTERFACES §5/§6 참조)에 없는 manifest를 pubkey가 선택되기 전에 fail-closed로 거부한다. 따라서 단지 keyring에 들어 있을 뿐인 신뢰도가 낮은 키 (예: fingerprint-feed 키)는 결코 flashless root 업데이트에 서명할 수 없다. 미설정 시 기본 안전: 단일 키 keyring = 그 하나의 키만; 다중 키 keyring = `key_id`가 고정될 때까지 거부.
 - 우아하게 저하됨: 바이너리 누락 / 네트워크 끊김 / 디스크 가득 → stderr에 명확한 에러 + journal의 `state:ERROR`.
   모듈은 손상시키지 않음.
 
@@ -79,7 +80,7 @@ JSON에 대해 견고함. `sh`는 `grep`/`cut`로 그것을 소비한다. 파일
 
 | 파일 | 역할 |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…. INTERFACES §5 참조) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…. INTERFACES §5 참조) |
 | `current.json` | ACTIVE 버전의 manifest (diff 기준). 부재 = 한 번도 업데이트 안 됨 |
 | `target.json` | 진행 중 트랜잭션의 고정된 manifest (존재 = 활성 트랜잭션). `DONE`에서 `current.json`이 됨 |
 | `plan.tsv` / `plan.del` | plan + 파일별 진행 (st) / 삭제할 경로 |

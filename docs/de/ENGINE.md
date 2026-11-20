@@ -65,6 +65,7 @@ Check/Boot wieder auf (die WebUI zeigt einen blauen Info-Toast "waiting for X ne
   Wakelock - batterieschonend. Ein Crash/Netzwerk/Reboot mittendrin -> `resume`/`boot` macht weiter.
 - **profile=hardened** => `vdlu-verify` obligatorisch auf dem Manifest VOR der Verwendung; Fehler = Abbruch; Downgrade blockiert
   (monotone Version). **trusted** => verify ist best-effort, aber der Hash jedes Blobs wird IMMER geprueft.
+- **Allowlist für Module-Update-Schlüssel (beide profiles):** `verify_manifest` lehnt, fail-closed, jedes Manifest ab, dessen `key_id` nicht in der konfigurierten `key_id`-Allowlist steht (siehe INTERFACES §5/§6), BEVOR die Pubkey ausgewählt wird, sodass ein Schlüssel geringeren Vertrauens, der bloß im Keyring liegt (z. B. ein Fingerprint-Feed-Schlüssel), niemals ein flashless Root-Update signieren kann. Standardsicher, wenn nicht gesetzt: Keyring mit einem Schlüssel = nur dieser eine Schlüssel; Keyring mit mehreren Schlüsseln = abgelehnt, bis `key_id` gepinnt ist.
 - Degradiert anstaendig: fehlendes Binary / Netzwerk down / Platte voll -> ein klarer Fehler auf stderr + `state:ERROR` im
   Journal, ohne das Modul zu beschaedigen.
 
@@ -80,7 +81,7 @@ JSON. Das `sh` konsumiert es mit `grep`/`cut`; der Plan pro Datei wird in einem 
 
 | Datei | Rolle |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; siehe INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; siehe INTERFACES §5) |
 | `current.json` | Manifest der AKTIVEN Version (diff base); abwesend = nie aktualisiert |
 | `target.json` | gepinntes Manifest der im Flug befindlichen Transaktion (Praesenz = aktive Transaktion); wird bei `DONE` zu `current.json` |
 | `plan.tsv` / `plan.del` | Plan + Fortschritt pro Datei (st) / zu loeschende Pfade |

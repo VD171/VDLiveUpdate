@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -135,6 +138,7 @@ síť. Stahování na nepovolené síti = stav **`DEFERRED`** v journalu (NE ERR
   binary `ed25519-mini` (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=platné/1=neplatné/2=usage).
   rc!=0 = odmítnutí. **`profile=hardened` => verify povinné; selhání = abort.**
   `profile=trusted` => verify je best-effort (zdroj už důvěryhodný přes SSH), ale hash každého blobu se VŽDY kontroluje.
+- **Allowlist klíče pro module-update (fail-closed, před výběrem pubkey):** `key_id` manifestu musí být přijatý MODULE-UPDATE klíč, než se vybere `<key_id>.pub` - `key_id` z configu (§5) je ta allowlist. Keyring může NÉST i klíč nižší důvěry (např. klíč fingerprint-feedu, automatizovaný, jiný účet); bez allowlistu by se manifest podepsaný tím klíčem ověřil a při úniku by aplikoval celou flashless root aktualizaci. `verify_manifest` to vynucuje v OBOU profiles a předává vyřešenou množinu `vdlu-verify` přes env `VDLU_KEYID_ALLOW` (aby samostatný verifikátor souhlasil). Nenastaveno je bezpečné ve výchozím stavu (keyring s jedním klíčem: jen ten klíč; víceklíčový keyring: odmítnuto, dokud není `key_id` připnuto). Kořen důvěry fingerprint-feedu je ODDĚLENÁ cesta s vlastním připnutým klíčem a není dotčen.
 - `producer/vdlu-keygen <id> <out>` -> generuje `<id>.pem` (priv) + `<id>.pub` (PEM, pro nástroje na PC) +
   `<id>.pub.raw` (**RAW 32B** = `<id>.pub` štíhlého keyringu na zařízení). openssl `genpkey -algorithm ed25519`.
 

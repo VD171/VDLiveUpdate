@@ -65,6 +65,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   wakelock - बैटरी-सुरक्षित। बीच में एक crash/network/reboot -> `resume`/`boot` जारी रखता है।
 - **profile=hardened** ⇒ उपयोग से पहले manifest पर `vdlu-verify` अनिवार्य; विफलता = abort; downgrade अवरुद्ध
   (monotonic संस्करण)। **trusted** ⇒ verify best-effort है, लेकिन हर blob का हैश हमेशा जाँचा जाता है।
+- **module-update कुंजी allowlist (दोनों profiles):** `verify_manifest`, pubkey चुने जाने से पहले, किसी भी ऐसे manifest को fail-closed अस्वीकार करता है जिसका `key_id` कॉन्फ़िगर की गई `key_id` allowlist (देखें INTERFACES §5/§6) में नहीं है, ताकि केवल keyring में पड़ी एक कम-भरोसे वाली कुंजी (जैसे एक fingerprint-feed कुंजी) कभी भी flashless root अपडेट पर हस्ताक्षर न कर सके। अनसेट होने पर डिफ़ॉल्ट-सुरक्षित: एकल-कुंजी keyring = केवल वही एक कुंजी; बहु-कुंजी keyring = `key_id` पिन होने तक अस्वीकृत।
 - सुंदरता से घटता है: गायब बाइनरी / नेटवर्क डाउन / डिस्क भरी -> stderr पर एक स्पष्ट त्रुटि + journal में `state:ERROR`,
   मॉड्यूल को भ्रष्ट किए बिना।
 
@@ -80,7 +81,7 @@ locals) manifest को char-by-char टोकनाइज़ करता ह�
 
 | file | भूमिका |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; INTERFACES §5 देखें) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; INTERFACES §5 देखें) |
 | `current.json` | ACTIVE संस्करण का manifest (diff आधार); अनुपस्थित = कभी अपडेट नहीं |
 | `target.json` | in-flight ट्रांज़ैक्शन का pinned manifest (उपस्थिति = सक्रिय ट्रांज़ैक्शन); `DONE` पर `current.json` बन जाता है |
 | `plan.tsv` / `plan.del` | plan + प्रति-फ़ाइल प्रगति (st) / हटाने के लिए paths |

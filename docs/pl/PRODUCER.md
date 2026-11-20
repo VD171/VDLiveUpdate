@@ -129,6 +129,8 @@ wybierające `<keyring>/<key_id>.pub` (surowy) to cały mechanizm rotacji - bez 
 **stabilny** między releasami (zmienia go tylko rotacja klucza): re-wendoring musi **weryfikować-nie-kopiować** i nigdy
 nie nadpisywać go PEM-em `.pub` po stronie PC.
 
+**Keyringi wielokluczowe MUSZĄ przypiąć klucz modułu.** Engine ogranicza, który `key_id` może podpisać MODULE-UPDATE, do allowlisty `key_id` z configu (INTERFACES §5/§6), sprawdzanej fail-closed przed wyborem pubkey. Keyring z jednym kluczem jest domyślnie bezpieczny (ten jeden klucz jest akceptowany). Ale moduł, którego keyring NIESIE także klucz niższego zaufania - np. klucz fingerprint-feedu obok klucza release - jest odrzucany, dopóki jego `config` nie zadeklaruje klucza modułu, np. `key_id=vd-2026` (rozdzielone przecinkami dla rotacji, np. `key_id=vd-2026,vd-2027`). To powstrzymuje wyciekły klucz niższego zaufania od podpisania flashless aktualizacji root.
+
 `vdlu-pack` **wyklucza keyring i binaria `verify/` z feedu** (korzeń zaufania jest wyłącznie-flash, nigdy nie serwowany po kablu), obok `baseline.json`, rusztowania instalatora (`META-INF/`, `customize.sh`), bramki flash `.vd/`, wypełnianych przez CI `update.json`/`update-mmrl.json` oraz towarzyszy `.sha256` per plik. Tylko własna treść modułu jest aktualizowalna przez feed, więc manifest nigdy nie może nadpisać kotwicy zaufania na urządzeniu.
 
 <!-- doc-footer -->

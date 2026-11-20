@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -136,6 +139,7 @@ check/boot ครั้งถัดไปบนเครือข่ายที
   `ed25519-mini` ที่ฝังไว้ (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=valid/1=invalid/2=usage)
   rc!=0 = reject **`profile=hardened` => verify จำเป็น; ล้มเหลว = abort**
   `profile=trusted` => verify เป็น best-effort (แหล่งเชื่อถือแล้วผ่าน SSH), แต่ hash ของทุก blob ถูกตรวจสอบ เสมอ
+- **allowlist ของคีย์ module-update (fail-closed, ก่อนการเลือก pubkey):** `key_id` ของ manifest ต้องเป็นคีย์ MODULE-UPDATE ที่ยอมรับแล้วก่อนที่จะเลือก `<key_id>.pub` - `key_id` ของ config (§5) คือ allowlist นั้น keyring อาจพกคีย์ที่ความเชื่อถือต่ำกว่าได้ด้วย (เช่น คีย์ fingerprint-feed, อัตโนมัติ, คนละบัญชี) หากไม่มี allowlist, manifest ที่เซ็นด้วยคีย์นั้นจะผ่านการตรวจสอบและใช้การอัปเดต flashless root เต็มรูปแบบหากรั่วไหล `verify_manifest` บังคับใช้ในทั้งสอง profiles และส่งเซ็ตที่แก้แล้วให้ `vdlu-verify` ผ่าน env `VDLU_KEYID_ALLOW` (เพื่อให้ verifier แบบ standalone เห็นตรงกัน) ไม่ได้ตั้งค่า = ปลอดภัยโดยปริยาย (keyring คีย์เดียว: เฉพาะคีย์นั้น; keyring หลายคีย์: ปฏิเสธจนกว่าจะปักหมุด `key_id`) รากความเชื่อถือของ fingerprint-feed เป็นเส้นทางแยกต่างหากที่มีคีย์ปักหมุดของตัวเอง และไม่ได้รับผลกระทบ
 - `producer/vdlu-keygen <id> <out>` -> สร้าง `<id>.pem` (priv) + `<id>.pub` (PEM, สำหรับ tooling บน PC) +
   `<id>.pub.raw` (**RAW 32B** = `<id>.pub` ของ keyring แบบเรียวบนอุปกรณ์) openssl `genpkey -algorithm ed25519`
 

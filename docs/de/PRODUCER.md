@@ -129,6 +129,8 @@ das `<keyring>/<key_id>.pub` (raw) waehlt, ist der gesamte Rotationsmechanismus 
 **stabil** ueber Releases hinweg (nur Schluesselrotation aendert es): ein Re-Vendor muss es **verifizieren-nicht-kopieren** und es niemals
 mit dem PC-seitigen `.pub` PEM ueberschreiben.
 
+**Keyrings mit mehreren Schlüsseln MÜSSEN den Modul-Schlüssel pinnen.** Die Engine beschränkt, welcher `key_id` ein MODULE-UPDATE signieren darf, auf die `key_id`-Allowlist der config (INTERFACES §5/§6), fail-closed geprüft, bevor die Pubkey ausgewählt wird. Ein Keyring mit einem Schlüssel ist standardsicher (dieser eine Schlüssel wird akzeptiert). Aber ein Modul, dessen Keyring AUCH einen Schlüssel geringeren Vertrauens trägt - z. B. einen Fingerprint-Feed-Schlüssel neben dem Release-Schlüssel - wird abgelehnt, bis seine `config` den Modul-Schlüssel deklariert, z. B. `key_id=vd-2026` (kommagetrennt für die Rotation, z. B. `key_id=vd-2026,vd-2027`). Das verhindert, dass ein geleakter Schlüssel geringeren Vertrauens ein flashless Root-Update signiert.
+
 `vdlu-pack` **schliesst das Keyring und die `verify/`-Binaries aus dem Feed aus** (die Trust-Root ist flash-only, wird nie ueber die Leitung ausgeliefert), neben `baseline.json`, dem Installer-Geruest (`META-INF/`, `customize.sh`), dem `.vd/`-Flash-Gate, den CI-gefuellten `update.json`/`update-mmrl.json` und den per-Datei-`.sha256`-Begleitern. Nur der moduleigene Inhalt ist per Feed aktualisierbar, sodass ein Manifest niemals den On-Device-Trust-Anchor umschreiben kann.
 
 <!-- doc-footer -->

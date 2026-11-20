@@ -94,6 +94,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -138,6 +141,7 @@ Engine `97baf887`+ (`file://` nunca se controla).
   binario `ed25519-mini` embebido (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=válido/1=inválido/2=uso).
   rc!=0 = rechazo. **`profile=hardened` ⇒ verify obligatorio; fallo = abortar.**
   `profile=trusted` ⇒ verify es best-effort (fuente ya confiable vía SSH), pero el hash de cada blob se verifica SIEMPRE.
+- **Allowlist de clave de module-update (fail-closed, antes de la selección de la pubkey):** el `key_id` del manifiesto debe ser una clave MODULE-UPDATE aceptada antes de seleccionar `<key_id>.pub` - el `key_id` de la config (§5) es esa allowlist. Un keyring puede llevar TAMBIÉN una clave de menor confianza (p. ej. una clave de fingerprint-feed, automatizada, de otra cuenta); sin la allowlist, un manifiesto firmado por esa clave verificaría y aplicaría una actualización root flashless completa si se filtrara. `verify_manifest` lo impone en AMBOS profiles y pasa el conjunto resuelto a `vdlu-verify` por la env `VDLU_KEYID_ALLOW` (para que el verificador standalone coincida). Sin definir es seguro por defecto (keyring de una clave: solo esa clave; keyring multiclave: rechazado hasta fijar `key_id`). La raíz de confianza del fingerprint-feed es una ruta SEPARADA, con su propia clave fijada, y no se ve afectada.
 - `producer/vdlu-keygen <id> <out>` → genera `<id>.pem` (priv) + `<id>.pub` (PEM, para tooling en el PC) +
   `<id>.pub.raw` (**RAW 32B** = el `<id>.pub` del keyring slim en el dispositivo). openssl `genpkey -algorithm ed25519`.
 

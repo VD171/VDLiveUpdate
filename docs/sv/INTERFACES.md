@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -137,6 +140,7 @@ konsumerades). Motor `97baf887`+ (`file://` grindas aldrig).
   inbäddade `ed25519-mini`-binären (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=giltig/1=ogiltig/2=användning).
   rc!=0 = avvisa. **`profile=hardened` ⇒ verify obligatoriskt; fel = avbryt.**
   `profile=trusted` ⇒ verify är best-effort (källan redan betrodd via SSH), men varje blobs hash kontrolleras ALLTID.
+- **Allowlist för module-update-nyckel (fail-closed, före pubnyckel-valet):** manifestets `key_id` måste vara en accepterad MODULE-UPDATE-nyckel innan `<key_id>.pub` väljs - configens `key_id` (§5) är den allowlisten. En keyring kan OCKSÅ bära en nyckel med lägre tillit (t.ex. en fingerprint-feed-nyckel, automatiserad, annat konto); utan allowlisten skulle ett manifest signerat av den nyckeln verifieras och vid en läcka tillämpa en fullständig flashless root-uppdatering. `verify_manifest` upprätthåller det i BÅDA profiles och skickar den upplösta mängden till `vdlu-verify` via env `VDLU_KEYID_ALLOW` (så att den fristående verifieraren håller med). Osatt är standardsäkert (keyring med en nyckel: bara den nyckeln; keyring med flera nycklar: avvisad tills `key_id` är fastnålad). Fingerprint-feedens tillitsrot är en SEPARAT väg med sin egen fastnålade nyckel och påverkas inte.
 - `producer/vdlu-keygen <id> <out>` → genererar `<id>.pem` (priv) + `<id>.pub` (PEM, för verktyg på PC:n) +
   `<id>.pub.raw` (**RAW 32B** = `<id>.pub` i den slimmade keyringen på enheten). openssl `genpkey -algorithm ed25519`.
 

@@ -65,6 +65,7 @@ check/boot'ta devam eder (WebUI mavi bir bilgi toast'u "X ağı bekleniyor" gös
   wakelock - pil dostu. Yol ortasında bir çökme/ağ/yeniden başlatma → `resume`/`boot` sürdürür.
 - **profile=hardened** ⇒ kullanımdan ÖNCE manifest üzerinde `vdlu-verify` zorunlu; başarısızlık = iptal; sürüm düşürme engellendi
   (monoton sürüm). **trusted** ⇒ verify en iyi çabadır, ama her blob'un hash'i HER ZAMAN kontrol edilir.
+- **module-update anahtar allowlist'i (her iki profiles):** `verify_manifest`, `key_id`'si yapılandırılmış `key_id` allowlist'inde (bkz. INTERFACES §5/§6) olmayan her manifesti, pubkey seçilmeden ÖNCE fail-closed reddeder, böylece yalnızca keyring'de duran daha düşük güvenli bir anahtar (ör. bir fingerprint-feed anahtarı) asla bir flashless root güncellemesi imzalayamaz. Ayarlanmamışken varsayılan-güvenli: tek anahtarlı keyring = yalnızca o tek anahtar; çok anahtarlı keyring = `key_id` sabitlenene kadar reddedilir.
 - Zarifçe bozulur: eksik ikili / ağ kapalı / disk dolu → stderr'de açık bir hata + günlükte `state:ERROR`,
   modülü bozmadan.
 
@@ -80,7 +81,7 @@ JSON'a karşı sağlam. `sh` onu `grep`/`cut` ile tüketir; dosya başına plan 
 
 | dosya | rol |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; INTERFACES §5'e bakın) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; INTERFACES §5'e bakın) |
 | `current.json` | AKTİF sürümün manifesti (diff tabanı); yok = hiç güncellenmedi |
 | `target.json` | devam eden işlemin sabitlenmiş manifesti (varlığı = aktif işlem); `DONE`'da `current.json` olur |
 | `plan.tsv` / `plan.del` | plan + dosya başına ilerleme (st) / silinecek yollar |

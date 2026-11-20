@@ -128,6 +128,8 @@ Keyring คือไดเรกทอรีของไฟล์ `<key_id>.pub`
 **เสถียร** ข้ามการ release (เปลี่ยนเฉพาะตอน rotate คีย์): การ re-vendor ต้อง **verify-not-copy** มัน, และไม่เคย
 เขียนทับมันด้วย `.pub` PEM ฝั่ง PC
 
+**keyring หลายคีย์ต้องปักหมุดคีย์ของโมดูล** engine จำกัดว่า `key_id` ใดสามารถเซ็น MODULE-UPDATE ได้ ให้อยู่ใน allowlist `key_id` ของ config (INTERFACES §5/§6) ซึ่งตรวจแบบ fail-closed ก่อนที่จะเลือก pubkey keyring คีย์เดียวปลอดภัยโดยปริยาย (คีย์เดียวนั้นถูกยอมรับ) แต่โมดูลที่ keyring พกคีย์ที่ความเชื่อถือต่ำกว่าด้วย - เช่น คีย์ fingerprint-feed เคียงข้างคีย์ release - จะถูกปฏิเสธจนกว่า `config` ของมันจะประกาศคีย์ของโมดูล เช่น `key_id=vd-2026` (คั่นด้วยจุลภาคสำหรับการ rotate เช่น `key_id=vd-2026,vd-2027`) สิ่งนี้หยุดไม่ให้คีย์ที่ความเชื่อถือต่ำกว่าที่รั่วไหลเซ็นการอัปเดต flashless root ได้
+
 `vdlu-pack` **กัน keyring และไบนารี `verify/` ออกจากฟีด** (รากความเชื่อถืออยู่ใน flash เท่านั้น, ไม่เคยถูกเสิร์ฟผ่านเครือข่าย), เคียงข้างกับ `baseline.json`, โครงนั่งร้านของ installer (`META-INF/`, `customize.sh`), flash gate `.vd/`, `update.json`/`update-mmrl.json` ที่ CI เติม, และไฟล์คู่ `.sha256` ต่อไฟล์ มีเพียงเนื้อหาของโมดูลเองที่อัปเดตผ่านฟีดได้, ดังนั้น manifest จึงไม่มีทางเขียนทับ trust anchor บนอุปกรณ์ได้
 
 <!-- doc-footer -->

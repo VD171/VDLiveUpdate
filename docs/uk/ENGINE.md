@@ -65,6 +65,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   wakelock - безпечно для батареї. Крах/мережа/перезавантаження посередині → `resume`/`boot` продовжує.
 - **profile=hardened** ⇒ `vdlu-verify` обов'язковий на маніфесті ПЕРЕД використанням; збій = abort; downgrade заблоковано
   (монотонна версія). **trusted** ⇒ verify є best-effort, але геш кожного блоба ЗАВЖДИ перевіряється.
+- **Allowlist ключа module-update (обидва profiles):** `verify_manifest` відхиляє, fail-closed, будь-який маніфест, чий `key_id` не входить до налаштованої allowlist `key_id` (див. INTERFACES §5/§6), ПЕРЕД вибором pubkey, тож ключ нижчої довіри, що лише лежить у keyring (напр., ключ fingerprint-feed), ніколи не може підписати flashless root-оновлення. Безпечно за замовчуванням, коли невстановлено: keyring з одним ключем = лише той один ключ; багатоключовий keyring = відхилено, доки `key_id` не закріплено.
 - Деградує граційно: відсутній бінарник / мережа лежить / диск повний → ясна помилка на stderr + `state:ERROR` у
   журналі, без пошкодження модуля.
 
@@ -80,7 +81,7 @@ JSON. `sh` споживає його через `grep`/`cut`; пофайлови
 
 | файл | роль |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; див. INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; див. INTERFACES §5) |
 | `current.json` | маніфест АКТИВНОЇ версії (база diff); відсутній = ніколи не оновлювався |
 | `target.json` | зафіксований маніфест транзакції в польоті (наявність = активна транзакція); стає `current.json` на `DONE` |
 | `plan.tsv` / `plan.del` | план + пофайловий прогрес (st) / шляхи для видалення |

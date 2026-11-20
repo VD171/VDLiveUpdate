@@ -65,6 +65,7 @@ check/boot (de WebUI toont een blauwe info-toast "waiting for X network", geen f
   wakelock - batterijveilig. Een crash/netwerk/reboot halverwege → `resume`/`boot` gaat door.
 - **profile=hardened** ⇒ `vdlu-verify` verplicht op het manifest VÓÓR gebruik; falen = afbreken; downgrade geblokkeerd
   (monotone versie). **trusted** ⇒ verify is best-effort, maar de hash van elke blob wordt ALTIJD gecontroleerd.
+- **Allowlist voor module-update-sleutel (beide profiles):** `verify_manifest` weigert, fail-closed, elk manifest waarvan de `key_id` niet in de geconfigureerde `key_id`-allowlist staat (zie INTERFACES §5/§6) VOORDAT de pubkey wordt geselecteerd, zodat een sleutel van lager vertrouwen die slechts in de keyring zit (bijv. een fingerprint-feed-sleutel) nooit een flashless root-update kan tekenen. Standaardveilig wanneer niet ingesteld: keyring met één sleutel = alleen die ene sleutel; keyring met meerdere sleutels = geweigerd tot `key_id` is vastgepind.
 - Degradeert gracieus: ontbrekende binary / netwerk plat / schijf vol → een duidelijke fout op stderr + `state:ERROR` in
   het journal, zonder de module te corrumperen.
 
@@ -80,7 +81,7 @@ JSON. De `sh` consumeert het met `grep`/`cut`; het plan per bestand wordt heropg
 
 | bestand | rol |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; zie INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; zie INTERFACES §5) |
 | `current.json` | manifest van de ACTIEVE versie (diff-basis); afwezig = nooit geüpdatet |
 | `target.json` | vastgepind manifest van de lopende transactie (aanwezigheid = actieve transactie); wordt `current.json` bij `DONE` |
 | `plan.tsv` / `plan.del` | plan + voortgang per bestand (st) / te verwijderen paden |

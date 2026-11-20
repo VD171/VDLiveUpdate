@@ -65,6 +65,7 @@ checku/bootu (WebUI zobrazí modrý info toast "waiting for X network", ne chybu
   wakelock - šetrný k baterii. Pád/síť/reboot uprostřed -> `resume`/`boot` pokračuje.
 - **profile=hardened** => `vdlu-verify` povinné na manifestu PŘED použitím; selhání = abort; downgrade zablokován
   (monotónní verze). **trusted** => verify je best-effort, ale hash každého blobu se VŽDY kontroluje.
+- **Allowlist klíče pro module-update (oba profiles):** `verify_manifest` odmítá, fail-closed, jakýkoli manifest, jehož `key_id` není v nakonfigurované `key_id` allowlistu (viz INTERFACES §5/§6), NEŽ se vybere pubkey, takže klíč nižší důvěry, který jen leží v keyringu (např. klíč fingerprint-feedu), nikdy nemůže podepsat flashless root aktualizaci. Bezpečné ve výchozím stavu, když nenastaveno: keyring s jedním klíčem = jen ten jeden klíč; víceklíčový keyring = odmítnuto, dokud není `key_id` připnuto.
 - Degraduje elegantně: chybějící binary / síť dole / plný disk -> jasná chyba na stderr + `state:ERROR` v
   journalu, bez poškození modulu.
 
@@ -80,7 +81,7 @@ JSON. `sh` ho konzumuje přes `grep`/`cut`; plán po souborech se znovu sestaví
 
 | soubor | role |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; viz INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; viz INTERFACES §5) |
 | `current.json` | manifest AKTIVNÍ verze (diff base); chybí = nikdy neaktualizováno |
 | `target.json` | připnutý manifest rozpracované transakce (přítomnost = aktivní transakce); stane se `current.json` při `DONE` |
 | `plan.tsv` / `plan.del` | plán + průběh po souborech (st) / cesty ke smazání |

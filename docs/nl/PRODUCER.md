@@ -129,6 +129,8 @@ dat `<keyring>/<key_id>.pub` (raw) kiest, is het hele rotatiemechanisme - geen e
 **stabiel** over releases heen (alleen sleutelrotatie verandert hem): een her-vendor moet hem **verifiëren-niet-kopiëren**, en nooit
 overschrijven met de PC-zijdige `.pub` PEM.
 
+**Keyrings met meerdere sleutels MOETEN de modulesleutel vastpinnen.** De engine beperkt welke `key_id` een MODULE-UPDATE mag tekenen tot de `key_id`-allowlist van de config (INTERFACES §5/§6), fail-closed gecontroleerd voordat de pubkey wordt geselecteerd. Een keyring met één sleutel is standaardveilig (die ene sleutel wordt geaccepteerd). Maar een module waarvan de keyring OOK een sleutel van lager vertrouwen draagt - bijv. een fingerprint-feed-sleutel naast de release-sleutel - wordt geweigerd tot zijn `config` de modulesleutel declareert, bijv. `key_id=vd-2026` (kommagescheiden voor rotatie, bijv. `key_id=vd-2026,vd-2027`). Dit voorkomt dat een gelekte sleutel van lager vertrouwen een flashless root-update tekent.
+
 `vdlu-pack` **sluit de keyring en de `verify/`-binaries uit van de feed** (de vertrouwenswortel is alleen-flash, wordt nooit over de draad geserveerd), naast `baseline.json`, de installer-steiger (`META-INF/`, `customize.sh`), de `.vd/`-flashpoort, de door CI gevulde `update.json`/`update-mmrl.json`, en de `.sha256`-metgezellen per bestand. Alleen de eigen inhoud van de module is via de feed bij te werken, zodat een manifest het vertrouwensanker op het toestel nooit kan herschrijven.
 
 <!-- doc-footer -->

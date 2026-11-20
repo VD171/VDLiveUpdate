@@ -91,6 +91,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -131,6 +134,7 @@ check/boot بعدی روی شبکه‌ی درست ازسر گرفته می‌ش�
   `ed25519-mini` (CLI `ed25519-mini <pub32> <msg> <sig64>`، rc 0=معتبر/1=نامعتبر/2=usage).
   rc!=0 = رد. **`profile=hardened` ⇒ verify الزامی؛ شکست = abort.**
   `profile=trusted` ⇒ verify تا حد امکان است (منبع پیشاپیش از طریق SSH مورد اعتماد)، اما هشِ هر بلاب همیشه بررسی می‌شود.
+- **فهرست مجازِ کلیدِ module-update (fail-closed، پیش از انتخابِ pubkey):** `key_id`ِ مانیفست باید پیش از انتخابِ `<key_id>.pub` یک کلیدِ MODULE-UPDATEِ پذیرفته‌شده باشد - `key_id`ِ config (§5) همان فهرستِ مجاز است. یک keyring ممکن است کلیدی با اعتمادِ پایین‌تر را نیز حمل کند (مثلاً یک کلیدِ fingerprint-feed، خودکار، حسابی دیگر)؛ بدونِ فهرستِ مجاز، مانیفستی که با آن کلید امضا شده باشد در صورتِ نشت تأیید می‌شود و یک به‌روزرسانیِ کاملِ flashless root را اعمال می‌کند. `verify_manifest` این را در هر دو profiles اعمال می‌کند و مجموعه‌ی حل‌شده را از طریقِ env `VDLU_KEYID_ALLOW` به `vdlu-verify` می‌دهد (تا تأییدکننده‌ی standalone هم هم‌رأی باشد). تنظیم‌نشده به‌طورِ پیش‌فرض امن است (keyringِ تک‌کلیدی: فقط همان کلید؛ keyringِ چندکلیدی: تا پین‌شدنِ `key_id` رد می‌شود). ریشه‌ی اعتمادِ fingerprint-feed یک مسیرِ جداگانه با کلیدِ پین‌شده‌ی خودش است و تأثیر نمی‌پذیرد.
 - `producer/vdlu-keygen <id> <out>` → `<id>.pem` (priv) + `<id>.pub` (PEM، برای ابزارها روی PC) +
   `<id>.pub.raw` (**RAW 32B** = همان `<id>.pub` در keyring سبک روی دستگاه) را تولید می‌کند. openssl `genpkey -algorithm ed25519`.
 

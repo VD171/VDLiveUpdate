@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -135,6 +138,7 @@ boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot;
   `ed25519-mini` バイナリ (CLI `ed25519-mini <pub32> <msg> <sig64>`、rc 0=有効/1=無効/2=使用法)。
   rc!=0 = 拒否。**`profile=hardened` ⇒ 検証は必須。失敗 = 中止。**
   `profile=trusted` ⇒ 検証はベストエフォート (ソースは SSH 経由で既に信頼済み) だが、すべての blob のハッシュは**常に**チェックされる。
+- **module-update 鍵の allowlist (fail-closed、pubkey 選択の前):** manifest の `key_id` は、`<key_id>.pub` が選択される前に、受理された MODULE-UPDATE 鍵でなければならない - config の `key_id` (§5) がその allowlist である。keyring は信頼の低い鍵も保持しうる (例: fingerprint-feed の鍵。自動化され、別アカウント)。allowlist がなければ、その鍵で署名された manifest は、漏洩した場合に検証を通り、完全な flashless root 更新を適用してしまう。`verify_manifest` は両方の profiles でこれを強制し、解決した集合を env `VDLU_KEYID_ALLOW` 経由で `vdlu-verify` に渡す (単体の verifier も一致するように)。未設定はデフォルトで安全 (単一鍵の keyring: その鍵のみ。複数鍵の keyring: `key_id` が固定されるまで拒否)。fingerprint-feed の信頼ルートは、独自の固定鍵を持つ別経路であり、影響を受けない。
 - `producer/vdlu-keygen <id> <out>` → `<id>.pem` (秘密) + `<id>.pub` (PEM、PC 上のツール用) +
   `<id>.pub.raw` (**生の 32B** = デバイス上のスリム keyring の `<id>.pub`) を生成する。openssl `genpkey -algorithm ed25519`。
 

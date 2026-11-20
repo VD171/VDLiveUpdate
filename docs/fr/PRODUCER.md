@@ -132,6 +132,8 @@ l'appareil choisissant `<keyring>/<key_id>.pub` (raw) est tout le mécanisme de 
 d'engine. Le keyring est **stable** à travers les releases (seule la rotation de clé le change) : un re-vendor
 doit le **vérifier-pas-copier** et ne jamais l'écraser avec le `.pub` PEM du PC-side.
 
+**Les keyrings multiclés DOIVENT épingler la clé du module.** L'engine restreint quel `key_id` peut signer un MODULE-UPDATE à l'allowlist `key_id` de la config (INTERFACES §5/§6), vérifiée fail-closed avant que la pubkey soit sélectionnée. Un keyring à une clé est sûr par défaut (cette unique clé est acceptée). Mais un module dont le keyring porte AUSSI une clé de moindre confiance - p. ex. une clé de fingerprint-feed à côté de la clé de release - est rejeté tant que son `config` ne déclare pas la clé du module, p. ex. `key_id=vd-2026` (séparées par des virgules pour la rotation, p. ex. `key_id=vd-2026,vd-2027`). Cela empêche une clé de moindre confiance ayant fuité de signer une mise à jour root flashless.
+
 `vdlu-pack` **exclut le keyring et les binaires `verify/` du feed** (la racine de confiance est flash uniquement, jamais servie sur le réseau), aux côtés de `baseline.json`, de l'échafaudage de l'installeur (`META-INF/`, `customize.sh`), de la porte de flash `.vd/`, des `update.json`/`update-mmrl.json` remplis par la CI, et des compagnons `.sha256` par fichier. Seul le contenu propre du module est actualisable par le feed, donc un manifeste ne peut jamais réécrire l'ancre de confiance sur l'appareil.
 
 <!-- doc-footer -->

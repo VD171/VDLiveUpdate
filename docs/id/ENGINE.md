@@ -65,6 +65,7 @@ check/boot berikutnya (WebUI menampilkan toast info biru "menunggu jaringan X", 
   wakelock - hemat baterai. Sebuah crash/jaringan/reboot di tengah jalan -> `resume`/`boot` melanjutkan.
 - **profile=hardened** ⇒ `vdlu-verify` wajib atas manifest SEBELUM digunakan; kegagalan = abort; downgrade diblokir
   (versi monotonik). **trusted** ⇒ verify bersifat best-effort, tetapi hash setiap blob SELALU diperiksa.
+- **allowlist kunci module-update (kedua profiles):** `verify_manifest` menolak, fail-closed, setiap manifest yang `key_id`-nya tidak ada dalam allowlist `key_id` yang dikonfigurasi (lihat INTERFACES §5/§6) SEBELUM pubkey dipilih, sehingga kunci kepercayaan lebih rendah yang hanya berada di keyring (mis. kunci fingerprint-feed) tidak pernah dapat menandatangani pembaruan flashless root. Aman-secara-default saat tidak disetel: keyring kunci tunggal = hanya satu kunci itu; keyring multi-kunci = ditolak sampai `key_id` dipin.
 - Menurun secara anggun: biner hilang / jaringan mati / disk penuh -> error jelas di stderr + `state:ERROR` di
   journal, tanpa merusak modul.
 
@@ -80,7 +81,7 @@ parameter) men-tokenisasi manifest karakter-demi-karakter dan memancarkan satu b
 
 | file | peran |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; lihat INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; lihat INTERFACES §5) |
 | `current.json` | manifest versi AKTIF (basis diff); tidak ada = belum pernah diperbarui |
 | `target.json` | manifest yang dipatok dari transaksi berjalan (keberadaan = transaksi aktif); menjadi `current.json` saat `DONE` |
 | `plan.tsv` / `plan.del` | plan + progres per-file (st) / path untuk dihapus |

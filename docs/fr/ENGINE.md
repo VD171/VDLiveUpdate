@@ -67,6 +67,7 @@ réseau X", pas une erreur).
   continue.
 - **profile=hardened** ⇒ `vdlu-verify` obligatoire sur le manifeste AVANT usage ; échec = abandon ; downgrade
   bloqué (version monotone). **trusted** ⇒ verify est best-effort, mais le hash de chaque blob est TOUJOURS vérifié.
+- **Allowlist de clé de module-update (les deux profiles) :** `verify_manifest` rejette, fail-closed, tout manifeste dont le `key_id` n'est pas dans l'allowlist `key_id` configurée (voir INTERFACES §5/§6) AVANT que la pubkey soit sélectionnée, de sorte qu'une clé de moindre confiance qui ne fait que résider dans le keyring (p. ex. une clé de fingerprint-feed) ne puisse jamais signer une mise à jour root flashless. Sûr par défaut quand non défini : keyring à une clé = cette clé seulement ; keyring multiclé = rejeté tant que `key_id` n'est pas épinglé.
 - Dégrade avec grâce : binaire manquant / réseau coupé / disque plein → une erreur claire sur stderr + `state:ERROR`
   dans le journal, sans corrompre le module.
 
@@ -82,7 +83,7 @@ pretty-printed. Le `sh` le consomme avec `grep`/`cut` ; le plan par fichier est 
 
 | fichier | rôle |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/… ; voir INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/… ; voir INTERFACES §5) |
 | `current.json` | manifeste de la version ACTIVE (base du diff) ; absent = jamais mis à jour |
 | `target.json` | manifeste épinglé de la transaction en vol (présence = transaction active) ; devient `current.json` au `DONE` |
 | `plan.tsv` / `plan.del` | plan + progression par fichier (st) / paths à supprimer |

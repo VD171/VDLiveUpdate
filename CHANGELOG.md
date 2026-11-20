@@ -5,9 +5,25 @@ signed manifest declares via `engine_min`.
 
 ## Unreleased
 - Public release: English README and dev docs, Apache-2.0 LICENSE, third-party NOTICE.
-- Hardening: path validation now also rejects dot-segment (`.`/`..` as a whole segment) and trailing-slash
-  paths. The signed feed never carries the on-device trust root (keyring + verifier) or flash-only infra, so
-  no manifest can rewrite what verifies it.
+
+## ENGINE_VERSION 4 - 2026-11-19
+- **Trust root:** module-update signing key is now pinned to a fail-closed ALLOWLIST. `verify_manifest`
+  rejects any manifest whose `key_id` is not in the configured `key_id` allowlist BEFORE selecting the
+  pubkey, closing a bypass where a lower-trust key present in the keyring (e.g. a fingerprint-feed key)
+  could sign a full flashless root update if it leaked. Default-safe when `key_id` is unset: a single-key
+  keyring accepts only that one key; a multi-key keyring is rejected until `key_id` is pinned (comma-
+  separated for rotation). The same allowlist is mirrored in `vdlu-verify` (via `VDLU_KEYID_ALLOW`) and
+  applied to the signed tools-manifest. The fingerprint-feed trust root stays a separate, pinned path.
+- Path validation also rejects dot-segment (`.`/`..` as a whole segment) and trailing-slash paths (this
+  rule shipped under v3 without a version bump; versioned here so `engine_min` can gate it).
+- Hardening (defense in depth): cap the tools-manifest size before reading it (anti-OOM) in both
+  `install-tool` and `vdlu-verify`; bound the `wget` download path with `head -c` (the `--max-filesize`
+  equivalent for curl-less devices); `check` now takes the lock before rebuilding its work dir;
+  `stage_file` gets the same `contained()` containment guard as the other apply primitives; the WebUI
+  poller gets an early `diff` journal at run start so a slow manifest fetch no longer shows a false
+  "no response".
+- `uname -m` to ABI fallback in `vdlu-verify` now also maps 32-bit x86 (`i686`/`i386`).
+- Note: ANY change to engine verification/apply logic bumps `ENGINE_VERSION`.
 
 ## ENGINE_VERSION 3 - 2026-11-16
 - `hardened` is the default profile; `profile` is fail-closed by inversion - only the literal `trusted`

@@ -65,6 +65,7 @@ check/boot (a WebUI mostra um toast info azul "aguardando rede X", não um erro)
   wakelock - seguro para a bateria. Um crash/rede/reboot no meio → `resume`/`boot` continua.
 - **profile=hardened** ⇒ `vdlu-verify` obrigatório no manifesto ANTES de usar; falha = aborta; downgrade bloqueado
   (versão monotônica). **trusted** ⇒ verify é best-effort, mas o hash de todo blob é SEMPRE conferido.
+- **Allowlist de chave de module-update (ambos os profiles):** o `verify_manifest` rejeita, fail-closed, qualquer manifesto cujo `key_id` não esteja na allowlist `key_id` configurada (ver INTERFACES §5/§6) ANTES de a pubkey ser selecionada, então uma chave de menor confiança que apenas reside no keyring (ex.: uma chave de fingerprint-feed) nunca pode assinar uma atualização root flashless. Seguro por padrão quando não-definido: keyring de chave única = só aquela chave; keyring multi-chave = rejeitado até `key_id` ser fixado.
 - Degrada graciosamente: binário faltando / rede caída / disco cheio → um erro claro no stderr + `state:ERROR` no
   journal, sem corromper o módulo.
 
@@ -80,7 +81,7 @@ pretty-printed. O `sh` o consome com `grep`/`cut`; o plano por arquivo é remont
 
 | arquivo | papel |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; ver INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; ver INTERFACES §5) |
 | `current.json` | manifesto da versão ATIVA (base do diff); ausente = nunca atualizado |
 | `target.json` | manifesto fixado da transação em voo (presença = transação ativa); vira `current.json` no `DONE` |
 | `plan.tsv` / `plan.del` | plano + progresso por arquivo (st) / paths a deletar |

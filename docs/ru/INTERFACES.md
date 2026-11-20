@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -136,6 +139,7 @@ boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot;
   бинарник `ed25519-mini` (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=валидно/1=невалидно/2=использование).
   rc!=0 = отклонить. **`profile=hardened` ⇒ verify обязателен; сбой = прерывание.**
   `profile=trusted` ⇒ verify по возможности (источник уже доверенный через SSH), но хэш каждого блоба ВСЕГДА проверяется.
+- **Allowlist ключа module-update (fail-closed, перед выбором pubkey):** `key_id` манифеста должен быть принятым ключом MODULE-UPDATE, прежде чем будет выбран `<key_id>.pub` - `key_id` из config (§5) и есть эта allowlist. Keyring может НЕСТИ и ключ меньшего доверия (напр., ключ fingerprint-feed, автоматизированный, другой аккаунт); без allowlist манифест, подписанный этим ключом, прошёл бы проверку и применил бы полное flashless root-обновление в случае утечки. `verify_manifest` обеспечивает это в ОБОИХ profiles и передаёт разрешённое множество в `vdlu-verify` через env `VDLU_KEYID_ALLOW` (чтобы отдельный верификатор соглашался). Не задано - безопасно по умолчанию (keyring с одним ключом: только этот ключ; многоключевой keyring: отклонено, пока `key_id` не закреплён). Корень доверия fingerprint-feed - это ОТДЕЛЬНЫЙ путь со своим закреплённым ключом, и он не затрагивается.
 - `producer/vdlu-keygen <id> <out>` → генерирует `<id>.pem` (priv) + `<id>.pub` (PEM, для тулинга на ПК) +
   `<id>.pub.raw` (**RAW 32B** = `<id>.pub` компактного keyring на устройстве). openssl `genpkey -algorithm ed25519`.
 

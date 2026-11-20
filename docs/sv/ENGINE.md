@@ -65,6 +65,7 @@ check/boot (WebUI visar en blå infotoast "väntar på X-nätverk", inte ett fel
   wakelock - batterisäker. En krasch/nätverk/omstart mitt i → `resume`/`boot` fortsätter.
 - **profile=hardened** ⇒ `vdlu-verify` obligatoriskt på manifestet INNAN användning; fel = avbryt; nedgradering blockerad
   (monoton version). **trusted** ⇒ verify är best-effort, men varje blobs hash kontrolleras ALLTID.
+- **Allowlist för module-update-nyckel (båda profiles):** `verify_manifest` avvisar, fail-closed, varje manifest vars `key_id` inte finns i den konfigurerade `key_id`-allowlisten (se INTERFACES §5/§6) INNAN pubnyckeln väljs, så att en nyckel med lägre tillit som bara ligger i keyringen (t.ex. en fingerprint-feed-nyckel) aldrig kan signera en flashless root-uppdatering. Standardsäkert när osatt: keyring med en nyckel = bara den enda nyckeln; keyring med flera nycklar = avvisad tills `key_id` är fastnålad.
 - Degraderar graciöst: saknad binär / nätverk nere / disk full → ett tydligt fel på stderr + `state:ERROR` i
   journalen, utan att korrumpera modulen.
 
@@ -80,7 +81,7 @@ JSON. `sh` konsumerar den med `grep`/`cut`; planen per fil återmonteras i en 2:
 
 | fil | roll |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; se INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; se INTERFACES §5) |
 | `current.json` | manifest för den AKTIVA versionen (diff-bas); frånvarande = aldrig uppdaterad |
 | `target.json` | fäst manifest för den pågående transaktionen (närvaro = aktiv transaktion); blir `current.json` vid `DONE` |
 | `plan.tsv` / `plan.del` | plan + förlopp per fil (st) / sökvägar att ta bort |

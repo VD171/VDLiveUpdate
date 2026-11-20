@@ -94,6 +94,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -138,6 +141,7 @@ Engine `97baf887`+ (`file://` wordt nooit gegatet).
   ingebedde `ed25519-mini`-binary (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=geldig/1=ongeldig/2=gebruik).
   rc!=0 = weiger. **`profile=hardened` ⇒ verify verplicht; falen = afbreken.**
   `profile=trusted` ⇒ verify is best-effort (bron al vertrouwd via SSH), maar de hash van elke blob wordt ALTIJD gecontroleerd.
+- **Allowlist voor module-update-sleutel (fail-closed, vóór de pubkey-selectie):** de `key_id` van het manifest moet een geaccepteerde MODULE-UPDATE-sleutel zijn voordat `<key_id>.pub` wordt geselecteerd - de `key_id` van de config (§5) is die allowlist. Een keyring kan OOK een sleutel van lager vertrouwen dragen (bijv. een fingerprint-feed-sleutel, geautomatiseerd, ander account); zonder de allowlist zou een manifest dat door die sleutel is getekend verifiëren en bij een lek een volledige flashless root-update toepassen. `verify_manifest` dwingt het af in BEIDE profiles en geeft de opgeloste set door aan `vdlu-verify` via de env `VDLU_KEYID_ALLOW` (zodat de standalone verifier het eens is). Niet ingesteld is standaardveilig (keyring met één sleutel: alleen die sleutel; keyring met meerdere sleutels: geweigerd tot `key_id` is vastgepind). De vertrouwenswortel van de fingerprint-feed is een APART pad met zijn eigen vastgepinde sleutel en wordt niet beïnvloed.
 - `producer/vdlu-keygen <id> <out>` → genereert `<id>.pem` (priv) + `<id>.pub` (PEM, voor tooling op de pc) +
   `<id>.pub.raw` (**RAW 32B** = de `<id>.pub` van de slanke keyring op het toestel). openssl `genpkey -algorithm ed25519`.
 

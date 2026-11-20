@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -135,6 +138,7 @@ boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot;
   `ed25519-mini` 바이너리 (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=유효/1=무효/2=사용법).
   rc!=0 = 거부. **`profile=hardened` ⇒ 검증 필수. 실패 = 중단.**
   `profile=trusted` ⇒ 검증은 best-effort (소스는 SSH를 통해 이미 신뢰됨)이지만, 모든 blob의 해시는 **항상** 검사된다.
+- **module-update 키 allowlist (fail-closed, pubkey 선택 전):** manifest의 `key_id`는 `<key_id>.pub`가 선택되기 전에 허용된 MODULE-UPDATE 키여야 한다 - config의 `key_id` (§5)가 그 allowlist다. keyring은 신뢰도가 낮은 키도 담을 수 있다 (예: fingerprint-feed 키, 자동화됨, 다른 계정). allowlist가 없으면 그 키로 서명된 manifest는 유출될 경우 검증을 통과하고 완전한 flashless root 업데이트를 적용하게 된다. `verify_manifest`는 두 profiles 모두에서 이를 강제하며, 해결된 집합을 env `VDLU_KEYID_ALLOW`를 통해 `vdlu-verify`에 전달한다 (독립 verifier도 동의하도록). 미설정은 기본 안전 (단일 키 keyring: 그 키만; 다중 키 keyring: `key_id`가 고정될 때까지 거부). fingerprint-feed 신뢰 루트는 자체 고정 키를 가진 별도 경로이며 영향을 받지 않는다.
 - `producer/vdlu-keygen <id> <out>` → `<id>.pem` (개인) + `<id>.pub` (PEM, PC의 툴링용) +
   `<id>.pub.raw` (**RAW 32B** = 기기의 슬림 keyring의 `<id>.pub`)을 생성한다. openssl `genpkey -algorithm ed25519`.
 

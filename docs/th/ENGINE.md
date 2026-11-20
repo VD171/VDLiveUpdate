@@ -65,6 +65,7 @@ check/boot ครั้งถัดไป (WebUI แสดง toast info สี�
   wakelock - ประหยัดแบตเตอรี่ crash/network/reboot กลางทาง -> `resume`/`boot` ทำต่อ
 - **profile=hardened** => `vdlu-verify` จำเป็นบน manifest ก่อนใช้งาน; ล้มเหลว = abort; downgrade ถูกบล็อก
   (version แบบ monotonic) **trusted** => verify เป็น best-effort, แต่ hash ของทุก blob ถูกตรวจสอบ เสมอ
+- **allowlist ของคีย์ module-update (ทั้งสอง profiles):** `verify_manifest` ปฏิเสธแบบ fail-closed ต่อ manifest ใด ๆ ที่ `key_id` ไม่อยู่ใน allowlist `key_id` ที่กำหนดไว้ (ดู INTERFACES §5/§6) ก่อนที่จะเลือก pubkey ดังนั้นคีย์ที่ความเชื่อถือต่ำกว่าซึ่งเพียงแค่อยู่ใน keyring (เช่น คีย์ fingerprint-feed) จึงไม่มีทางเซ็นการอัปเดต flashless root ได้ ปลอดภัยโดยปริยายเมื่อไม่ได้ตั้งค่า: keyring คีย์เดียว = เฉพาะคีย์เดียวนั้น; keyring หลายคีย์ = ปฏิเสธจนกว่าจะปักหมุด `key_id`
 - ลดระดับอย่างนุ่มนวล: ไบนารีขาด / เครือข่ายล่ม / ดิสก์เต็ม -> error ที่ชัดเจนบน stderr + `state:ERROR` ใน
   journal, โดยไม่ทำให้โมดูลเสียหาย
 
@@ -80,7 +81,7 @@ Flattener สไตล์ gron ใน `awk` (pure POSIX: `substr`/`index`/`gsub`
 
 | ไฟล์ | บทบาท |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/...; ดู INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/...; ดู INTERFACES §5) |
 | `current.json` | manifest ของเวอร์ชัน ACTIVE (diff base); absent = ไม่เคยอัปเดต |
 | `target.json` | manifest ที่ปักไว้ของทรานแซกชันที่กำลังดำเนินอยู่ (presence = active transaction); กลายเป็น `current.json` เมื่อ `DONE` |
 | `plan.tsv` / `plan.del` | plan + ความคืบหน้าต่อไฟล์ (st) / path ที่จะลบ |

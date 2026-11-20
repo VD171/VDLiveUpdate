@@ -129,6 +129,8 @@ vybírající `<keyring>/<key_id>.pub` (raw) je celý rotační mechanismus - ž
 **stabilní** napříč releasy (mění ho jen rotace klíče): re-vendor musí **ověřit-ne-kopírovat** a nikdy ho
 nepřepsat PC-side `.pub` PEM.
 
+**Víceklíčové keyringy MUSÍ připnout klíč modulu.** Engine omezuje, který `key_id` smí podepsat MODULE-UPDATE, na `key_id` allowlist z configu (INTERFACES §5/§6), kontrolovaný fail-closed před výběrem pubkey. Keyring s jedním klíčem je bezpečný ve výchozím stavu (ten jeden klíč je přijat). Ale modul, jehož keyring NESE i klíč nižší důvěry - např. klíč fingerprint-feedu vedle release klíče - je odmítnut, dokud jeho `config` nedeklaruje klíč modulu, např. `key_id=vd-2026` (oddělené čárkou pro rotaci, např. `key_id=vd-2026,vd-2027`). To zabrání, aby uniklý klíč nižší důvěry podepsal flashless root aktualizaci.
+
 `vdlu-pack` **vylučuje keyring a `verify/` binárky z feedu** (kořen důvěry je flash-only, nikdy se neservíruje po síti), vedle `baseline.json`, lešení instalátoru (`META-INF/`, `customize.sh`), `.vd/` flash brány, CI-vyplněných `update.json`/`update-mmrl.json` a per-file `.sha256` společníků. Feedem aktualizovatelný je jen vlastní obsah modulu, takže manifest nikdy nemůže přepsat kotvu důvěry na zařízení.
 
 <!-- doc-footer -->

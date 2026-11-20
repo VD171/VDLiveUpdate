@@ -129,6 +129,8 @@ PEM नहीं - `ed25519-mini` raw 32 बाइट्स पढ़ता ह�
 **स्थिर** है (केवल key rotation इसे बदलता है): एक re-vendor को इसे **verify-not-copy** करना चाहिए, और इसे कभी
 PC-side `.pub` PEM से अधिलेखित नहीं करना चाहिए।
 
+**बहु-कुंजी keyring को मॉड्यूल कुंजी पिन करनी ही चाहिए।** engine यह सीमित करता है कि कौन-सा `key_id` किसी MODULE-UPDATE पर हस्ताक्षर कर सकता है, config की `key_id` allowlist (INTERFACES §5/§6) तक, जो pubkey चुने जाने से पहले fail-closed जाँची जाती है। एकल-कुंजी keyring डिफ़ॉल्ट-सुरक्षित है (वही एक कुंजी स्वीकार होती है)। लेकिन ऐसा मॉड्यूल जिसका keyring एक कम-भरोसे वाली कुंजी भी रखता है - जैसे release कुंजी के साथ एक fingerprint-feed कुंजी - तब तक अस्वीकृत रहता है जब तक उसका `config` मॉड्यूल कुंजी घोषित न करे, जैसे `key_id=vd-2026` (rotation के लिए अल्पविराम से अलग, जैसे `key_id=vd-2026,vd-2027`)। यह एक लीक हुई कम-भरोसे वाली कुंजी को flashless root अपडेट पर हस्ताक्षर करने से रोकता है।
+
 `vdlu-pack` **keyring और `verify/` binaries को feed से बाहर करता है** (trust root केवल flash है, कभी नेटवर्क पर नहीं परोसा जाता), साथ ही `baseline.json`, installer स्कैफोल्डिंग (`META-INF/`, `customize.sh`), `.vd/` flash गेट, CI द्वारा भरे गए `update.json`/`update-mmrl.json`, और प्रति-फ़ाइल `.sha256` साथियों को भी। केवल मॉड्यूल की अपनी सामग्री feed से अपडेट करने योग्य है, इसलिए एक manifest कभी भी डिवाइस पर trust anchor को पुनः नहीं लिख सकता।
 
 <!-- doc-footer -->

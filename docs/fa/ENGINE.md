@@ -63,6 +63,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   crash/شبکه/reboot در میانه‌ی راه → `resume`/`boot` ادامه می‌دهد.
 - **profile=hardened** ⇒ `vdlu-verify` روی مانیفست پیش از استفاده الزامی؛ شکست = abort؛ downgrade مسدود (نسخه‌ی یکنوا).
   **trusted** ⇒ verify تا حد امکان است، اما هشِ هر بلاب همیشه بررسی می‌شود.
+- **فهرست مجازِ کلیدِ module-update (هر دو profiles):** `verify_manifest` هر مانیفستی را که `key_id`ِ آن در فهرستِ مجازِ `key_id`ِ پیکربندی‌شده (نگاه کنید به INTERFACES §5/§6) نباشد، پیش از انتخابِ pubkey به‌صورتِ fail-closed رد می‌کند، پس کلیدی با اعتمادِ پایین‌تر که فقط در keyring نشسته است (مثلاً یک کلیدِ fingerprint-feed) هرگز نمی‌تواند یک به‌روزرسانیِ flashless root را امضا کند. در حالتِ تنظیم‌نشده به‌طورِ پیش‌فرض امن: keyringِ تک‌کلیدی = فقط همان یک کلید؛ keyringِ چندکلیدی = تا پین‌شدنِ `key_id` رد می‌شود.
 - با وقار افت می‌کند: باینریِ گم‌شده / شبکه‌ی قطع / دیسکِ پر → یک خطای روشن روی stderr + `state:ERROR` در journal، بدون
   خراب‌کردن ماژول.
 
@@ -78,7 +79,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 | file | role |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…؛ نگاه کن به INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…؛ نگاه کن به INTERFACES §5) |
 | `current.json` | مانیفست نسخه‌ی ACTIVE (پایه‌ی diff)؛ غایب = هرگز به‌روز نشده |
 | `target.json` | مانیفست پین‌شده‌ی تراکنشِ در جریان (حضور = تراکنش فعال)؛ در `DONE` به `current.json` بدل می‌شود |
 | `plan.tsv` / `plan.del` | plan + پیشرفت فایل‌به‌فایل (st) / path‌هایی برای حذف |

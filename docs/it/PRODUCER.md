@@ -129,6 +129,8 @@ che sceglie `<keyring>/<key_id>.pub` (grezza) sono l'intero meccanismo di rotazi
 **stabile** tra le release (solo la rotazione delle chiavi lo cambia): un re-vendor deve **verificare-non-copiare**, e mai
 sovrascriverlo con la `.pub` PEM PC-side.
 
+**I keyring multichiave DEVONO fissare la chiave del modulo.** L'engine restringe quale `key_id` può firmare un MODULE-UPDATE all'allowlist `key_id` della config (INTERFACES §5/§6), controllata fail-closed prima che la pubkey venga selezionata. Un keyring a chiave singola è sicuro di default (quella singola chiave è accettata). Ma un modulo il cui keyring porta ANCHE una chiave a fiducia inferiore - es. una chiave di fingerprint-feed accanto alla chiave di release - è rifiutato finché il suo `config` non dichiara la chiave del modulo, es. `key_id=vd-2026` (separate da virgola per la rotazione, es. `key_id=vd-2026,vd-2027`). Questo impedisce a una chiave a fiducia inferiore trapelata di firmare un aggiornamento root flashless.
+
 `vdlu-pack` **esclude il keyring e i binari `verify/` dal feed** (la radice di fiducia è solo-flash, mai servita via cavo), insieme a `baseline.json`, l'impalcatura dell'installer (`META-INF/`, `customize.sh`), il gate di flash `.vd/`, gli `update.json`/`update-mmrl.json` riempiti dalla CI, e i compagni `.sha256` per-file. Solo il contenuto proprio del modulo è aggiornabile via feed, quindi un manifest non può mai riscrivere l'ancora di fiducia sul dispositivo.
 
 <!-- doc-footer -->

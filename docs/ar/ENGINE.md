@@ -65,6 +65,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   wakelock - آمنة للبطارية. تعطّل/شبكة/إقلاع في المنتصف ← `resume`/`boot` يتابع.
 - **profile=hardened** ⇐ `vdlu-verify` إلزامي على المانيفست **قبل** الاستخدام؛ الفشل = إجهاض؛ downgrade محجوب
   (نسخة رتيبة التزايد). **trusted** ⇐ التحقّق بذل أفضل جهد، لكن تجزئة كل blob **تُفحَص دائمًا**.
+- **قائمة سماح لمفتاح module-update (كلا الـ profiles):** يرفض `verify_manifest`، بنمط fail-closed، أيّ مانيفست لا يكون `key_id` الخاص به ضمن قائمة سماح `key_id` المضبوطة (انظر INTERFACES §5/§6) قبل اختيار pubkey، فلا يستطيع مفتاح أدنى ثقة يقبع فقط في الـ keyring (مثل مفتاح fingerprint-feed) أن يوقّع أبدًا تحديث root من نوع flashless. آمن افتراضيًا عند عدم الضبط: keyring بمفتاح واحد = ذلك المفتاح الوحيد فقط؛ keyring متعدّد المفاتيح = مرفوض حتى يُثبَّت `key_id`.
 - يتدهور بسلاسة: ثنائي مفقود / شبكة ساقطة / قرص ممتلئ ← خطأ واضح على stderr + `state:ERROR` في
   الـ journal، دون إفساد الوحدة.
 
@@ -80,7 +81,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 | ملف | الدور |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…؛ انظر INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…؛ انظر INTERFACES §5) |
 | `current.json` | مانيفست النسخة **النشطة** (diff base)؛ غائب = لم يُحدَّث قط |
 | `target.json` | مانيفست مثبَّت للمعاملة الجارية (الوجود = معاملة نشطة)؛ يصير `current.json` عند `DONE` |
 | `plan.tsv` / `plan.del` | الخطّة + تقدّم كلّ ملف (st) / مسارات للحذف |

@@ -128,6 +128,8 @@ Keyring, `<key_id>.pub` dosyalarından oluşan bir dizindir, her biri **RAW 32B*
 sürümler boyunca **kararlıdır** (yalnızca anahtar rotasyonu onu değiştirir): bir yeniden-vendor onu **kopyalamadan-doğrulamalı** ve asla
 onu PC tarafı `.pub` PEM ile üzerine yazmamalıdır.
 
+**Çok anahtarlı keyring'ler modül anahtarını sabitlemek ZORUNDADIR.** Engine, bir MODULE-UPDATE'i hangi `key_id`'nin imzalayabileceğini config'in `key_id` allowlist'iyle (INTERFACES §5/§6) sınırlar; bu, pubkey seçilmeden önce fail-closed kontrol edilir. Tek anahtarlı bir keyring varsayılan-güvenlidir (o tek anahtar kabul edilir). Ama keyring'i daha düşük güvenli bir anahtarı DA taşıyan bir modül - ör. release anahtarının yanında bir fingerprint-feed anahtarı - `config`'i modül anahtarını bildirene kadar reddedilir, ör. `key_id=vd-2026` (rotasyon için virgülle ayrılmış, ör. `key_id=vd-2026,vd-2027`). Bu, sızmış daha düşük güvenli bir anahtarın bir flashless root güncellemesi imzalamasını engeller.
+
 `vdlu-pack` **keyring'i ve `verify/` ikililerini beslemeden hariç tutar** (güven kökü yalnızca flaştadır, asla ağ üzerinden sunulmaz), `baseline.json`, yükleyici iskelesi (`META-INF/`, `customize.sh`), `.vd/` flaş geçidi, CI'ın doldurduğu `update.json`/`update-mmrl.json` ve dosya başına `.sha256` eşlikçileriyle birlikte. Yalnızca modülün kendi içeriği besleme ile güncellenebilir, bu yüzden bir manifest cihazdaki güven çıpasını asla yeniden yazamaz.
 
 <!-- doc-footer -->

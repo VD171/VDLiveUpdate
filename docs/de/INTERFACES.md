@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -136,6 +139,7 @@ Engine `97baf887`+ (`file://` wird nie gated).
   eingebettete `ed25519-mini`-Binary (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=gueltig/1=ungueltig/2=usage).
   rc!=0 = Ablehnung. **`profile=hardened` => verify obligatorisch; Fehler = Abbruch.**
   `profile=trusted` => verify ist best-effort (Quelle bereits via SSH vertraut), aber der Hash jedes Blobs wird IMMER geprueft.
+- **Allowlist für Module-Update-Schlüssel (fail-closed, vor der Pubkey-Auswahl):** der `key_id` des Manifests muss ein akzeptierter MODULE-UPDATE-Schlüssel sein, bevor `<key_id>.pub` ausgewählt wird - der `key_id` der config (§5) ist diese Allowlist. Ein Keyring kann AUCH einen Schlüssel geringeren Vertrauens tragen (z. B. einen Fingerprint-Feed-Schlüssel, automatisiert, anderes Konto); ohne die Allowlist würde ein mit diesem Schlüssel signiertes Manifest verifiziert und bei einem Leak ein vollständiges flashless Root-Update anwenden. `verify_manifest` erzwingt es in BEIDEN profiles und übergibt die aufgelöste Menge via der env `VDLU_KEYID_ALLOW` an `vdlu-verify` (damit der eigenständige Verifier zustimmt). Nicht gesetzt ist standardsicher (Keyring mit einem Schlüssel: nur dieser Schlüssel; Keyring mit mehreren Schlüsseln: abgelehnt, bis `key_id` gepinnt ist). Die Fingerprint-Feed-Vertrauenswurzel ist ein SEPARATER Pfad mit eigenem gepinnten Schlüssel und ist nicht betroffen.
 - `producer/vdlu-keygen <id> <out>` -> erzeugt `<id>.pem` (priv) + `<id>.pub` (PEM, fuer Tooling auf dem PC) +
   `<id>.pub.raw` (**RAW 32B** = der `<id>.pub` des schlanken Keyrings auf dem Geraet). openssl `genpkey -algorithm ed25519`.
 

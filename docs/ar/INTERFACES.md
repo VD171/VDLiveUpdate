@@ -93,6 +93,9 @@ profile=trusted        # trusted | hardened. CODE DEFAULT (line absent) = harden
 net_policy=any         # any (Wi-Fi+mobile) | wifi (Wi-Fi only) | mobile (mobile only) - gates the DOWNLOAD by network type
 allow_metered=0        # ⚠️ SUPERSEDED by net_policy (not consumed by the engine)
 pubkey_dir=keyring     # relative to $MODULE_DIR/vdlu (keyring of pubkeys for verify)
+key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), comma-separated (rotation).
+                       # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
+                       # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
@@ -136,6 +139,7 @@ boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot;
   المضمّن `ed25519-mini` (CLI `ed25519-mini <pub32> <msg> <sig64>`، rc 0=صالح/1=غير صالح/2=usage).
   ‏rc!=0 = رفض. **`profile=hardened` ⇐ التحقّق إلزامي؛ الفشل = إجهاض.**
   ‏`profile=trusted` ⇐ التحقّق بذل أفضل جهد (المصدر موثوق أصلًا عبر SSH)، لكن تجزئة كل blob **تُفحَص دائمًا**.
+- **قائمة سماح لمفتاح module-update (fail-closed، قبل اختيار pubkey):** يجب أن يكون `key_id` الخاص بالمانيفست مفتاح MODULE-UPDATE مقبولًا قبل اختيار `<key_id>.pub` - `key_id` في config (§5) هو قائمة السماح تلك. قد يحمل الـ keyring أيضًا مفتاحًا أدنى ثقة (مثل مفتاح fingerprint-feed، مؤتمت، حساب مختلف)؛ بدون قائمة السماح، سيُتحقَّق من مانيفست موقَّع بذلك المفتاح ويطبّق تحديث root من نوع flashless كاملًا إذا تسرّب. يفرض `verify_manifest` ذلك في كلا الـ profiles ويمرّر المجموعة المحسومة إلى `vdlu-verify` عبر متغيّر البيئة `VDLU_KEYID_ALLOW` (كي يتوافق المدقّق المستقل). غير المضبوط آمن افتراضيًا (keyring بمفتاح واحد: ذلك المفتاح فقط؛ keyring متعدّد المفاتيح: مرفوض حتى يُثبَّت `key_id`). جذر ثقة fingerprint-feed مسار منفصل بمفتاحه المثبَّت الخاص، ولا يتأثّر.
 - `producer/vdlu-keygen <id> <out>` ← يولّد `<id>.pem` (priv) + `<id>.pub` (PEM، لأدوات الحاسوب) +
   `<id>.pub.raw` (**RAW 32B** = الـ `<id>.pub` للـ keyring النحيف على الجهاز). openssl `genpkey -algorithm ed25519`.
 

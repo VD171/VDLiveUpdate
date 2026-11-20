@@ -68,6 +68,11 @@ check/boot (the WebUI shows a blue info toast "waiting for X network", not an er
   `boot_retry_minutes>0` - a latent boot stall exists only in that config.
 - **profile=hardened** ⇒ `vdlu-verify` mandatory on the manifest BEFORE use; failure = abort; downgrade blocked
   (monotonic version). **trusted** ⇒ verify is best-effort, but every blob's hash is ALWAYS checked.
+- **Module-update key allowlist (both profiles):** `verify_manifest` rejects, fail-closed, any manifest whose
+  `key_id` is not in the configured `key_id` allowlist (see INTERFACES §5/§6) BEFORE the pubkey is selected, so
+  a lower-trust key that merely sits in the keyring (e.g. a fingerprint-feed key) can never sign a flashless
+  root update. Default-safe when unset: single-key keyring → that one key; multi-key keyring → rejected until
+  `key_id` is pinned.
 - Degrades gracefully: missing binary / network down / disk full → a clear error on stderr + `state:ERROR` in
   the journal, without corrupting the module.
 
@@ -83,7 +88,7 @@ JSON. The `sh` consumes it with `grep`/`cut`; the per-file plan is reassembled i
 
 | file | role |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`boot_retry_*`/…; see INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; see INTERFACES §5) |
 | `current.json` | manifest of the ACTIVE version (diff base); absent = never updated |
 | `target.json` | pinned manifest of the in-flight transaction (presence = active transaction); becomes `current.json` on `DONE` |
 | `plan.tsv` / `plan.del` | plan + per-file progress (st) / paths to delete |

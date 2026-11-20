@@ -127,6 +127,8 @@ keyring은 `<key_id>.pub` 파일들의 디렉터리이며, 각각 **RAW 32B** ed
 릴리스를 가로질러 **안정적**이다 (키 로테이션만이 그것을 변경함): 재벤더링은 **복사가 아니라 검증**해야 하며,
 결코 PC 측 `.pub` PEM으로 덮어써서는 안 된다.
 
+**다중 키 keyring은 모듈 키를 반드시 고정해야 한다.** 엔진은 어떤 `key_id`가 MODULE-UPDATE에 서명할 수 있는지를 config의 `key_id` allowlist (INTERFACES §5/§6)로 제한하며, pubkey가 선택되기 전에 fail-closed로 확인한다. 단일 키 keyring은 기본 안전하다 (그 하나의 키가 수락됨). 그러나 keyring이 신뢰도가 낮은 키도 담는 모듈 - 예: release 키와 나란히 있는 fingerprint-feed 키 - 은 그 `config`가 모듈 키를 선언할 때까지 거부된다, 예: `key_id=vd-2026` (로테이션을 위해 쉼표로 구분, 예: `key_id=vd-2026,vd-2027`). 이는 유출된 신뢰도가 낮은 키가 flashless root 업데이트에 서명하는 것을 막는다.
+
 `vdlu-pack`은 **keyring과 `verify/` 바이너리를 피드에서 제외한다** (신뢰 루트는 플래시 전용이며, 결코 유선으로 제공되지 않는다). `baseline.json`, 인스톨러 스캐폴딩 (`META-INF/`, `customize.sh`), `.vd/` 플래시 게이트, CI가 채우는 `update.json`/`update-mmrl.json`, 그리고 파일별 `.sha256` 동반 파일도 마찬가지다. 피드로 업데이트할 수 있는 것은 모듈 자신의 내용뿐이므로, manifest가 기기의 신뢰 앵커를 다시 쓸 수는 결코 없다.
 
 <!-- doc-footer -->
