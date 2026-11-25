@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # potem run /
 
 ## Zobacz również
 
-Siostrzane projekty tego samego autora:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: debugger metod urządzenia, który odczytuje każdy element każdą metodą zdolną go odczytać.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: odczytuje to, co Google zapisuje na Twoim urządzeniu, w pełni na urządzeniu i bez internetu.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: spoofer urządzenia, który zamienia świeży fingerprint w spójny, konsekwentny profil.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: samodzielny, konfigurowalny demon SSH z rootem dla KernelSU/APatch/Magisk.
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: pełna kopia zapasowa i przywracanie aplikacji oraz danych jako root, w całości sterowane z WebUI.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: podszywanie się pod globalny fingerprint urządzenia / Play Integrity, dla całego urządzenia z zakresem dla poszczególnych aplikacji i WebUI.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: pełna kopia zapasowa i przywracanie aplikacji oraz danych jako root, sterowane w całości z WebUI.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: samodzielny zrootowany demon SSH (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: Twoje usługi Google (RCS, Wallet, atestacje Play Integrity) odczytywane na Twoim urządzeniu bez internetu.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: bezproblemowy rootowy instalator sideload dla pojedynczych, wsadowych i podzielonych APK, z przełącznikiem weryfikatora Play Protect i podszywaniem źródła instalacji.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: debugger metod urządzenia: odczytuje każdy element wszystkimi metodami, które mogą go odczytać, i porównuje je obok siebie.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: nasze repozytorium modułów dla MMRL/WebUI-X (zainstaluj je wszystkie z menedżera roota).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: zbiór danych fingerprintów `build.prop` z Pixeli (fork @T3SL4).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: użyj Telegrama jako magazynu obiektów z małego CLI w Go.
 
 ## Kontakt
 

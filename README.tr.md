@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Ayrıca bakınız
 
-Aynı yazara ait kardeş projeler:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: her öğeyi, onu okuyabilen her yöntem üzerinden okuyan bir cihaz yöntemi hata ayıklayıcısı.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: Google'ın cihazında neyi kaydettiğini okur, tamamen cihaz üzerinde ve internet olmadan.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: taze bir fingerprint'i tutarlı, uyumlu bir profile dönüştüren bir cihaz spoofer'ı.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: KernelSU/APatch/Magisk için bağımsız, yapılandırılabilir root'lu bir SSH daemon'ı.
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: tamamen bir WebUI'den yönetilen, root olarak tam uygulama ve veri yedekleme ve geri yükleme.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: genel cihaz fingerprint'i / Play Integrity sahteciliği, uygulama başına kapsamlı ve tüm cihaz genelinde, bir WebUI ile.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: root olarak tam uygulama ve veri yedekleme ve geri yükleme; tümüyle bir WebUI'den yönetilir.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: bağımsız, root yetkili bir SSH artalan süreci (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: Google hizmetleriniz (RCS, Wallet, Play Integrity doğrulamaları), internet olmadan cihazınızda okunur.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: tekli, toplu ve bölünmüş APK'lar için sürtünmesiz bir root sideload yükleyicisi; Play Protect doğrulayıcı anahtarı ve kurulum kaynağı sahteciliği ile birlikte.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: bir cihaz yöntem hata ayıklayıcısı: her öğeyi, onu okuyabilen her yöntemle okur ve bunları yan yana karşılaştırır.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: MMRL/WebUI-X için modül deposu (bunların tümünü root yöneticinizden kurun).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: Pixel `build.prop` fingerprint'lerinden oluşan bir veri kümesi (@T3SL4 forku).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: küçük bir Go CLI'sinden Telegram'ı nesne deposu olarak kullanın.
 
 ## İletişim
 

@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Xem thêm
 
-Các dự án anh em của cùng tác giả:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: một trình gỡ lỗi phương thức của thiết bị, đọc từng mục qua mọi phương thức có thể đọc nó.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: đọc những gì Google ghi lại trên thiết bị của bạn, hoàn toàn trên thiết bị và không cần internet.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: một trình giả mạo thiết bị biến một fingerprint mới thành một hồ sơ mạch lạc, nhất quán.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: một daemon SSH root độc lập, có thể cấu hình cho KernelSU/APatch/Magisk.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: giả mạo fingerprint toàn cục của thiết bị / Play Integrity, trên toàn thiết bị với phạm vi theo từng ứng dụng và một WebUI.
 - **[VDBackup](https://github.com/VD171/VD-Backup)**: sao lưu và khôi phục toàn bộ ứng dụng và dữ liệu với quyền root, điều khiển hoàn toàn từ một WebUI.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: một SSH daemon độc lập chạy với quyền root (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: các dịch vụ Google của bạn (RCS, Wallet, các chứng thực Play Integrity), đọc ngay trên thiết bị của bạn mà không cần internet.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: một trình cài đặt sideload với quyền root không ma sát cho các APK đơn, hàng loạt và phân tách, với công tắc trình xác minh Play Protect và giả mạo nguồn cài đặt.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: một trình gỡ lỗi phương thức của thiết bị: đọc từng mục qua mọi phương thức có thể đọc nó và so sánh chúng cạnh nhau.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: kho mô-đun của chúng tôi cho MMRL/WebUI-X (cài đặt tất cả những thứ này từ trình quản lý root của bạn).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: một bộ dữ liệu fingerprint `build.prop` của Pixel (fork của @T3SL4).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: dùng Telegram như một object store từ một CLI Go nhỏ gọn.
 
 ## Contacts
 

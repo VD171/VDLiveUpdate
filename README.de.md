@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Siehe auch
 
-Schwesterprojekte desselben Autors:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: ein Geräte-Methoden-Debugger, der jedes Element über jede Methode liest, die es lesen kann.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: liest, was Google auf deinem Gerät aufzeichnet, vollständig auf dem Gerät und ohne Internet.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: ein Geräte-Spoofer, der aus einem frischen Fingerprint ein kohärentes, konsistentes Profil macht.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: ein eigenständiger, konfigurierbarer gerooteter SSH-Daemon für KernelSU/APatch/Magisk.
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: vollständiges Sichern und Wiederherstellen von Apps und Daten als root, komplett über eine WebUI gesteuert.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: Spoofing des globalen Geräte-fingerprints / Play Integrity, geräteweit mit App-spezifischem Geltungsbereich und einer WebUI.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: vollständiges Backup und Wiederherstellen von Apps und Daten als Root, komplett über eine WebUI gesteuert.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: ein eigenständiger gerooteter SSH-Daemon (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: deine Google-Dienste (RCS, Wallet, Play-Integrity-Attestierungen), auf deinem Gerät ohne Internet gelesen.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: ein reibungsloser Root-Sideload-Installer für einzelne, Batch- und Split-APKs, mit einem Play-Protect-Verifier-Schalter und Fälschung der Installationsquelle.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: ein Geräte-Methoden-Debugger: liest jedes Element über jede Methode, die es lesen kann, und vergleicht sie nebeneinander.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: unser Modul-Repository für MMRL/WebUI-X (installiere all dies aus deinem Root-Manager).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: ein Datensatz von Pixel-`build.prop`-fingerprints (Fork von @T3SL4).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: nutze Telegram als Objektspeicher über ein winziges Go-CLI.
 
 ## Kontakte
 

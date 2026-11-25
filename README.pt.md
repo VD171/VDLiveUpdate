@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # então run 
 
 ## Veja também
 
-Projetos irmãos do mesmo autor:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: um debugger de métodos de aparelho que lê cada item por todos os métodos capazes de lê-lo.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: lê o que o Google registra no seu aparelho, totalmente no aparelho e sem internet.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: um spoofer de aparelho que transforma um fingerprint novo em um perfil coerente e consistente.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: um daemon SSH rooteado, standalone e configurável, para KernelSU/APatch/Magisk.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: spoofing do fingerprint global do dispositivo / Play Integrity, no dispositivo inteiro com escopo por app e uma WebUI.
 - **[VDBackup](https://github.com/VD171/VD-Backup)**: backup e restauração completos de apps e dados como root, conduzidos inteiramente por uma WebUI.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: um daemon SSH independente com root (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: seus serviços Google (RCS, Wallet, atestações do Play Integrity), lidos no seu dispositivo sem internet.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: um instalador sideload com root e sem atrito para APKs únicos, em lote e divididos, com um interruptor para o verificador do Play Protect e falsificação da origem de instalação.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: um depurador de métodos do dispositivo: lê cada item por todos os métodos que conseguem lê-lo e os compara lado a lado.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: nosso repositório de módulos para MMRL/WebUI-X (instale todos estes pelo seu gerenciador root).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: um conjunto de dados de fingerprints `build.prop` de Pixel (fork de @T3SL4).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: use o Telegram como um object store a partir de uma pequena CLI em Go.
 
 ## Contatos
 

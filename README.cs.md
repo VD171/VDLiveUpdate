@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Viz také
 
-Sesterské projekty téhož autora:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: debugger metod zařízení, který čte každou položku přes každou metodu, jež ji umí přečíst.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: čte, co o tobě Google na tvém zařízení zaznamenává, celé na zařízení a bez internetu.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: nástroj na podvržení zařízení, který z čerstvého fingerprintu udělá soudržný a konzistentní profil.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: samostatný, konfigurovatelný rootový SSH démon pro KernelSU/APatch/Magisk.
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: úplné zálohování a obnova aplikací a dat jako root, plně ovládané z WebUI.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: podvržení globálního fingerprintu zařízení / Play Integrity, pro celé zařízení s rozsahem pro jednotlivé aplikace a WebUI.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: kompletní záloha a obnova aplikací a dat jako root, řízená zcela z WebUI.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: samostatný rootovaný SSH démon (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: vaše služby Google (RCS, Wallet, atestace Play Integrity) čtené na vašem zařízení bez internetu.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: bezproblémový rootový sideload instalátor pro jednotlivé, dávkové a rozdělené APK, s přepínačem ověřování Play Protect a podvržením zdroje instalace.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: debugger metod zařízení: čte každou položku všemi metodami, které ji dokážou přečíst, a porovnává je vedle sebe.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: naše úložiště modulů pro MMRL/WebUI-X (vše z tohoto nainstalujete ze svého root manageru).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: datová sada fingerprintů `build.prop` od Pixelů (fork @T3SL4).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: použijte Telegram jako úložiště objektů z malého Go CLI.
 
 ## Kontakty
 

@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## 함께 보기
 
-같은 작성자의 자매 프로젝트:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: 각 항목을, 그것을 읽을 수 있는 모든 메서드로 읽어내는 기기 메서드 디버거.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: Google 이 당신의 기기에 기록하는 내용을, 완전히 기기 상에서 인터넷 없이 읽어냅니다.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: 새로운 핑거프린트를 일관되고 정합성 있는 프로파일로 바꾸는 기기 스푸퍼.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: KernelSU/APatch/Magisk 를 위한 단독 실행형 설정 가능 root SSH 데몬.
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: 앱과 데이터의 완전한 백업 및 복원을 root 로 수행하며, 전적으로 WebUI 에서 조작합니다.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: 전역 기기 fingerprint / Play Integrity 스푸핑, 기기 전체에 적용되며 앱별 범위와 WebUI를 제공.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: 루트로 앱과 데이터를 통째로 백업·복원하며, 전부 WebUI에서 조작합니다.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: 독립 실행형 루트 SSH 데몬 (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: 여러분의 Google 서비스 (RCS, Wallet, Play Integrity 증명)를 인터넷 없이 기기에서 읽습니다.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: 단일, 배치, 분할 APK 를 위한 마찰 없는 root 사이드로드 설치기로, Play Protect 검사기 토글과 설치 출처 위장을 갖추고 있습니다.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: 기기 메서드 디버거. 각 항목을 그것을 읽을 수 있는 모든 메서드로 읽어 나란히 비교합니다.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: MMRL/WebUI-X용 모듈 저장소 (이 모든 것을 root 관리자에서 설치하세요).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: Pixel `build.prop` fingerprint 데이터셋 (@T3SL4의 fork).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: 작은 Go CLI에서 Telegram을 객체 저장소로 사용하세요.
 
 ## 연락처
 

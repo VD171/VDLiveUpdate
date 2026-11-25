@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## 另见
 
-同一作者的姊妹项目:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: 一个设备方法调试器，通过每一种能读取某项的方法来读取该项。
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: 读取 Google 在你设备上记录的内容，完全在设备上进行且无需联网。
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: 一个设备伪装器，把一个全新的 fingerprint 变成一份连贯、一致的配置。
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: 一个面向 KernelSU/APatch/Magisk 的独立、可配置的 root SSH 守护进程。
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: 以 root 权限对应用和数据进行完整备份与还原，完全由 WebUI 驱动。
-- **[VDInstaller](https://github.com/VD171/VD-Installer)**: 一个面向单个、批量和拆分 APK 的无摩擦 root 侧载安装器，带有 Play Protect 验证器开关和安装来源伪装。
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**：全局设备 fingerprint / Play Integrity 伪装，作用于整机并支持按应用划分范围，带 WebUI。
+- **[VDBackup](https://github.com/VD171/VD-Backup)**：以 root 身份对应用和数据进行完整备份与恢复，全程由 WebUI 驱动。
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**：一个独立的 root SSH 守护进程 (Dropbear)。
+- **[VDGoogle](https://github.com/VD171/VD-Google)**：在你的设备上无需联网即可读取你的 Google 服务 (RCS、Wallet、Play Integrity 证明)。
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**：一个面向单个、批量和拆分 APK 的无摩擦 root 侧载安装器，带有 Play Protect 验证器开关和安装来源伪装。
+- **[VDInfos](https://github.com/VD171/VD-Infos)**：一个设备方法调试器: 通过每一种能读取某项的方法去读取它，并将结果并排比较。
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**：我们的 MMRL/WebUI-X 模块仓库（从你的 root 管理器安装以上全部）。
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**：一份 Pixel `build.prop` fingerprint 数据集（@T3SL4 的 fork）。
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**：通过一个小巧的 Go CLI 把 Telegram 当作对象存储来使用。
 
 ## Contacts
 

@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Дивіться також
 
-Споріднені проєкти того самого автора:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: налагоджувач методів пристрою, який читає кожен елемент через кожен метод, що може його прочитати.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: читає те, що Google записує на вашому пристрої, повністю на пристрої й без інтернету.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: підмінювач пристрою, який перетворює свіжий fingerprint на узгоджений, послідовний профіль.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: автономний, налаштовуваний SSH-демон із root-правами для KernelSU/APatch/Magisk.
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: повне резервне копіювання та відновлення застосунків і даних із правами root, кероване повністю через WebUI.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: підміна глобального fingerprint пристрою / Play Integrity, для всього пристрою з областю дії для кожного застосунку та WebUI.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: повне резервне копіювання та відновлення застосунків і даних із правами root, повністю кероване з WebUI.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: автономний SSH-демон із root-правами (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: ваші сервіси Google (RCS, Wallet, атестації Play Integrity), прочитані на вашому пристрої без інтернету.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: безперешкодний root-інсталятор sideload для одиночних, пакетних і розділених APK, з перемикачем верифікатора Play Protect та підробкою джерела встановлення.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: налагоджувач методів пристрою, який читає кожен елемент через кожен метод, що може його прочитати, і порівнює їх пліч-о-пліч.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: наш репозиторій модулів для MMRL/WebUI-X (встановіть усе це з вашого root-менеджера).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: набір даних fingerprint-ів `build.prop` від Pixel (форк @T3SL4).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: використовуйте Telegram як об'єктне сховище з крихітного CLI на Go.
 
 ## Contacts
 

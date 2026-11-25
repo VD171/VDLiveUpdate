@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Voir aussi
 
-Projets frères du même auteur :
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)** : un débogueur de méthodes de l'appareil qui lit chaque élément à travers toutes les méthodes capables de le lire.
-- **[VDGoogle](https://github.com/VD171/VD-Google)** : lit ce que Google enregistre sur votre appareil, entièrement en local et sans internet.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)** : un spoofer d'appareil qui transforme une empreinte fraîche en un profil cohérent et consistant.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)** : un démon SSH en root, autonome et configurable, pour KernelSU/APatch/Magisk.
-- **[VDBackup](https://github.com/VD171/VD-Backup)** : sauvegarde et restauration complètes des apps et des données en root, pilotées entièrement depuis une WebUI.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)** : usurpation du fingerprint global de l'appareil / Play Integrity, sur tout l'appareil avec une portée par application et une WebUI.
+- **[VDBackup](https://github.com/VD171/VD-Backup)** : sauvegarde et restauration complètes des applications et des données en root, pilotées entièrement depuis une WebUI.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)** : un démon SSH autonome en root (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)** : vos services Google (RCS, Wallet, attestations Play Integrity), lus sur votre appareil sans internet.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)** : un installateur sideload en root et sans friction pour les APK uniques, par lots et splittés, avec un interrupteur pour le vérificateur Play Protect et l'usurpation de la source d'installation.
+- **[VDInfos](https://github.com/VD171/VD-Infos)** : un débogueur de méthodes de l'appareil : il lit chaque élément par toutes les méthodes qui peuvent le lire et les compare côte à côte.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)** : notre dépôt de modules pour MMRL/WebUI-X (installez tout ceci depuis votre gestionnaire root).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)** : un jeu de données de fingerprints `build.prop` de Pixel (fork de @T3SL4).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)** : utilisez Telegram comme stockage d'objets depuis une petite CLI en Go.
 
 ## Contacts
 

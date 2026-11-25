@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Se även
 
-Systerprojekt av samma författare:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: en felsökare för enhetsmetoder som läser varje objekt genom varje metod som kan läsa det.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: läser vad Google registrerar på din enhet, helt på enheten och utan internet.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: en enhetsspoofer som förvandlar ett färskt fingerprint till en sammanhängande, konsekvent profil.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: en fristående, konfigurerbar rootad SSH-daemon för KernelSU/APatch/Magisk.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: spoofing av enhetens globala fingerprint / Play Integrity, för hela enheten med omfattning per app och ett WebUI.
 - **[VDBackup](https://github.com/VD171/VD-Backup)**: fullständig säkerhetskopiering och återställning av appar och data som root, helt styrd från ett WebUI.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: en fristående rootad SSH-daemon (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: dina Google-tjänster (RCS, Wallet, Play Integrity-attesteringar), lästa på din enhet utan internet.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: en friktionsfri root-sideload-installerare för enskilda, batch- och split-APK:er, med en växel för Play Protect-verifieraren och förfalskning av installationskällan.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: en felsökare för enhetsmetoder: läser varje objekt genom varje metod som kan läsa det och jämför dem sida vid sida.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: vårt modulrepositorium för MMRL/WebUI-X (installera allt detta från din root-hanterare).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: en datamängd med Pixel-`build.prop`-fingerprints (fork av @T3SL4).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: använd Telegram som ett objektlager från ett litet Go-CLI.
 
 ## Kontakter
 

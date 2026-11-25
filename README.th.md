@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## ดูเพิ่มเติม
 
-โปรเจกต์พี่น้องโดยผู้เขียนคนเดียวกัน:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: ตัวดีบักเมธอดของอุปกรณ์ที่อ่านแต่ละ item ผ่านทุกเมธอดที่สามารถอ่านมันได้
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: อ่านสิ่งที่ Google บันทึกไว้บนอุปกรณ์ของคุณ ทำงานบนอุปกรณ์ทั้งหมดและไม่ใช้อินเทอร์เน็ต
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: ตัวสปูฟอุปกรณ์ที่เปลี่ยน fingerprint ใหม่ให้กลายเป็นโปรไฟล์ที่สอดคล้องและสม่ำเสมอ
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: เดมอน SSH แบบ root ที่ทำงานได้อิสระและกำหนดค่าได้ สำหรับ KernelSU/APatch/Magisk
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: การสำรองและกู้คืนแอปและข้อมูลอย่างสมบูรณ์ในฐานะ root ควบคุมทั้งหมดจาก WebUI
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: การสปูฟ fingerprint ของอุปกรณ์ทั้งเครื่อง / Play Integrity ครอบคลุมทั้งอุปกรณ์ พร้อมขอบเขตแยกตามแอป และ WebUI
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: สำรองและกู้คืนแอปและข้อมูลแบบเต็มในฐานะ root ขับเคลื่อนทั้งหมดจาก WebUI
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: ตัว SSH daemon แบบสแตนด์อโลนที่ทำงานด้วยสิทธิ์รูท (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: บริการ Google ของคุณ (RCS, Wallet, การรับรอง Play Integrity) อ่านได้บนอุปกรณ์ของคุณโดยไม่ต้องใช้อินเทอร์เน็ต.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: ตัวติดตั้งแบบ sideload ด้วยสิทธิ์ root ที่ไร้แรงเสียดทาน สำหรับ APK เดี่ยว แบบชุด และแบบแยก พร้อมสวิตช์ตัวตรวจสอบ Play Protect และการปลอมแหล่งที่มาของการติดตั้ง
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: ตัวดีบักเมธอดของอุปกรณ์: อ่านแต่ละรายการผ่านทุกเมธอดที่อ่านมันได้ แล้วนำมาเทียบกันเคียงข้าง.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: คลังมอดูลของเราสำหรับ MMRL/WebUI-X (ติดตั้งทั้งหมดนี้จากตัวจัดการ root ของคุณ)
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: ชุดข้อมูล fingerprint ของ `build.prop` จาก Pixel (fork ของ @T3SL4)
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: ใช้ Telegram เป็น object store ผ่าน CLI เล็ก ๆ ที่เขียนด้วย Go
 
 ## ติดต่อ
 

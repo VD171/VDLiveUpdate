@@ -79,14 +79,15 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## همچنین ببینید
 
-پروژه‌های هم‌خانوادهٔ همین نویسنده:
-
-- **[VDInfos](https://github.com/VD171/VD-Infos)**: یک دیباگر متدهای دستگاه که هر آیتم را از طریق تمام متدهایی که می‌توانند آن را بخوانند می‌خواند.
-- **[VDGoogle](https://github.com/VD171/VD-Google)**: آنچه را گوگل روی دستگاه شما ثبت می‌کند می‌خواند، کاملاً روی خود دستگاه و بدون اینترنت.
-- **[COPG-VD](https://github.com/VD171/COPG-VD)**: یک spoofer دستگاه که یک fingerprint تازه را به یک پروفایل منسجم و سازگار تبدیل می‌کند.
-- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: یک دیمن SSH روت‌شدهٔ مستقل و پیکربندی‌پذیر برای KernelSU/APatch/Magisk.
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: پشتیبان‌گیری و بازیابی کامل برنامه‌ها و داده‌ها با دسترسی روت، که به‌طور کامل از یک WebUI اداره می‌شود.
+- **[COPG-VD](https://github.com/VD171/COPG-VD)**: جعل fingerprint سراسری دستگاه / Play Integrity، در کل دستگاه با دامنه‌ی هر برنامه و یک WebUI.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: پشتیبان‌گیری و بازیابی کامل اپ و داده به‌صورت روت، که به‌طور کامل از یک WebUI رانده می‌شود.
+- **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: یک سرویس SSH مستقل با دسترسی روت (Dropbear).
+- **[VDGoogle](https://github.com/VD171/VD-Google)**: سرویس‌های Google شما (RCS، Wallet، گواهی‌های Play Integrity)، روی دستگاهتان و بدون اینترنت خوانده می‌شوند.
 - **[VDInstaller](https://github.com/VD171/VD-Installer)**: یک نصب‌کنندهٔ ساید‌لود روت‌شدهٔ بدون‌اصطکاک برای APKهای تکی، دسته‌ای و تقسیم‌شده، همراه با کلید تأییدکنندهٔ Play Protect و جعل منبع نصب.
+- **[VDInfos](https://github.com/VD171/VD-Infos)**: یک اشکال‌زدای روش‌های دستگاه: هر مورد را از طریق هر روشی که می‌تواند آن را بخواند می‌خواند و آن‌ها را کنار هم مقایسه می‌کند.
+- **[VD-Modules](https://github.com/VD171/VD-Modules)**: مخزن ماژول‌های ما برای MMRL/WebUI-X (همه‌ی این‌ها را از مدیر root خود نصب کنید).
+- **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: یک مجموعه‌داده از fingerprintهای `build.prop` پیکسل (fork از @T3SL4).
+- **[@VictorGabriel7Dev/mtproto-store](https://github.com/VictorGabriel7Dev/mtproto-store)**: از Telegram به‌عنوان یک object store از طریق یک CLI کوچک Go استفاده کنید.
 
 ## تماس‌ها
 
