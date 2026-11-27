@@ -22,9 +22,28 @@
   ======================================================================
 -->
 
-# VDLiveUpdate
+# VD Live Update
 
-> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · 한국어 · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+
+<p align="center">
+  <img src="images/logo-wordmark.png" alt="VD Live Update" width="320">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1a7f37" alt="License"></a>
+  <a href="https://github.com/VD171/VDLiveUpdate/stargazers"><img src="https://img.shields.io/github/stars/VD171/VDLiveUpdate?color=d29922" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="docs/QUICKSTART.md">Quickstart</a> ·
+  <a href="docs/ENGINE.md">Engine</a> ·
+  <a href="docs/PRODUCER.md">Producer</a> ·
+  <a href="docs/WEBUI.md">WebUI</a> ·
+  <a href="docs/INTERFACES.md">Interfaces</a> ·
+  <a href="docs/AI-AGENTS.md">AI agents</a> ·
+  <a href="docs/TRUST-MODEL.md">Trust model</a>
+</p>
 
 **VDLU** 는 **KernelSU / APatch / Magisk** 모듈을 위한, 플래시가 필요 없는 증분 자체 업데이트 엔진입니다. 설치된 모듈은 **변경된 파일만** (콘텐츠 주소 지정 블롭 + 서명된 매니페스트) 가져와 자신을 업데이트하고, 라이브한 파일은 **재부팅 없이** 적용하며, 재부팅이 필요한 소수의 파일 (`.so`, `/system` 오버레이, `sepolicy.rule`) 만 스테이징하고 표시합니다. root 매니저도, 전체 `.zip` 재다운로드도, 스테이징된 파일을 위한 경우를 제외한 재부팅도 없습니다.
 
@@ -68,6 +87,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ```
 
 `sh -n engine/*.sh`, `node --check webui/vdlu.js`, 그리고 `webui/demo.html` 을 브라우저에서 엽니다 (기기 브리지를 모킹합니다).
+
+## AI 에이전트
+
+엔진은 전적으로 셸에서 구동됩니다 (`sh engine/update.sh <check|run|resume|boot|status|cancel>` 가 기계가 읽을 수 있는 상태를 출력합니다). 따라서 AI 에이전트는 UI 없이 업데이트를 확인, 적용, 재개할 수 있습니다. 구성 요소 사이의 이음새 계약은 [`docs/INTERFACES.md`](docs/INTERFACES.md) 에 문서화되어 있으며, AI의 패치도 다른 것과 동일한 검토 기준을 거칩니다.
 
 ## 문서
 
@@ -118,4 +141,4 @@ VDLU 는 전적으로 당신의 기기와 당신 자신의 릴리스 호스트�
 
 ---
 
-📣 **Join the channel for updates:** @Priv8_VD https://t.me/Priv8_VD
+📣 **업데이트를 받으려면 채널에 참여하세요:** @Priv8_VD https://t.me/Priv8_VD

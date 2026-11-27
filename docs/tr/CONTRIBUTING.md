@@ -12,9 +12,9 @@ Katkılar hoş karşılanır.
 - Bir PR'den önce uçtan uca test edin: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, ardından motor
   (`check` / `run` / `boot`). Ayrıca `sh -n engine/*.sh` ve `node --check webui/vdlu.js`.
 - Güvenlik pazarlık konusu değildir: her manifest alanı düşmanca girdidir ve `validate_plan()` fail-closed
-  kalır; özel imzalama anahtarı asla CI'ya ya da bir cihaza dokunmaz.
-- Cihazda POSIX sh (`local` dışında bashism yok, `jq` yok); yorumları kısa tutun.
-- PR başına bir mantıksal değişiklik; neyin neden değiştiğini söyleyin.
+  kalır, özel imzalama anahtarı asla CI'ya ya da bir cihaza dokunmaz.
+- Cihazda POSIX sh (`local` dışında bashism yok, `jq` yok), yorumları kısa tutun.
+- PR başına bir mantıksal değişiklik, neyin neden değiştiğini söyleyin.
 
 ## İletişim
 
@@ -26,4 +26,4 @@ Katkılar hoş karşılanır.
 
 ---
 
-> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır; bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır, bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._

@@ -34,7 +34,7 @@ Dit is de exacte `vdlu/`-boom die de module na adoptie draagt:
 ```
 
 De muteerbare toestand van de engine (`config`, `current.json`, journal, lock) leeft in
-Tier-2, `/data/adb/<modid>/vdlu/`, buiten de module-dir; `config.default` seedt hem bij de
+Tier-2, `/data/adb/<modid>/vdlu/`, buiten de module-dir, `config.default` seedt hem bij de
 eerste run.
 
 ## 1. Vendor de engine
@@ -48,7 +48,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Lever alleen de ABI's die je ondersteunt; `customize.sh` kan `verify/` bij installatietijd
+Lever alleen de ABI's die je ondersteunt, `customize.sh` kan `verify/` bij installatietijd
 snoeien tot de ABI van het toestel.
 
 ## 2. Genereer een signeersleutel (eenmalig)
@@ -85,6 +85,7 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
 Gebruik `profile=trusted` alleen voor een privé `file://`/SSH-bron (verify best-effort;
@@ -121,7 +122,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` worden gevendord uit `webui/`; een vertaling kan worden toegevoegd met
+(`vdlu.js` / `vdlu.css` worden gevendord uit `webui/`, een vertaling kan worden toegevoegd met
 `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Teken de feed in je release-workflow
@@ -152,7 +153,7 @@ Het is niet-fataal indien afwezig (het toestel begint gewoon vanaf `0` bij de ee
 
 ---
 
-Dat is de hele adoptie. `sh -n <module>/vdlu/update.sh` moet slagen; test de
+Dat is de hele adoptie. `sh -n <module>/vdlu/update.sh` moet slagen, test de
 producer en engine end-to-end zoals getoond in [`PRODUCER.md`](PRODUCER.md) en de
 root-README voordat je levert.
 
@@ -160,4 +161,4 @@ root-README voordat je levert.
 
 ---
 
-> _Deze documentatie is gegenereerd met Claude (Anthropic) en wordt onderhouden door VD171. Correcties en verbeteringen zijn welkom; zie [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Deze documentatie is gegenereerd met Claude (Anthropic) en wordt onderhouden door VD171. Correcties en verbeteringen zijn welkom, zie [CONTRIBUTING.md](CONTRIBUTING.md)._

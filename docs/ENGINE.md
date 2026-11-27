@@ -9,7 +9,7 @@ Flashless, incremental update client for KSU/Magisk modules. Implements the
 of convergence).
 
 Pure POSIX sh (mksh/busybox/toybox). **SLIM:** it depends only on toybox (`sha256sum`/`gzip`/`base64`/`date`) +
-the embedded `ed25519-mini` (ed25519 verify; **no openssl on the device**) + a static `curl` **fetched** on the
+the embedded `ed25519-mini` (ed25519 verify, **no openssl on the device**) + a static `curl` **fetched** on the
 first https update (the WebUI does the `fetch()`, persists it in Tier-2, and `install-tool` verifies its
 signature+hash BEFORE using it). `file://` needs no curl. Zero dependency on `jq`.
 
@@ -20,8 +20,8 @@ VDLU_DIR=/data/adb/<mod>/vdlu MODULE_DIR=/data/adb/modules/<mod> MODID=<mod> \
   sh $MODULE_DIR/vdlu/update.sh <cmd>
 ```
 
-`rc 0` = ok; `rc != 0` = error (reason on stderr). `vdlu-verify` is delivered by another component
-(signature in `INTERFACES.md §6`); the engine only calls it.
+`rc 0` = ok, `rc != 0` = error (reason on stderr). `vdlu-verify` is delivered by another component
+(signature in `INTERFACES.md §6`), the engine only calls it.
 
 | cmd | does |
 |---|---|
@@ -40,39 +40,51 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 `DONE` only once a re-hash of EVERYTHING matches. If any REBOOT-hard was staged ⇒ `PENDING_REBOOT` (never a
 bogus `DONE`). `ERROR` on any failure, without corrupting the module (the applied LIVE files are reverted
-from `rollback/<v>/`; nothing "half-applied lying about it"). Benign exit of the `fetch` phase: **`DEFERRED`** -
-the download was deferred by `net_policy` (network not allowed); plan/target persist and it resumes on the next
+from `rollback/<v>/`, nothing "half-applied lying about it"). Benign exit of the `fetch` phase: **`DEFERRED`** -
+the download was deferred by `net_policy` (network not allowed), plan/target persist and it resumes on the next
 check/boot (the WebUI shows a blue info toast "waiting for X network", not an error).
 
 ## Rigor guarantees
 
-- **FETCH:** gated by `net_policy` (any/wifi/mobile; http/https only, `file://` never) - a disallowed network ⇒
+- **FETCH:** gated by `net_policy` (any/wifi/mobile, http/https only, `file://` never) - a disallowed network ⇒
   `DEFERRED` (resumable), without spending data. Downloads only what is missing into `<sha>.part` (curl with
   `--connect-timeout` + `--speed-time`, never hangs), decompresses `gz` (toybox `gunzip`), checks `sha256sum` ==
   manifest, atomic `mv` to `blobs/<sha>`. A cached+ok blob is skipped. It can seed the blob from an unchanged
   local file (dedup/offline). **3 failures on the same blob = the phase aborts without applying anything.** It
-  only becomes `FETCHED` with ALL the plan's blobs present+verified.
+  only becomes `FETCHED` with ALL the plan's blobs present+verified. At toolchain setup it logs the resolved
+  TLS trust (CA path + readability, bundle size and cert count) so a boot-time curl `rc 77` is self-explaining
+  in `boot.log` - it tells an empty store from an unreadable one (the boot SELinux-context case).
 - **APPLY** (only from `FETCHED`): `live`/`soft` → backup to `rollback/<v>/` → `.vdlu-tmp` → `chmod` → verify →
   atomic `rename`. `reboot` → materializes into `staged/<path>.vdlu-new` (does NOT touch the live inode).
   `delete[]` → backup → remove. Idempotent (a file already at the target hash is skipped).
-- **COMMIT:** re-hash of every `live`/`soft`; only then does it write `current.json`. With staged files ⇒
+- **COMMIT:** re-hash of every `live`/`soft`, only then does it write `current.json`. With staged files ⇒
   `PENDING_REBOOT`. `boot` does `mv -f staged/....vdlu-new $MODULE_DIR/<path>` (pre-zygote) + re-verifies +
   `DONE`.
-- **cancel:** checked between files (safe point); removes the in-flight `.vdlu-tmp`/`.part`, deletes `cancel`,
+- **cancel:** checked between files (safe point), removes the in-flight `.vdlu-tmp`/`.part`, deletes `cancel`,
   leaves the journal resumable (`cancelled:true`, `error:null`).
-- **mkdir-lock `$VDLU_DIR/lock.d`** serializes (flock is unworkable on toybox; stale-recovery by PID). The
+- **mkdir-lock `$VDLU_DIR/lock.d`** serializes (flock is unworkable on toybox, stale-recovery by PID). The
   PATIENT boot-retry does not hold the lock while waiting (`acquire_lock_try`+release between tries) nor a
   wakelock - battery-safe. A crash/network/reboot mid-way → `resume`/`boot` continues.
 - `boot` runs **synchronously** in post-fs-data (pre-zygote, required so the `.so` swap lands before any
   process maps it). The patient boot-retry only engages with a non-file (http) source AND
   `boot_retry_minutes>0` - a latent boot stall exists only in that config.
-- **profile=hardened** ⇒ `vdlu-verify` mandatory on the manifest BEFORE use; failure = abort; downgrade blocked
+- **profile=hardened** ⇒ `vdlu-verify` mandatory on the manifest BEFORE use, failure = abort, downgrade blocked
   (monotonic version). **trusted** ⇒ verify is best-effort, but every blob's hash is ALWAYS checked.
 - **Module-update key allowlist (both profiles):** `verify_manifest` rejects, fail-closed, any manifest whose
   `key_id` is not in the configured `key_id` allowlist (see INTERFACES §5/§6) BEFORE the pubkey is selected, so
   a lower-trust key that merely sits in the keyring (e.g. a fingerprint-feed key) can never sign a flashless
-  root update. Default-safe when unset: single-key keyring → that one key; multi-key keyring → rejected until
+  root update. Default-safe when unset: single-key keyring → that one key, multi-key keyring → rejected until
   `key_id` is pinned.
+- **Trust-anchor exclusion (VDLU#2):** the engine IGNORES every `vdlu/` path in a fetched plan (`update.sh`,
+  `vdlu-verify`, `verify/*`, `keyring/*`, config) - never fetched, applied, or deleted - even if a signed feed
+  carries them. A feed can never swap the on-device verifier or signing key, the trust anchor changes only by a
+  full signed re-flash, so a single leaked signing key cannot persist root over the wire.
+- **Busy-defer (opt-in `apply_busy_file`):** with `apply_busy_file` set (an absolute path the host module
+  touches during its own operations, e.g. a running backup), APPLY is deferred while that path exists - an
+  update never swaps module files mid-operation. The blobs are already fetched, so the next trigger applies
+  with no re-download.
+- **Size ceilings:** 128 MiB per file (`MAX_FILE_BYTES`) and 2 MiB per manifest (`MAX_MANIFEST_BYTES`),
+  enforced before read in both `update.sh` and `vdlu-verify` (anti decompression-bomb / anti-OOM).
 - Degrades gracefully: missing binary / network down / disk full → a clear error on stderr + `state:ERROR` in
   the journal, without corrupting the module.
 
@@ -81,14 +93,14 @@ check/boot (the WebUI shows a blue info toast "waiting for X network", not an er
 A gron-style flattener in `awk` (pure POSIX: `substr`/`index`/`gsub`/`split`/`printf` + locals passed as
 parameters) tokenizes the manifest char-by-char and emits one `path<TAB>value` line per scalar leaf
 (`files/0/sha256<TAB>ab..`, `version<TAB>6`, `delete/0<TAB>etc/x`). Robust against compact OR pretty-printed
-JSON. The `sh` consumes it with `grep`/`cut`; the per-file plan is reassembled in a 2nd `awk` into TSV
+JSON. The `sh` consumes it with `grep`/`cut`, the per-file plan is reassembled in a 2nd `awk` into TSV
 (`class st mode enc sha size path`), which becomes `$VDLU_DIR/plan.tsv`.
 
 ## State files (in `$VDLU_DIR`, Tier-2)
 
 | file | role |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; see INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/…; see INTERFACES §5) |
 | `current.json` | manifest of the ACTIVE version (diff base); absent = never updated |
 | `target.json` | pinned manifest of the in-flight transaction (presence = active transaction); becomes `current.json` on `DONE` |
 | `plan.tsv` / `plan.del` | plan + per-file progress (st) / paths to delete |
@@ -104,4 +116,4 @@ JSON. The `sh` consumes it with `grep`/`cut`; the per-file plan is reassembled i
 
 ---
 
-> _This documentation was generated with Claude (Anthropic) and is maintained by VD171. Corrections and improvements are welcome; see [CONTRIBUTING.md](../CONTRIBUTING.md)._
+> _This documentation was generated with Claude (Anthropic) and is maintained by VD171. Corrections and improvements are welcome, see [CONTRIBUTING.md](../CONTRIBUTING.md)._

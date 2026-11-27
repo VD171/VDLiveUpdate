@@ -24,7 +24,7 @@ Manifesto, bir yayının tam açıklamasıdır: hedef ağaçtaki her dosya, neyi
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Feed **yalnızca modülün kendi içeriğini** taşır. Sabit bir yol kümesi ka
 
 | Hariç tutulan | Neden |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (güven kökü: ham açık anahtarlar + doğrulayıcı ikilisi) | **Bu temel güvenlik nedenidir.** Güven çıpası (trust anchor) **yalnızca-flash**'tır. Keyring veya doğrulayıcı feed ile teslim edilebilir olsaydı, bir manifesto onu doğrulayan şeyin ta kendisinin üzerine yazabilirdi. Onları hattan uzak tutmak, bir manifestonun cihaz üstü güven çıpasını asla yeniden yazamayacağı anlamına gelir. |
+| `vdlu/keyring/`, `vdlu/verify/` (güven kökü: ham açık anahtarlar + doğrulayıcı ikilisi) | **Bu temel güvenlik nedenidir.** Güven çıpası (trust anchor) **yalnızca-flash**'tır. Keyring veya doğrulayıcı feed ile teslim edilebilir olsaydı, bir manifesto onu doğrulayan şeyin ta kendisinin üzerine yazabilirdi. Onları hattan uzak tutmak, bir manifestonun cihaz üstü güven çıpasını asla yeniden yazamayacağı anlamına gelir. İkinci, bağımsız bir koruma olarak (`ENGINE_VERSION` 5), engine ayrıca getirilen bir plandaki her `vdlu/` yolunu **yok sayar**, bu yüzden onları taşıyan bir feed bile çıpaya dokunamaz. |
 | `vdlu/baseline.json` | İmzalı manifestonun bir kopyasıdır (kurulum tohumu); onu paketlemek bir kendine referans döngüsü olurdu. |
 | `.vd/` flash altyapısı | Zip'te gönderilen, asla canlı uygulanmayan flash-kapısı iskelesi. |
 | `update.json`, `update-mmrl.json` | Boyutları/sha'ları CI tarafından zip'ler oluşturulduktan *sonra* doldurulur, bu yüzden gönderilen kopya herhangi bir feed kopyasından farklıdır. Onları beslemek, her kurulumun ilk kendini güncellemesinde hayalet (phantom) bir tek dosya alışına neden olur ve zaten cihaz üstünde köreltidirler (yönetici uzaktaki ham güncelleme JSON'unu okur). |

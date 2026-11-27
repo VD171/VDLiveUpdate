@@ -36,7 +36,7 @@ om, så publiceringen är inkrementell och det oförändrade / återställda inn
 
 ### `enc`-beslutet (vdlu-pack)
 
-`sha256` är **alltid** av originalinnehållet (okomprimerat); `enc` namnger bara hur bloben lagras.
+`sha256` är **alltid** av originalinnehållet (okomprimerat), `enc` namnger bara hur bloben lagras.
 
 - `gz` när `size >= 4096` **och** gzip (`-9 -n`, deterministisk) sparar minst 10 % (`comp <= raw*0.90`).
 - `raw` annars (liten text som HTTP gzip redan täcker, eller redan inkompressibel data).
@@ -47,7 +47,7 @@ dekomprimerar med toybox `gunzip` (alltid närvarande), så ingen zstd paketeras
 
 ### `class`-beslutet (vdlu-pack) - reboot-taxonomi
 
-Härlett från sökväg (INTERFACES §3, doc §4). Endast standardvärden; en sökvägsregel nedgraderar aldrig `reboot`->`live`.
+Härlett från sökväg (INTERFACES §3, doc §4). Endast standardvärden, en sökvägsregel nedgraderar aldrig `reboot`->`live`.
 
 | class | matchas av | tillämpas |
 |---|---|---|
@@ -66,7 +66,7 @@ reproducerbara manifest.
 så att enheten föds "aktuell" (ingen from:0, ingen om-hämtning). Motorn behandlar den som en **lokal betrodd seed**
 (den anlände i den flashade zippen, som är installationens tillitsgräns) och **verifierar INTE dess signatur** -
 endast manifestet som HÄMTATS från flödet går genom `vdlu-verify`. Så baseline behöver **ingen nyckel**: den är
-bara `vdlu-pack`-utdata över det levererade trädet (osignerad; `sig`/`key_id` förblir tomma). En CI kan därför
+bara `vdlu-pack`-utdata över det levererade trädet (osignerad, `sig`/`key_id` förblir tomma). En CI kan därför
 generera den **nyckellöst**, vilket håller signeringsnyckeln 100 % borta från CI - endast det publicerade FLÖDET signeras (operatör,
 lokalt). `vdlu-pack` exkluderar `baseline.json` från sitt eget manifest (anti-självreferens). Icke-fatalt om
 frånvarande: enheten börjar bara från:0 vid den första uppdateringen, aldrig trasig.
@@ -99,19 +99,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` är en del av den kanoniska formen (endast `sig` strippas); `vdlu-sign` sätter `key_id` **innan**
+`key_id` är en del av den kanoniska formen (endast `sig` strippas), `vdlu-sign` sätter `key_id` **innan**
 hashning. Att värdesplatshållaren är tom (`"sig":""`, signeringstid) eller fylld (verifieringstid) ger de
 identiska kanoniska byten, så signering och verifiering stämmer genom konstruktion.
 
 Python reproducerar det som `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` sedan sha256 - används
-bara för att dubbelkolla; de auktoritativa producenterna är de två sh-verktygen.
+bara för att dubbelkolla, de auktoritativa producenterna är de två sh-verktygen.
 
 ## Signatur (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   för signering/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (ed25519
   SPKI DER är ett 12-byte-prefix + den 32-byte-nyckeln, så `tail -c 32` ÄR nyckeln). Den avger BÅDA.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` över den kanoniska sha256-hexen; signatur lagrad base64.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` över den kanoniska sha256-hexen, signatur lagrad base64.
 - `vdlu-verify` (**enhet, slim**): `ed25519-mini <pubkey32> <msg> <sig64>` - läser keyringen som **RAW 32B**-
   pubnyckeln, INGEN openssl på enheten. `key_id` är sökvägssaniterad (ingen `/`, `.`, `..`, `"`). 🚨 Keyringen levererar
   **`.pub.raw` (32B)**, aldrig `.pub` PEM (113B): PEM:en är endast PC-sidig och `ed25519-mini` kan inte läsa den.
@@ -137,4 +137,4 @@ skriva över den med den PC-sidiga `.pub` PEM:en.
 
 ---
 
-> _Denna dokumentation genererades med Claude (Anthropic) och underhålls av VD171. Rättelser och förbättringar välkomnas; se [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Denna dokumentation genererades med Claude (Anthropic) och underhålls av VD171. Rättelser och förbättringar välkomnas, se [CONTRIBUTING.md](CONTRIBUTING.md)._

@@ -9,7 +9,7 @@ Client de mise à jour flashless et incrémentale pour les modules KSU/Magisk. I
 de convergence).
 
 sh POSIX pur (mksh/busybox/toybox). **SLIM :** il dépend seulement de toybox (`sha256sum`/`gzip`/`base64`/`date`) +
-l'`ed25519-mini` embarqué (verify ed25519 ; **pas d'openssl sur l'appareil**) + un `curl` statique **récupéré**
+l'`ed25519-mini` embarqué (verify ed25519, **pas d'openssl sur l'appareil**) + un `curl` statique **récupéré**
 à la première mise à jour https (la WebUI fait le `fetch()`, le persiste en Tier-2, et `install-tool` vérifie sa
 signature+hash AVANT de l'utiliser). `file://` n'a pas besoin de curl. Zéro dépendance à `jq`.
 
@@ -20,8 +20,8 @@ VDLU_DIR=/data/adb/<mod>/vdlu MODULE_DIR=/data/adb/modules/<mod> MODID=<mod> \
   sh $MODULE_DIR/vdlu/update.sh <cmd>
 ```
 
-`rc 0` = ok ; `rc != 0` = erreur (raison sur stderr). `vdlu-verify` est livré par un autre composant
-(signature dans `INTERFACES.md §6`) ; l'engine ne fait que l'appeler.
+`rc 0` = ok, `rc != 0` = erreur (raison sur stderr). `vdlu-verify` est livré par un autre composant
+(signature dans `INTERFACES.md §6`), l'engine ne fait que l'appeler.
 
 | cmd | fait |
 |---|---|
@@ -40,34 +40,40 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 `DONE` seulement une fois qu'un re-hash de TOUT correspond. Si un REBOOT-hard a été mis en scène ⇒
 `PENDING_REBOOT` (jamais un `DONE` factice). `ERROR` à tout échec, sans corrompre le module (les fichiers LIVE
-appliqués sont revertis depuis `rollback/<v>/` ; rien de "à moitié appliqué qui ment là-dessus"). Sortie bénigne
+appliqués sont revertis depuis `rollback/<v>/`, rien de "à moitié appliqué qui ment là-dessus"). Sortie bénigne
 de la phase `fetch` : **`DEFERRED`** - le téléchargement a été différé par `net_policy` (réseau non autorisé) ;
 plan/target persistent et il reprend au prochain check/boot (la WebUI montre un toast info bleu "en attente du
 réseau X", pas une erreur).
 
 ## Garanties de rigueur
 
-- **FETCH :** contrôlé par `net_policy` (any/wifi/mobile ; http/https seulement, `file://` jamais) - un réseau
+- **FETCH :** contrôlé par `net_policy` (any/wifi/mobile, http/https seulement, `file://` jamais) - un réseau
   non autorisé ⇒ `DEFERRED` (reprenable), sans dépenser de données. Ne télécharge que ce qui manque dans
   `<sha>.part` (curl avec `--connect-timeout` + `--speed-time`, ne se bloque jamais), décompresse `gz` (toybox
   `gunzip`), vérifie `sha256sum` == manifeste, `mv` atomique vers `blobs/<sha>`. Un blob cache+ok est sauté. Il
   peut semer le blob depuis un fichier local inchangé (dedup/offline). **3 échecs sur le même blob = la phase
-  abandonne sans rien appliquer.** Il ne devient `FETCHED` qu'avec TOUS les blobs du plan présents+vérifiés.
+  abandonne sans rien appliquer.** Il ne devient `FETCHED` qu'avec TOUS les blobs du plan présents+vérifiés. À la configuration du toolchain il
+  journalise la confiance TLS résolue (chemin de la CA + lisibilité, taille du bundle et nombre de certs) pour
+  qu'un `rc 77` de curl au boot soit auto-explicatif dans `boot.log` - il distingue un store vide d'un store
+  illisible (le cas du contexte SELinux de boot).
 - **APPLY** (seulement depuis `FETCHED`) : `live`/`soft` → sauvegarde vers `rollback/<v>/` → `.vdlu-tmp` → `chmod` → verify →
   `rename` atomique. `reboot` → matérialise dans `staged/<path>.vdlu-new` (ne touche PAS l'inode vivant).
   `delete[]` → sauvegarde → suppression. Idempotent (un fichier déjà au hash cible est sauté).
-- **COMMIT :** re-hash de chaque `live`/`soft` ; seulement alors il écrit `current.json`. Avec des fichiers mis
+- **COMMIT :** re-hash de chaque `live`/`soft`, seulement alors il écrit `current.json`. Avec des fichiers mis
   en scène ⇒ `PENDING_REBOOT`. `boot` fait `mv -f staged/....vdlu-new $MODULE_DIR/<path>` (pré-zygote) +
   re-vérifie + `DONE`.
-- **cancel :** vérifie entre les fichiers (point sûr) ; supprime le `.vdlu-tmp`/`.part` en vol, efface `cancel`,
+- **cancel :** vérifie entre les fichiers (point sûr), supprime le `.vdlu-tmp`/`.part` en vol, efface `cancel`,
   laisse le journal reprenable (`cancelled:true`, `error:null`).
-- **mkdir-lock `$VDLU_DIR/lock.d`** sérialise (flock est inutilisable sur toybox ; récupération du stale par
+- **mkdir-lock `$VDLU_DIR/lock.d`** sérialise (flock est inutilisable sur toybox, récupération du stale par
   PID). Le retry de boot PATIENT ne tient pas le lock pendant l'attente (`acquire_lock_try`+release entre les
   essais) ni un wakelock - sans danger pour la batterie. Un crash/réseau/reboot en cours de route → `resume`/`boot`
   continue.
-- **profile=hardened** ⇒ `vdlu-verify` obligatoire sur le manifeste AVANT usage ; échec = abandon ; downgrade
+- **profile=hardened** ⇒ `vdlu-verify` obligatoire sur le manifeste AVANT usage, échec = abandon, downgrade
   bloqué (version monotone). **trusted** ⇒ verify est best-effort, mais le hash de chaque blob est TOUJOURS vérifié.
-- **Allowlist de clé de module-update (les deux profiles) :** `verify_manifest` rejette, fail-closed, tout manifeste dont le `key_id` n'est pas dans l'allowlist `key_id` configurée (voir INTERFACES §5/§6) AVANT que la pubkey soit sélectionnée, de sorte qu'une clé de moindre confiance qui ne fait que résider dans le keyring (p. ex. une clé de fingerprint-feed) ne puisse jamais signer une mise à jour root flashless. Sûr par défaut quand non défini : keyring à une clé = cette clé seulement ; keyring multiclé = rejeté tant que `key_id` n'est pas épinglé.
+- **Allowlist de clé de module-update (les deux profiles) :** `verify_manifest` rejette, fail-closed, tout manifeste dont le `key_id` n'est pas dans l'allowlist `key_id` configurée (voir INTERFACES §5/§6) AVANT que la pubkey soit sélectionnée, de sorte qu'une clé de moindre confiance qui ne fait que résider dans le keyring (p. ex. une clé de fingerprint-feed) ne puisse jamais signer une mise à jour root flashless. Sûr par défaut quand non défini : keyring à une clé = cette clé seulement, keyring multiclé = rejeté tant que `key_id` n'est pas épinglé.
+- **Exclusion de l'ancre de confiance (VDLU#2) :** l'engine IGNORE chaque path `vdlu/` dans un plan récupéré (`update.sh`, `vdlu-verify`, `verify/*`, `keyring/*`, config) - jamais récupéré, appliqué, ni supprimé - même si un feed signé les porte. Un feed ne peut jamais échanger le vérificateur ou la clé de signature sur l'appareil, l'ancre de confiance ne change que par un re-flash signé complet, donc une seule clé de signature ayant fuité ne peut pas persister root par le réseau.
+- **Busy-defer (`apply_busy_file`, opt-in) :** avec `apply_busy_file` défini (un path absolu que le module hôte touche pendant ses propres opérations, p. ex. une sauvegarde en cours), APPLY est différé tant que ce path existe - une mise à jour n'échange jamais les fichiers du module en pleine opération. Les blobs sont déjà récupérés, donc le prochain trigger applique sans re-téléchargement.
+- **Plafonds de taille :** 128 MiB par fichier (`MAX_FILE_BYTES`) et 2 MiB par manifeste (`MAX_MANIFEST_BYTES`), imposés avant lecture dans `update.sh` et `vdlu-verify` (anti decompression-bomb / anti-OOM).
 - Dégrade avec grâce : binaire manquant / réseau coupé / disque plein → une erreur claire sur stderr + `state:ERROR`
   dans le journal, sans corrompre le module.
 
@@ -76,14 +82,14 @@ réseau X", pas une erreur).
 Un aplatisseur style gron en `awk` (POSIX pur : `substr`/`index`/`gsub`/`split`/`printf` + locals passés comme
 paramètres) tokenise le manifeste caractère par caractère et émet une ligne `path<TAB>value` par feuille scalaire
 (`files/0/sha256<TAB>ab..`, `version<TAB>6`, `delete/0<TAB>etc/x`). Robuste face à du JSON compact OU
-pretty-printed. Le `sh` le consomme avec `grep`/`cut` ; le plan par fichier est réassemblé dans un 2e `awk` en TSV
+pretty-printed. Le `sh` le consomme avec `grep`/`cut`, le plan par fichier est réassemblé dans un 2e `awk` en TSV
 (`class st mode enc sha size path`), qui devient `$VDLU_DIR/plan.tsv`.
 
 ## Fichiers d'état (dans `$VDLU_DIR`, Tier-2)
 
 | fichier | rôle |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/… ; voir INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/… ; voir INTERFACES §5) |
 | `current.json` | manifeste de la version ACTIVE (base du diff) ; absent = jamais mis à jour |
 | `target.json` | manifeste épinglé de la transaction en vol (présence = transaction active) ; devient `current.json` au `DONE` |
 | `plan.tsv` / `plan.del` | plan + progression par fichier (st) / paths à supprimer |
@@ -99,4 +105,4 @@ pretty-printed. Le `sh` le consomme avec `grep`/`cut` ; le plan par fichier est 
 
 ---
 
-> _Cette documentation a été générée avec Claude (Anthropic) et est maintenue par VD171. Les corrections et améliorations sont les bienvenues ; voir [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Cette documentation a été générée avec Claude (Anthropic) et est maintenue par VD171. Les corrections et améliorations sont les bienvenues, voir [CONTRIBUTING.md](CONTRIBUTING.md)._

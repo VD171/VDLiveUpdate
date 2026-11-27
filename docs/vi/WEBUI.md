@@ -58,7 +58,7 @@ Nếu bỏ qua, widget dùng của riêng nó:
   (rc≠0) - đúng chữ ký của `ex()` trong Demo `webroot/index.html`. Fallback nội bộ gọi
   `ksu.exec(cmd, '{}', cb)` với cùng hợp đồng.
 - **`toast(msg)`** = một thông báo nhất thời ngắn (fallback chèn mini-toast của riêng nó).
-- **`confirm(title,msg,ok,danger,fn)`** = một modal (hôm nay chỉ host dùng; widget không yêu cầu
+- **`confirm(title,msg,ok,danger,fn)`** = một modal (hôm nay chỉ host dùng, widget không yêu cầu
   xác nhận trong bất kỳ luồng nào).
 
 Truyền của riêng host khiến widget nói chuyện qua CÙNG hàng đợi tuần tự hóa và hình ảnh như phần còn lại của
@@ -83,7 +83,7 @@ Toast (lớp phủ góc, không chặn) và banner (trên cùng, bền) được
 
 ### Luồng trạng thái mà toast phản ánh (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` ở bất kỳ lúc nào.
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` ở bất kỳ lúc nào.
 Toast hiện **một thanh + `phase done/total · current · bytes`**. Các trạng thái kết thúc:
 - **`DONE`** → toast xanh lá "v&lt;target&gt; applied".
 - **`PENDING_REBOOT`** (hoặc `reboot_pending=true`) → toast xanh lá + **banner bền** "⚠️ Reboot to
@@ -94,7 +94,7 @@ Toast hiện **một thanh + `phase done/total · current · bytes`**. Các tr�
 ## Chạy demo
 
 Mở `demo.html` trong trình duyệt (`xdg-open webui/demo.html`). `ksu.exec` được mock mô phỏng `update.sh` và
-`journal.json` tiến triển; các nút chuyển đổi giữa các kịch bản **LIVE→DONE**, **reboot_pending**, **error mid-way**
+`journal.json` tiến triển, các nút chuyển đổi giữa các kịch bản **LIVE→DONE**, **reboot_pending**, **error mid-way**
 và **cancellable**. Đó là cùng `vdlu.js`/`vdlu.css` như trên thiết bị.
 
 ## i18n (ngôn ngữ)
@@ -108,7 +108,7 @@ bất kỳ khóa nào bằng cách truyền một map trong `init`:
 ```
 
 - Một lần hợp nhất **một phần** là ổn: một khóa thiếu quay về giá trị mặc định tiếng Anh.
-- Các khóa phase/state là `ph_<phase>` / `st_<STATE>`; phần còn lại phẳng (`cancel`, `updateNow`, …).
+- Các khóa phase/state là `ph_<phase>` / `st_<STATE>`, phần còn lại phẳng (`cancel`, `updateNow`, …).
 - Map khóa đầy đủ = đối tượng `DEFAULT_I18N` trong `vdlu.js` (cũng được phơi bày như `VDLU.i18n`).
 - Một bản dịch sẵn sàng được cung cấp như một ví dụ đã làm: `i18n/pt-BR.js`. Ngôn ngữ mới = một tệp
   `i18n/<lang>.js` theo cùng khuôn mẫu, hoặc host xây map từ hệ thống i18n của riêng nó.
@@ -117,12 +117,12 @@ bất kỳ khóa nào bằng cách truyền một map trong `init`:
 
 Các `vdlu.js`/`vdlu.css` này là **bản sao chuẩn**. Mọi module nhúng widget đều
 **re-vendor** bản sao này từng-byte-một vào `webroot/` của nó - nó **không bao giờ** chỉnh sửa
-bản của chính nó tại chỗ. Một tính năng mới của widget sinh ra ở đây và chảy xuống bằng re-vendor; chiều ngược lại sinh ra
+bản của chính nó tại chỗ. Một tính năng mới của widget sinh ra ở đây và chảy xuống bằng re-vendor, chiều ngược lại sinh ra
 drift âm thầm (nó đã xảy ra trong thực tế: một bản sao đã vendor tụt lại và thiếu `net_policy`, toast `DEFERRED`
 và các trường `boot_retry`).
 
 Người gác: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) tìm mọi bản sao trong cây nguồn và đánh dấu
-những cái lệch khỏi bản chuẩn (chỉ `vdlu.js`/`vdlu.css`; keyring là "verify, not copy").
+những cái lệch khỏi bản chuẩn (chỉ `vdlu.js`/`vdlu.css`, keyring là "verify, not copy").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -136,4 +136,4 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 
 ---
 
-> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến; xem [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến, xem [CONTRIBUTING.md](CONTRIBUTING.md)._

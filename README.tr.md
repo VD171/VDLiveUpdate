@@ -22,9 +22,28 @@
   ======================================================================
 -->
 
-# VDLiveUpdate
+# VD Live Update
 
-> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · Türkçe · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+
+<p align="center">
+  <img src="images/logo-wordmark.png" alt="VD Live Update" width="320">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1a7f37" alt="License"></a>
+  <a href="https://github.com/VD171/VDLiveUpdate/stargazers"><img src="https://img.shields.io/github/stars/VD171/VDLiveUpdate?color=d29922" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="docs/QUICKSTART.md">Quickstart</a> ·
+  <a href="docs/ENGINE.md">Engine</a> ·
+  <a href="docs/PRODUCER.md">Producer</a> ·
+  <a href="docs/WEBUI.md">WebUI</a> ·
+  <a href="docs/INTERFACES.md">Interfaces</a> ·
+  <a href="docs/AI-AGENTS.md">AI agents</a> ·
+  <a href="docs/TRUST-MODEL.md">Trust model</a>
+</p>
 
 **VDLU**, **KernelSU / APatch / Magisk** modülleri için flashsız, artımlı bir kendi kendini güncelleme motorudur. Kurulu bir modül, **yalnızca değişen dosyaları** (içerik adresli bloblar + imzalı bir manifest) getirerek kendini günceller, canlı uygulanabilenleri **yeniden başlatma olmadan** uygular ve gerçekten bir yeniden başlatma gerektiren birkaçını (bir `.so`, bir `/system` overlay'i, bir `sepolicy.rule`) hazırlar (stage) ve işaretler. Root yöneticisi yok, tüm `.zip`'i yeniden indirmek yok, o hazırlanan dosyalar dışında yeniden başlatma yok.
 
@@ -32,12 +51,12 @@ Kendi başına bir modül olarak çalıştırılmak için değil, bir modülün 
 
 ## Neden
 
-Normal bir modül güncellemesi tüm `.zip`'i yeniden gönderir. Büyük bir modül için bu, değişen birkaç satır uğruna büyük bir yeniden indirme demektir ve statik bir güncelleme manifest'i yalnızca tek bir `zipUrl`'e işaret edebildiğinden, cihazın gerçekte sahip olduğu flavor'ı (ABI, full vs lite) sunamaz. VDLU, **kurulu** ağacı imzalı bir akışa (feed) karşı diff'ler ve yalnızca delta'ları getirir; böylece bir arm64-full kurulumu arm64-full kalır, bir lite kurulumu lite kalır ve çoğu güncelleme canlı uygulanır.
+Normal bir modül güncellemesi tüm `.zip`'i yeniden gönderir. Büyük bir modül için bu, değişen birkaç satır uğruna büyük bir yeniden indirme demektir ve statik bir güncelleme manifest'i yalnızca tek bir `zipUrl`'e işaret edebildiğinden, cihazın gerçekte sahip olduğu flavor'ı (ABI, full vs lite) sunamaz. VDLU, **kurulu** ağacı imzalı bir akışa (feed) karşı diff'ler ve yalnızca delta'ları getirir, böylece bir arm64-full kurulumu arm64-full kalır, bir lite kurulumu lite kalır ve çoğu güncelleme canlı uygulanır.
 
 ## Nasıl çalışır
 
-- **Üretici (PC / release):** `vdlu-pack` bir modül ağacını içerik adresli bir akışa dönüştürür (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`); `vdlu-keygen` / `vdlu-sign` (ed25519); `vdlu-gc`, son N manifest'e referans yoluyla sahipsiz blobları budar (fail-safe, varsayılan olarak dry-run).
-- **Motor (cihaz):** POSIX sh, `jq` yok. `update.sh` (`check | run | resume | boot | status | cancel`), DIFF -> FETCH -> APPLY -> COMMIT akışını **sürdürülebilir bir işlem** (journal) olarak çalıştırır; rollback ve bir `mkdir` kilidiyle. İmza, gömülü `ed25519-mini` tarafından doğrulanır (cihazda `openssl` yok).
+- **Üretici (PC / release):** `vdlu-pack` bir modül ağacını içerik adresli bir akışa dönüştürür (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`), `vdlu-keygen` / `vdlu-sign` (ed25519), `vdlu-gc`, son N manifest'e referans yoluyla sahipsiz blobları budar (fail-safe, varsayılan olarak dry-run).
+- **Motor (cihaz):** POSIX sh, `jq` yok. `update.sh` (`check | run | resume | boot | status | cancel`), DIFF -> FETCH -> APPLY -> COMMIT akışını **sürdürülebilir bir işlem** (journal) olarak çalıştırır, rollback ve bir `mkdir` kilidiyle. İmza, gömülü `ed25519-mini` tarafından doğrulanır (cihazda `openssl` yok).
 - **WebUI:** yerleşik bir Updates paneli (ilerleme toast'u, iptal, yeniden başlatma banner'ı), vanilla JS.
 
 ## Profiller
@@ -47,14 +66,14 @@ Normal bir modül güncellemesi tüm `.zip`'i yeniden gönderir. Büyük bir mod
 
 ## Kendi modülünde benimse
 
-`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini`'yi `<module>/vdlu/` içine vendor et, **ham 32 baytlık açık anahtarını** `vdlu/keyring/<id>.pub` olarak göm, bir `config` (profil + kaynak) ekle, tetikleyicileri bağla (açılışta otomatik güncelleme için pre-zygote `post-fs-data.sh`; WebUI açılışında bir tetikleyici) ve release'ine `vdlu-pack` + `vdlu-sign` ekle. İşlenmiş bir şablon için [`docs/QUICKSTART.md`](docs/QUICKSTART.md)'a bak.
+`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini`'yi `<module>/vdlu/` içine vendor et, **ham 32 baytlık açık anahtarını** `vdlu/keyring/<id>.pub` olarak göm, bir `config` (profil + kaynak) ekle, tetikleyicileri bağla (açılışta otomatik güncelleme için pre-zygote `post-fs-data.sh`, WebUI açılışında bir tetikleyici) ve release'ine `vdlu-pack` + `vdlu-sign` ekle. İşlenmiş bir şablon için [`docs/QUICKSTART.md`](docs/QUICKSTART.md)'a bak.
 
 ## Güvenlik
 
 - **Her manifest alanı düşmanca girdidir.** `validate_plan()`, mutlak ya da `..` içeren bir yol, 64 hex karakter olmayan bir `sha256` veya geçersiz bir mode / class / encoding durumunda, herhangi bir getirme ya da uygulama **öncesinde** tüm manifest'i fail-closed reddeder.
-- **Özel imzalama anahtarı asla CI'ya veya bir cihaza dokunmaz**; yalnızca ham açık anahtar gömülür ve doğrulama `openssl` değil `ed25519-mini` kullanır.
-- `hardened`, tersine çevirme yoluyla fail-closed'dur: birebir `trusted` dışındaki her şey `hardened` olarak değerlendirilir; böylece bozuk bir profil değeri, imzasız bir manifest'i asla sessizce kabul edemez.
-- Yeniden başlatma sınıfı dosyalar (`.so`, `/system` overlay'i, `sepolicy.rule`) **hazırlanır, canlı bir inode'un üzerine asla yazılmaz**; geri kalan her şey canlı uygulanır. Başarısız bir uygulama, yedek olmadan üzerine yazmak yerine iptal eder.
+- **Özel imzalama anahtarı asla CI'ya veya bir cihaza dokunmaz**, yalnızca ham açık anahtar gömülür ve doğrulama `openssl` değil `ed25519-mini` kullanır.
+- `hardened`, tersine çevirme yoluyla fail-closed'dur: birebir `trusted` dışındaki her şey `hardened` olarak değerlendirilir, böylece bozuk bir profil değeri, imzasız bir manifest'i asla sessizce kabul edemez.
+- Yeniden başlatma sınıfı dosyalar (`.so`, `/system` overlay'i, `sepolicy.rule`) **hazırlanır, canlı bir inode'un üzerine asla yazılmaz**, geri kalan her şey canlı uygulanır. Başarısız bir uygulama, yedek olmadan üzerine yazmak yerine iptal eder.
 
 ## Derleme / test
 
@@ -69,9 +88,13 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 `sh -n engine/*.sh`, `node --check webui/vdlu.js` ve `webui/demo.html`'yi bir tarayıcıda aç (cihaz köprüsünü mock'lar).
 
+## Yapay zekâ ajanları
+
+Motor tamamen kabuk üzerinden sürülür (`sh engine/update.sh <check|run|resume|boot|status|cancel>` makine tarafından okunabilir bir durum yazdırır), böylece bir yapay zeka ajanı bir güncellemeyi arayüz olmadan denetleyebilir, uygulayabilir ve sürdürebilir. Bileşenler arasındaki ek sözleşmesi [`docs/INTERFACES.md`](docs/INTERFACES.md) içinde yer alır ve yapay zekadan gelen yamalar diğerleriyle aynı inceleme ölçütüne tabidir.
+
 ## Belgeler
 
-- [`INTERFACES.md`](docs/INTERFACES.md): bileşenler arasındaki ek yeri (seam) sözleşmesi (yakınsama yasası; değişmez olarak ele al).
+- [`INTERFACES.md`](docs/INTERFACES.md): bileşenler arasındaki ek yeri (seam) sözleşmesi (yakınsama yasası, değişmez olarak ele al).
 - [`ENGINE.md`](docs/ENGINE.md): cihaz tarafı motor (`update.sh`): sürdürülebilir DIFF -> FETCH -> APPLY -> COMMIT işlemi.
 - [`PRODUCER.md`](docs/PRODUCER.md): PC/sürüm tarafı: içerik adresli beslemeyi oluşturma ve imzalama (`vdlu-pack`, `vdlu-sign`).
 - [`WEBUI.md`](docs/WEBUI.md): hazır Updates paneli widget'ı (ilerleme toast'ı, iptal, yeniden başlatma afişi).
@@ -80,10 +103,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ## Ayrıca bakınız
 
 - **[COPG-VD](https://github.com/VD171/COPG-VD)**: genel cihaz fingerprint'i / Play Integrity sahteciliği, uygulama başına kapsamlı ve tüm cihaz genelinde, bir WebUI ile.
-- **[VDBackup](https://github.com/VD171/VD-Backup)**: root olarak tam uygulama ve veri yedekleme ve geri yükleme; tümüyle bir WebUI'den yönetilir.
+- **[VDBackup](https://github.com/VD171/VD-Backup)**: root olarak tam uygulama ve veri yedekleme ve geri yükleme, tümüyle bir WebUI'den yönetilir.
 - **[VD-dropbear](https://github.com/VD171/VD-dropbear)**: bağımsız, root yetkili bir SSH artalan süreci (Dropbear).
 - **[VDGoogle](https://github.com/VD171/VD-Google)**: Google hizmetleriniz (RCS, Wallet, Play Integrity doğrulamaları), internet olmadan cihazınızda okunur.
-- **[VDInstaller](https://github.com/VD171/VD-Installer)**: tekli, toplu ve bölünmüş APK'lar için sürtünmesiz bir root sideload yükleyicisi; Play Protect doğrulayıcı anahtarı ve kurulum kaynağı sahteciliği ile birlikte.
+- **[VDInstaller](https://github.com/VD171/VD-Installer)**: tekli, toplu ve bölünmüş APK'lar için sürtünmesiz bir root sideload yükleyicisi, Play Protect doğrulayıcı anahtarı ve kurulum kaynağı sahteciliği ile birlikte.
 - **[VDInfos](https://github.com/VD171/VD-Infos)**: bir cihaz yöntem hata ayıklayıcısı: her öğeyi, onu okuyabilen her yöntemle okur ve bunları yan yana karşılaştırır.
 - **[VD-Modules](https://github.com/VD171/VD-Modules)**: MMRL/WebUI-X için modül deposu (bunların tümünü root yöneticinizden kurun).
 - **[@VictorGabriel7Dev/build.prop](https://github.com/VictorGabriel7Dev/build.prop)**: Pixel `build.prop` fingerprint'lerinden oluşan bir veri kümesi (@T3SL4 forku).
@@ -102,13 +125,13 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Lisans
 
-VDLiveUpdate'in kendi kodu **Apache-2.0**'dır; bkz. [LICENSE](LICENSE). Getirme bootstrap'i için küçük bir `ed25519-mini` doğrulayıcısı ile statik bir `curl` vendor eder; her biri kendi lisansı altındadır; bkz.
+VDLiveUpdate'in kendi kodu **Apache-2.0**'dır, bkz. [LICENSE](LICENSE). Getirme bootstrap'i için küçük bir `ed25519-mini` doğrulayıcısı ile statik bir `curl` vendor eder, her biri kendi lisansı altındadır, bkz.
 [NOTICE.md](NOTICE.md) ve paketlenmiş binary'lerin yanındaki `PROVENANCE.json` dosyaları.
 
 ## Ticari markalar
 
-VDLiveUpdate bağımsız, resmi olmayan bir projedir; herhangi bir üçüncü tarafla bağlantılı veya onun tarafından onaylanmış değildir.
-"Android", Google LLC'nin ticari markasıdır; "KernelSU", "Magisk" ve "APatch" ilgili
+VDLiveUpdate bağımsız, resmi olmayan bir projedir, herhangi bir üçüncü tarafla bağlantılı veya onun tarafından onaylanmış değildir.
+"Android", Google LLC'nin ticari markasıdır, "KernelSU", "Magisk" ve "APatch" ilgili
 yazarlarının markalarıdır. VDLU tamamen senin cihazında ve kendi release sunucunda çalışır.
 
 ## Tags
@@ -117,4 +140,4 @@ yazarlarının markalarıdır. VDLU tamamen senin cihazında ve kendi release su
 
 ---
 
-📣 **Join the channel for updates:** @Priv8_VD https://t.me/Priv8_VD
+📣 **Güncellemeler için kanala katılın:** @Priv8_VD https://t.me/Priv8_VD

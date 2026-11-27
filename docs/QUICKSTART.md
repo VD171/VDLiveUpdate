@@ -34,7 +34,7 @@ This is the exact `vdlu/` tree the module carries after adoption:
 ```
 
 The engine's mutable state (`config`, `current.json`, journal, lock) lives in
-Tier-2, `/data/adb/<modid>/vdlu/`, outside the module dir; `config.default` seeds it
+Tier-2, `/data/adb/<modid>/vdlu/`, outside the module dir, `config.default` seeds it
 on first run.
 
 ## 1. Vendor the engine
@@ -48,7 +48,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Ship only the ABIs you support; `customize.sh` can prune `verify/` to the device's
+Ship only the ABIs you support, `customize.sh` can prune `verify/` to the device's
 ABI at install time.
 
 ## 2. Generate a signing key (one-time)
@@ -85,6 +85,7 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
 Use `profile=trusted` only for a private `file://`/SSH source (verify best-effort;
@@ -121,7 +122,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` are vendored from `webui/`; a translation can be added with
+(`vdlu.js` / `vdlu.css` are vendored from `webui/`, a translation can be added with
 `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Sign the feed in your release workflow
@@ -152,7 +153,7 @@ It is non-fatal if absent (the device just starts from `0` on the first update).
 
 ---
 
-That is the whole adoption. `sh -n <module>/vdlu/update.sh` must pass; test the
+That is the whole adoption. `sh -n <module>/vdlu/update.sh` must pass, test the
 producer and engine end-to-end as shown in [`PRODUCER.md`](PRODUCER.md) and the
 root README before you ship.
 
@@ -160,4 +161,4 @@ root README before you ship.
 
 ---
 
-> _This documentation was generated with Claude (Anthropic) and is maintained by VD171. Corrections and improvements are welcome; see [CONTRIBUTING.md](../CONTRIBUTING.md)._
+> _This documentation was generated with Claude (Anthropic) and is maintained by VD171. Corrections and improvements are welcome, see [CONTRIBUTING.md](../CONTRIBUTING.md)._

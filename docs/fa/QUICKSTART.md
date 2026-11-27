@@ -85,6 +85,7 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
 `profile=trusted` را تنها برای یک منبعِ خصوصیِ `file://`/SSH به کار ببر (verify best-effort؛

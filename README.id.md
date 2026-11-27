@@ -22,9 +22,28 @@
   ======================================================================
 -->
 
-# VDLiveUpdate
+# VD Live Update
 
-> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · Bahasa Indonesia · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+
+<p align="center">
+  <img src="images/logo-wordmark.png" alt="VD Live Update" width="320">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1a7f37" alt="License"></a>
+  <a href="https://github.com/VD171/VDLiveUpdate/stargazers"><img src="https://img.shields.io/github/stars/VD171/VDLiveUpdate?color=d29922" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="docs/QUICKSTART.md">Quickstart</a> ·
+  <a href="docs/ENGINE.md">Engine</a> ·
+  <a href="docs/PRODUCER.md">Producer</a> ·
+  <a href="docs/WEBUI.md">WebUI</a> ·
+  <a href="docs/INTERFACES.md">Interfaces</a> ·
+  <a href="docs/AI-AGENTS.md">AI agents</a> ·
+  <a href="docs/TRUST-MODEL.md">Trust model</a>
+</p>
 
 **VDLU** adalah mesin self-update inkremental tanpa-flash untuk modul **KernelSU / APatch / Magisk**. Sebuah modul yang terpasang memperbarui dirinya sendiri dengan mengambil **hanya berkas yang berubah** (blob ber-alamat-konten + manifest bertanda tangan), menerapkan yang live **tanpa reboot**, lalu menyiapkan (stage) dan menandai segelintir berkas yang memang memerlukannya (sebuah `.so`, overlay `/system`, sebuah `sepolicy.rule`). Tanpa root manager, tanpa mengunduh ulang seluruh `.zip`, dan tanpa reboot kecuali untuk berkas-berkas yang di-stage itu.
 
@@ -36,7 +55,7 @@ Pembaruan modul biasa mengirim ulang seluruh `.zip`. Untuk modul besar, itu bera
 
 ## Cara kerjanya
 
-- **Producer (PC / rilis):** `vdlu-pack` mengubah pohon modul menjadi feed ber-alamat-konten (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`); `vdlu-keygen` / `vdlu-sign` (ed25519); `vdlu-gc` memangkas blob yatim berdasarkan referensi ke N manifest terakhir (fail-safe, dry-run secara default).
+- **Producer (PC / rilis):** `vdlu-pack` mengubah pohon modul menjadi feed ber-alamat-konten (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`), `vdlu-keygen` / `vdlu-sign` (ed25519), `vdlu-gc` memangkas blob yatim berdasarkan referensi ke N manifest terakhir (fail-safe, dry-run secara default).
 - **Engine (perangkat):** POSIX sh, tanpa `jq`. `update.sh` (`check | run | resume | boot | status | cancel`) menjalankan DIFF -> FETCH -> APPLY -> COMMIT sebagai **transaksi yang dapat dilanjutkan (resumable)** (journal), dengan rollback dan kunci `mkdir`. Tanda tangan diverifikasi oleh `ed25519-mini` yang tertanam (tanpa `openssl` di perangkat).
 - **WebUI:** panel Updates siap-pakai (toast kemajuan, cancel, banner reboot), vanilla JS.
 
@@ -47,14 +66,14 @@ Pembaruan modul biasa mengirim ulang seluruh `.zip`. Untuk modul besar, itu bera
 
 ## Adopsi di modul Anda
 
-Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` ke dalam `<module>/vdlu/`, sertakan **public key mentah 32-byte** Anda sebagai `vdlu/keyring/<id>.pub`, tambahkan sebuah `config` (profil + sumber), sambungkan pemicu-pemicunya (`post-fs-data.sh` pre-zygote untuk auto-update saat boot; sebuah pemicu WebUI-open), dan tambahkan `vdlu-pack` + `vdlu-sign` ke rilis Anda. Lihat [`docs/QUICKSTART.md`](docs/QUICKSTART.md) untuk templat yang sudah jadi.
+Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` ke dalam `<module>/vdlu/`, sertakan **public key mentah 32-byte** Anda sebagai `vdlu/keyring/<id>.pub`, tambahkan sebuah `config` (profil + sumber), sambungkan pemicu-pemicunya (`post-fs-data.sh` pre-zygote untuk auto-update saat boot, sebuah pemicu WebUI-open), dan tambahkan `vdlu-pack` + `vdlu-sign` ke rilis Anda. Lihat [`docs/QUICKSTART.md`](docs/QUICKSTART.md) untuk templat yang sudah jadi.
 
 ## Keamanan
 
 - **Setiap field manifest adalah input yang bermusuhan.** `validate_plan()` menolak seluruh manifest secara fail-closed pada path absolut atau `..`, sebuah `sha256` yang bukan 64 karakter hex, atau mode / class / encoding yang tidak valid, **sebelum** fetch atau apply apa pun.
-- **Kunci penanda-tangan privat tidak pernah menyentuh CI maupun perangkat**; hanya public key mentah yang ditanamkan, dan verifikasi memakai `ed25519-mini`, bukan `openssl`.
+- **Kunci penanda-tangan privat tidak pernah menyentuh CI maupun perangkat**, hanya public key mentah yang ditanamkan, dan verifikasi memakai `ed25519-mini`, bukan `openssl`.
 - `hardened` bersifat fail-closed melalui inversi: apa pun selain literal `trusted` diperlakukan sebagai `hardened`, sehingga nilai profil yang rusak tidak akan pernah secara diam-diam menerima manifest tanpa tanda tangan.
-- Berkas kelas-reboot (`.so`, overlay `/system`, `sepolicy.rule`) **di-stage, tidak pernah ditulis di atas inode yang live**; selebihnya diterapkan secara live. Sebuah apply yang gagal akan dibatalkan (abort) alih-alih menimpa tanpa cadangan.
+- Berkas kelas-reboot (`.so`, overlay `/system`, `sepolicy.rule`) **di-stage, tidak pernah ditulis di atas inode yang live**, selebihnya diterapkan secara live. Sebuah apply yang gagal akan dibatalkan (abort) alih-alih menimpa tanpa cadangan.
 
 ## Build / tes
 
@@ -69,9 +88,13 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 `sh -n engine/*.sh`, `node --check webui/vdlu.js`, dan buka `webui/demo.html` di sebuah peramban (ia mem-mock jembatan perangkat).
 
+## Agen AI
+
+Engine dikendalikan sepenuhnya dari shell (`sh engine/update.sh <check|run|resume|boot|status|cancel>` mencetak status yang terbaca mesin), sehingga agen AI dapat memeriksa, menerapkan, dan melanjutkan pembaruan tanpa antarmuka. Kontrak sambungan antar komponen ada di [`docs/INTERFACES.md`](docs/INTERFACES.md), dan patch dari AI tunduk pada standar tinjauan yang sama seperti lainnya.
+
 ## Dokumentasi
 
-- [`INTERFACES.md`](docs/INTERFACES.md): kontrak sambungan (seam contract) antar komponen (hukum konvergensi; perlakukan sebagai tak-berubah).
+- [`INTERFACES.md`](docs/INTERFACES.md): kontrak sambungan (seam contract) antar komponen (hukum konvergensi, perlakukan sebagai tak-berubah).
 - [`ENGINE.md`](docs/ENGINE.md): engine sisi perangkat (`update.sh`): transaksi DIFF -> FETCH -> APPLY -> COMMIT yang dapat dilanjutkan.
 - [`PRODUCER.md`](docs/PRODUCER.md): sisi PC/rilis: membangun dan menandatangani feed ber-alamat konten (`vdlu-pack`, `vdlu-sign`).
 - [`WEBUI.md`](docs/WEBUI.md): widget panel Updates siap pakai (toast progres, batal, banner reboot).
@@ -102,16 +125,20 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Lisensi
 
-Kode milik VDLiveUpdate sendiri adalah **Apache-2.0**; lihat [LICENSE](LICENSE). Ia mem-vendor sebuah
-verifier `ed25519-mini` kecil dan sebuah `curl` statis untuk bootstrap fetch, masing-masing di bawah lisensinya sendiri; lihat
+Kode milik VDLiveUpdate sendiri adalah **Apache-2.0**, lihat [LICENSE](LICENSE). Ia mem-vendor sebuah
+verifier `ed25519-mini` kecil dan sebuah `curl` statis untuk bootstrap fetch, masing-masing di bawah lisensinya sendiri, lihat
 [NOTICE.md](NOTICE.md) dan berkas-berkas `PROVENANCE.json` di samping biner yang di-bundel.
 
 ## Merek dagang
 
 VDLiveUpdate adalah proyek independen dan tidak resmi, tidak berafiliasi dengan atau didukung oleh pihak ketiga mana pun.
-"Android" adalah merek dagang Google LLC; "KernelSU", "Magisk" dan "APatch" adalah merek milik
+"Android" adalah merek dagang Google LLC, "KernelSU", "Magisk" dan "APatch" adalah merek milik
 penulis masing-masing. VDLU berjalan sepenuhnya di perangkat Anda dan di host rilis Anda sendiri.
 
 ## Tags
 
 `VDLU` `flashless-update` `incremental-update` `KernelSU` `Magisk` `APatch` `module-update` `ed25519` `content-addressed` `OTA` `self-update` `Android` `VDLiveUpdate`
+
+---
+
+📣 **Gabung ke channel untuk pembaruan:** @Priv8_VD https://t.me/Priv8_VD

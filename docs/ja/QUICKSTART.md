@@ -83,6 +83,7 @@ channel=stable
 profile=hardened        # 公開フィード: 署名必須、ダウングレードブロック
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # オプトイン: このパスが存在する間は APPLY を延期 (例: 実行中のバックアップ)
 ```
 
 `profile=trusted` は私的な `file://`/SSH ソースにのみ使用する (検証はベストエフォート。すべての blob の

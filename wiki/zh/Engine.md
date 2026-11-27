@@ -46,7 +46,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 **DIFF。**引擎下载 `manifest.json`，校验每个字段（见下文及 [[Security and Trust Model]]），并把已签名的目标目录树与 `current.json`（已安装版本的清单）做 diff。结果是一个写入 `plan.tsv` 的按文件计划：每个文件一行，承载其 class、目标哈希、mode 和进度状态。已处于目标哈希的文件会被标记为跳过。
 
-**FETCH。**对每个仍然需要的文件，引擎从 `<source>/blobs/<sha>`（压缩时为 `<sha>.gz`）下载其按内容寻址的 blob，存入一个 `.part` 文件。如果该 blob 被 gzip 过，就解压它，然后对照清单校验其 SHA-256。只有在匹配时，它才会被原子地 `mv` 进 `blobs/<sha>`。已在缓存中且哈希正确的 blob 会被完全跳过，而一个未变化的本地文件可以在无需任何下载的情况下播种缓存。同一个 blob 上的三次失败会中止该阶段，不应用任何内容。只有当计划中的每个 blob 都已到位并已验证时，该阶段才会到达 `FETCHED`。关于这些 blob 来自的 [[Feed Format]]，参见那一页。
+**FETCH。**对每个仍然需要的文件，引擎从 `<source>/blobs/<sha>`（压缩时为 `<sha>.gz`）下载其按内容寻址的 blob，存入一个 `.part` 文件。如果该 blob 被 gzip 过，就解压它，然后对照清单校验其 SHA-256。只有在匹配时，它才会被原子地 `mv` 进 `blobs/<sha>`。已在缓存中且哈希正确的 blob 会被完全跳过，而一个未变化的本地文件可以在无需任何下载的情况下播种缓存。同一个 blob 上的三次失败会中止该阶段，不应用任何内容。只有当计划中的每个 blob 都已到位并已验证时，该阶段才会到达 `FETCHED`。关于这些 blob 来自的 [[Feed Format]]，参见那一页。在 toolchain 设置时引擎会记录已解析的 TLS 信任 - CA path 及其是否可读，外加 bundle 的大小与证书数量 - 因此 boot 时的 curl `rc 77` 在 `boot.log` 中可自我解释（它能区分一个空信任存储与一个不可读的存储，即 boot 时的 SELinux 上下文情形）。
 
 fetch 受网络策略控制：一个 feed 可以被限制为仅 Wi-Fi、仅移动网络或任意网络。当当前网络不被允许时，fetch 不会失败；它进入良性的 `DEFERRED` 状态，保持计划和目标被固定，并在正确的网络出现后于下一次 check 或 boot 时续传。其间不消耗任何流量。
 
@@ -67,6 +67,10 @@ fetch 受网络策略控制：一个 feed 可以被限制为仅 Wi-Fi、仅移�
 - **一切都是原子的。**新内容经由 `rename`/`mv` 覆盖到目标上落地，因此读者看到的要么是旧文件、要么是新文件，绝不会是一次被截断的写入。
 - **崩溃或被杀后可续传。**一次崩溃、一次掉线或中途重启会留下一个有效的日志；`resume`（或 `boot`）会从记录的阶段续接。该设计假定它会被中断。
 - **干净地降级。**缺失的二进制、掉线的网络或满了的磁盘，会在 stderr 上产生一个清晰的错误，并在日志中产生 `state:ERROR`，而不会损坏模块。
+- **信任锚被排除（`ENGINE_VERSION` 5）。**引擎会忽略一个被抓取计划中的每一个 `vdlu/` path - 它自己的 `update.sh`、`vdlu-verify`、`verify/` 二进制、keyring 和 config - 因此一个 feed 绝不能通过网络交换校验器或签名密钥；信任锚只通过一次完整的已签名 re-flash 才改变。参见 [[Security and Trust Model]]。
+- **当模块繁忙时更新会延迟。**当可选的 `apply_busy_file` 被设置为一个宿主模块在其自身操作期间触碰的绝对 path（例如一个正在运行的 backup），只要该 path 存在，APPLY 就会等待，因此文件绝不会在操作中途被交换；blob 已被抓取，因此下一次触发时应用而无需重新下载。
+- **大小上限。**一个文件被限制为 **128 MiB**，清单被限制为 **2 MiB**，在 `update.sh` 和 `vdlu-verify` 中都于读取任一者之前强制执行（anti decompression-bomb / anti-OOM）。
+- **领先于 feed 的模块绝不会被回退（`ENGINE_VERSION` 7）。** 从模块自身 `module.prop` 读取的实时安装 `versionCode` 作为 "from" 版本的下限，因此一台手动更新到超过陈旧 feed 的设备被读作*领先*：downgrade 守卫返回无害，没有计划也没有回退。`boot` 还会自愈已有安装 - target 低于已安装版本的持久化计划，或 `target <= 0` 的陈旧 journal（`ENGINE_VERSION` 6），会在任何 resume 之前被清除。
 
 ## 锁
 

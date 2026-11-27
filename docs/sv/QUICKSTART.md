@@ -34,7 +34,7 @@ Detta är det exakta `vdlu/`-trädet som modulen bär efter adoption:
 ```
 
 Engines muteringsbara tillstånd (`config`, `current.json`, journal, lock) bor i
-Tier-2, `/data/adb/<modid>/vdlu/`, utanför modul-dir:en; `config.default` seedar det vid första
+Tier-2, `/data/adb/<modid>/vdlu/`, utanför modul-dir:en, `config.default` seedar det vid första
 körningen.
 
 ## 1. Vendora engine
@@ -48,7 +48,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Leverera endast de ABI:er du stödjer; `customize.sh` kan beskära `verify/` till enhetens ABI
+Leverera endast de ABI:er du stödjer, `customize.sh` kan beskära `verify/` till enhetens ABI
 vid installationstid.
 
 ## 2. Generera en signeringsnyckel (engångs)
@@ -85,9 +85,10 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
-Använd `profile=trusted` endast för en privat `file://`/SSH-källa (verify best-effort; varje
+Använd `profile=trusted` endast för en privat `file://`/SSH-källa (verify best-effort, varje
 blobs sha256 kontrolleras fortfarande). Varje värde annat än det bokstavliga `trusted` behandlas
 som `hardened` (fail-closed).
 
@@ -121,7 +122,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` vendoras från `webui/`; en översättning kan läggas till med
+(`vdlu.js` / `vdlu.css` vendoras från `webui/`, en översättning kan läggas till med
 `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Signera flödet i ditt release-workflow
@@ -152,7 +153,7 @@ Det är icke-fatalt om det saknas (enheten börjar bara från `0` vid den först
 
 ---
 
-Det är hela adoptionen. `sh -n <module>/vdlu/update.sh` måste passera; testa producern
+Det är hela adoptionen. `sh -n <module>/vdlu/update.sh` måste passera, testa producern
 och engine från början till slut så som visas i [`PRODUCER.md`](PRODUCER.md) och root-README
 innan du levererar.
 
@@ -160,4 +161,4 @@ innan du levererar.
 
 ---
 
-> _Denna dokumentation genererades med Claude (Anthropic) och underhålls av VD171. Rättelser och förbättringar välkomnas; se [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Denna dokumentation genererades med Claude (Anthropic) och underhålls av VD171. Rättelser och förbättringar välkomnas, se [CONTRIBUTING.md](CONTRIBUTING.md)._

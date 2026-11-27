@@ -34,7 +34,7 @@ Thay `<id>` bằng id khóa ký của bạn, `<abi>` bằng (các) ABI thiết b
 ```
 
 Trạng thái thay đổi được của engine (`config`, `current.json`, journal, lock) nằm trong Tier-2,
-`/data/adb/<modid>/vdlu/`, bên ngoài module dir; `config.default` gieo nó ở lần chạy đầu tiên.
+`/data/adb/<modid>/vdlu/`, bên ngoài module dir, `config.default` gieo nó ở lần chạy đầu tiên.
 
 ## 1. Vendor engine
 
@@ -47,7 +47,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Chỉ ship các ABI bạn hỗ trợ; `customize.sh` có thể cắt tỉa `verify/` xuống còn ABI của thiết bị lúc cài đặt.
+Chỉ ship các ABI bạn hỗ trợ, `customize.sh` có thể cắt tỉa `verify/` xuống còn ABI của thiết bị lúc cài đặt.
 
 ## 2. Tạo một khóa ký (một lần)
 
@@ -81,9 +81,10 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
-Chỉ dùng `profile=trusted` cho một nguồn `file://`/SSH riêng tư (verify best-effort; sha256 của mỗi blob vẫn
+Chỉ dùng `profile=trusted` cho một nguồn `file://`/SSH riêng tư (verify best-effort, sha256 của mỗi blob vẫn
 được kiểm tra). Bất kỳ giá trị nào khác với chữ `trusted` đúng nghĩa đều được xử lý như `hardened`
 (fail-closed).
 
@@ -115,7 +116,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` được vendor từ `webui/`; có thể thêm một bản dịch với
+(`vdlu.js` / `vdlu.css` được vendor từ `webui/`, có thể thêm một bản dịch với
 `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Ký feed trong release workflow của bạn
@@ -145,11 +146,11 @@ Nó không nghiêm trọng nếu vắng mặt (thiết bị chỉ bắt đầu t
 
 ---
 
-Đó là toàn bộ việc áp dụng. `sh -n <module>/vdlu/update.sh` phải vượt qua; hãy kiểm thử producer và engine
+Đó là toàn bộ việc áp dụng. `sh -n <module>/vdlu/update.sh` phải vượt qua, hãy kiểm thử producer và engine
 đầu-cuối như trình bày trong [`PRODUCER.md`](PRODUCER.md) và README gốc trước khi bạn ship.
 
 <!-- doc-footer -->
 
 ---
 
-> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến; xem [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến, xem [CONTRIBUTING.md](CONTRIBUTING.md)._

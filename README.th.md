@@ -22,9 +22,28 @@
   ======================================================================
 -->
 
-# VDLiveUpdate
+# VD Live Update
 
-> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · ไทย · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+
+<p align="center">
+  <img src="images/logo-wordmark.png" alt="VD Live Update" width="320">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1a7f37" alt="License"></a>
+  <a href="https://github.com/VD171/VDLiveUpdate/stargazers"><img src="https://img.shields.io/github/stars/VD171/VDLiveUpdate?color=d29922" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="docs/QUICKSTART.md">Quickstart</a> ·
+  <a href="docs/ENGINE.md">Engine</a> ·
+  <a href="docs/PRODUCER.md">Producer</a> ·
+  <a href="docs/WEBUI.md">WebUI</a> ·
+  <a href="docs/INTERFACES.md">Interfaces</a> ·
+  <a href="docs/AI-AGENTS.md">AI agents</a> ·
+  <a href="docs/TRUST-MODEL.md">Trust model</a>
+</p>
 
 **VDLU** เป็นเอนจินสำหรับการอัปเดตตัวเองแบบ flashless และแบบเพิ่มส่วนต่าง (incremental) สำหรับโมดูล **KernelSU / APatch / Magisk** โมดูลที่ติดตั้งแล้วจะอัปเดตตัวเองโดยดึง **เฉพาะไฟล์ที่เปลี่ยนแปลง** (blobs แบบ content-addressed + manifest ที่เซ็นลายเซ็นแล้ว) นำไฟล์ที่ทำได้ไปใช้แบบ live **โดยไม่ต้องรีบูต** และจัดเตรียม (stage) พร้อมติดธงให้กับไฟล์ไม่กี่ไฟล์ที่จำเป็นต้องรีบูตจริง ๆ (ไฟล์ `.so`, overlay บน `/system`, `sepolicy.rule`) ไม่ต้องใช้ root manager ไม่ต้องดาวน์โหลด `.zip` ทั้งก้อนใหม่ และไม่ต้องรีบูตยกเว้นสำหรับไฟล์ที่จัดเตรียมไว้เหล่านั้น
 
@@ -36,7 +55,7 @@
 
 ## วิธีการทำงาน
 
-- **ตัวผลิต (Producer, PC / release):** `vdlu-pack` แปลงต้นไม้ของโมดูลให้เป็นฟีดแบบ content-addressed (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`); `vdlu-keygen` / `vdlu-sign` (ed25519); `vdlu-gc` ตัดแต่ง blobs ที่กำพร้าโดยอ้างอิงกับ manifest N ชุดล่าสุด (fail-safe, dry-run เป็นค่าเริ่มต้น)
+- **ตัวผลิต (Producer, PC / release):** `vdlu-pack` แปลงต้นไม้ของโมดูลให้เป็นฟีดแบบ content-addressed (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`), `vdlu-keygen` / `vdlu-sign` (ed25519), `vdlu-gc` ตัดแต่ง blobs ที่กำพร้าโดยอ้างอิงกับ manifest N ชุดล่าสุด (fail-safe, dry-run เป็นค่าเริ่มต้น)
 - **เอนจิน (อุปกรณ์):** POSIX sh ไม่ใช้ `jq` `update.sh` (`check | run | resume | boot | status | cancel`) รัน DIFF -> FETCH -> APPLY -> COMMIT เป็น **ธุรกรรมที่กลับมาทำต่อได้** (journal) พร้อม rollback และล็อกแบบ `mkdir` ลายเซ็นถูกตรวจสอบด้วย `ed25519-mini` ที่ฝังมา (ไม่มี `openssl` บนอุปกรณ์)
 - **WebUI:** แผง Updates แบบ drop-in (toast แสดงความคืบหน้า, ยกเลิก, แบนเนอร์รีบูต), vanilla JS
 
@@ -47,7 +66,7 @@
 
 ## นำไปใช้ในโมดูลของคุณ
 
-Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` เข้าไปใน `<module>/vdlu/`, ฝัง **กุญแจสาธารณะแบบ raw 32 ไบต์** ของคุณเป็น `vdlu/keyring/<id>.pub`, เพิ่ม `config` (profile + source), ต่อสาย triggers (`post-fs-data.sh` แบบ pre-zygote สำหรับการอัปเดตอัตโนมัติตอนบูต; trigger เมื่อเปิด WebUI) และเพิ่ม `vdlu-pack` + `vdlu-sign` เข้าไปในขั้นตอน release ของคุณ ดูเทมเพลตที่ทำไว้ให้แล้วได้ที่ [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
+Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` เข้าไปใน `<module>/vdlu/`, ฝัง **กุญแจสาธารณะแบบ raw 32 ไบต์** ของคุณเป็น `vdlu/keyring/<id>.pub`, เพิ่ม `config` (profile + source), ต่อสาย triggers (`post-fs-data.sh` แบบ pre-zygote สำหรับการอัปเดตอัตโนมัติตอนบูต, trigger เมื่อเปิด WebUI) และเพิ่ม `vdlu-pack` + `vdlu-sign` เข้าไปในขั้นตอน release ของคุณ ดูเทมเพลตที่ทำไว้ให้แล้วได้ที่ [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
 
 ## ความปลอดภัย
 
@@ -69,9 +88,13 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 `sh -n engine/*.sh`, `node --check webui/vdlu.js`, และเปิด `webui/demo.html` ในเว็บเบราว์เซอร์ (มัน mock สะพานเชื่อมอุปกรณ์ไว้)
 
+## เอเจนต์ AI
+
+เอนจินถูกควบคุมทั้งหมดจากเชลล์ (`sh engine/update.sh <check|run|resume|boot|status|cancel>` พิมพ์สถานะที่เครื่องอ่านได้) ดังนั้นเอเจนต์ AI จึงสามารถตรวจสอบ ใช้งาน และดำเนินการอัปเดตต่อได้โดยไม่ต้องมีส่วนติดต่อผู้ใช้ สัญญารอยต่อระหว่างส่วนประกอบอยู่ใน [`docs/INTERFACES.md`](docs/INTERFACES.md) และแพตช์จาก AI ต้องผ่านมาตรฐานการตรวจทานเดียวกับแพตช์อื่น ๆ
+
 ## เอกสาร
 
-- [`INTERFACES.md`](docs/INTERFACES.md): สัญญารอยต่อ (seam contract) ระหว่างคอมโพเนนต์ (กฎแห่งการบรรจบ; ให้ถือว่าเปลี่ยนแปลงไม่ได้)
+- [`INTERFACES.md`](docs/INTERFACES.md): สัญญารอยต่อ (seam contract) ระหว่างคอมโพเนนต์ (กฎแห่งการบรรจบ, ให้ถือว่าเปลี่ยนแปลงไม่ได้)
 - [`ENGINE.md`](docs/ENGINE.md): engine ฝั่งอุปกรณ์ (`update.sh`): ทรานแซกชัน DIFF -> FETCH -> APPLY -> COMMIT ที่กลับมาทำต่อได้
 - [`PRODUCER.md`](docs/PRODUCER.md): ฝั่ง PC/release: การสร้างและเซ็นฟีดแบบระบุที่อยู่ด้วยเนื้อหา (`vdlu-pack`, `vdlu-sign`)
 - [`WEBUI.md`](docs/WEBUI.md): วิดเจ็ตแผง Updates แบบพร้อมใช้ (toast ความคืบหน้า, ยกเลิก, แบนเนอร์รีบูต)
@@ -102,13 +125,13 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## ลิขสิทธิ์
 
-โค้ดของ VDLiveUpdate เองเป็น **Apache-2.0**; ดู [LICENSE](LICENSE) มันได้ vendor ตัวตรวจสอบ `ed25519-mini` ขนาดเล็กและ `curl` แบบ static สำหรับ fetch bootstrap โดยแต่ละตัวอยู่ภายใต้ลิขสิทธิ์ของตัวเอง; ดู
+โค้ดของ VDLiveUpdate เองเป็น **Apache-2.0**, ดู [LICENSE](LICENSE) มันได้ vendor ตัวตรวจสอบ `ed25519-mini` ขนาดเล็กและ `curl` แบบ static สำหรับ fetch bootstrap โดยแต่ละตัวอยู่ภายใต้ลิขสิทธิ์ของตัวเอง, ดู
 [NOTICE.md](NOTICE.md) และไฟล์ `PROVENANCE.json` ที่อยู่ข้าง ๆ ไบนารีที่มาพร้อมกัน
 
 ## เครื่องหมายการค้า
 
 VDLiveUpdate เป็นโปรเจกต์อิสระที่ไม่เป็นทางการ ไม่มีความเกี่ยวข้องกับหรือได้รับการรับรองจากบุคคลที่สามใด ๆ
-"Android" เป็นเครื่องหมายการค้าของ Google LLC; "KernelSU", "Magisk" และ "APatch" เป็นเครื่องหมายของ
+"Android" เป็นเครื่องหมายการค้าของ Google LLC, "KernelSU", "Magisk" และ "APatch" เป็นเครื่องหมายของ
 ผู้สร้างแต่ละราย VDLU ทำงานทั้งหมดบนอุปกรณ์ของคุณและบนโฮสต์ release ของคุณเอง
 
 ## Tags
@@ -117,4 +140,4 @@ VDLiveUpdate เป็นโปรเจกต์อิสระที่ไม�
 
 ---
 
-📣 **Join the channel for updates:** @Priv8_VD https://t.me/Priv8_VD
+📣 **เข้าร่วมช่องเพื่อรับการอัปเดต:** @Priv8_VD https://t.me/Priv8_VD

@@ -35,7 +35,7 @@ Dies ist der exakte `vdlu/`-Baum, den das Modul nach der Adoption trägt:
 ```
 
 Der veränderliche Zustand der Engine (`config`, `current.json`, Journal, Lock) lebt in
-Tier-2, `/data/adb/<modid>/vdlu/`, außerhalb des Modulverzeichnisses; `config.default` seedet
+Tier-2, `/data/adb/<modid>/vdlu/`, außerhalb des Modulverzeichnisses, `config.default` seedet
 ihn beim ersten Lauf.
 
 ## 1. Die Engine vendorisieren
@@ -49,7 +49,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini pro ABI
 ```
 
-Liefere nur die ABIs aus, die du unterstützt; `customize.sh` kann `verify/` zur
+Liefere nur die ABIs aus, die du unterstützt, `customize.sh` kann `verify/` zur
 Installationszeit auf die ABI des Geräts reduzieren.
 
 ## 2. Einen Signierschlüssel generieren (einmalig)
@@ -86,9 +86,10 @@ channel=stable
 profile=hardened        # öffentlicher Feed: Signatur obligatorisch, Downgrade blockiert
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: APPLY verschieben, solange dieser Pfad existiert (z. B. ein laufendes Backup)
 ```
 
-Nutze `profile=trusted` nur für eine private `file://`/SSH-Quelle (verify best-effort; der
+Nutze `profile=trusted` nur für eine private `file://`/SSH-Quelle (verify best-effort, der
 sha256 jedes Blobs wird trotzdem geprüft). Jeder andere Wert als das wörtliche `trusted` wird
 als `hardened` behandelt (fail-closed).
 
@@ -122,7 +123,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` werden aus `webui/` vendorisiert; eine Übersetzung kann mit
+(`vdlu.js` / `vdlu.css` werden aus `webui/` vendorisiert, eine Übersetzung kann mit
 `i18n: window.VDLU_I18N_<LANG>` hinzugefügt werden.)
 
 ## 6. Den Feed in deinem Release-Workflow signieren
@@ -155,7 +156,7 @@ Aktualisierung von `0`).
 
 ---
 
-Das ist die gesamte Adoption. `sh -n <module>/vdlu/update.sh` muss durchgehen; teste den
+Das ist die gesamte Adoption. `sh -n <module>/vdlu/update.sh` muss durchgehen, teste den
 Producer und die Engine Ende-zu-Ende wie in [`PRODUCER.md`](PRODUCER.md) und dem Root-README
 gezeigt, bevor du auslieferst.
 
@@ -163,4 +164,4 @@ gezeigt, bevor du auslieferst.
 
 ---
 
-> _Diese Dokumentation wurde mit Claude (Anthropic) erstellt und wird von VD171 gepflegt. Korrekturen und Verbesserungen sind willkommen; siehe [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Diese Dokumentation wurde mit Claude (Anthropic) erstellt und wird von VD171 gepflegt. Korrekturen und Verbesserungen sind willkommen, siehe [CONTRIBUTING.md](CONTRIBUTING.md)._

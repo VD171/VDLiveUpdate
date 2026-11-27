@@ -10,6 +10,27 @@ Questa pagina è la storia completa della fiducia. Vedi [[Feed Format]] per lo s
 
 ---
 
+## Versioni supportate
+
+Le correzioni di sicurezza arrivano nell'ultima `ENGINE_VERSION`; un manifest firmato
+dichiara l'engine minimo di cui ha bisogno tramite `engine_min`, e l'engine on-device
+rifiuta un manifest che chiede più di quanto implementa. Gli engine vendorizzati più
+vecchi devono fare **re-vendor** per ottenere una correzione, non essere back-patchati
+in place.
+
+| ENGINE_VERSION | stato |
+|---|---|
+| 7 (corrente) | supportato - mai riportare indietro un modulo più avanti del feed (il `versionCode` installato dal vivo fa da base alla versione "from"), auto-riparazione al boot di un plan di downgrade obsoleto |
+| 6 | superato - auto-riparazione al boot di un journal obsoleto con `target <= 0` (il baseline 0 lasciato da uno stub rimosso non guida più alcuna UI o azione di boot) |
+| 5 | superato - esclusione dell'ancora di fiducia lato-engine (la dir `vdlu/` viene ignorata anche se un feed la porta), soglie di 128 MiB per-file / 2 MiB manifest |
+| 4 | superato - allowlist `key_id`, rifiuto dei path con dot-segment/trailing-slash, size cap, lock in fase di check |
+| <= 3 | non supportato - fai il re-vendor dell'engine corrente |
+
+Qualsiasi modifica alla verifica dell'engine o alla logica di apply fa il bump di
+`ENGINE_VERSION`.
+
+---
+
 ## L'idea centrale: fail-closed, prima che accada qualsiasi cosa
 
 `validate_plan()` gira dentro la fase `check`/diff, **prima** di qualsiasi fetch e **prima** di qualsiasi apply. Percorre ogni voce nell'albero di file pianificato e ogni voce in `delete[]`, e se una singola voce è malformata **rifiuta l'intero manifest** e la transazione non parte mai. Non c'è accettazione parziale, nessun "salta quella cattiva e applica il resto". Un campo cattivo avvelena il batch, di proposito.
@@ -124,6 +145,14 @@ La correzione vincola il `key_id` di aggiornamento modulo accettato a una **allo
 Poiché il controllo gira prima della selezione della pubkey, un manifest che nomina una chiave presente ma non in allowlist viene rifiutato senza che il verificatore carichi mai quella chiave. L'insieme risolto viene rispecchiato in `vdlu-verify` tramite `VDLU_KEYID_ALLOW`, così il verificatore leggero sul dispositivo applica lo stesso vincolo e i due non possono divergere. Questo vale in **entrambi** i profili: sia `hardened` che `trusted` consultano l'allowlist, perché l'allowlist decide *quale chiave* è una radice valida di aggiornamento modulo, non *se* una firma è richiesta.
 
 Il feed di fingerprint mantiene la propria radice di fiducia vincolata separata, `FEED_KEY_ID`. È una radice distinta con un compito distinto, mai raggiungibile tramite il percorso di aggiornamento modulo di cui sopra, così vincolare l'allowlist di aggiornamento modulo non la tocca e una chiave di feed trapelata continua a non poter firmare un aggiornamento di modulo. Questa modifica ha portato `ENGINE_VERSION` a 4.
+
+---
+
+## L'esclusione dell'ancora di fiducia lato-engine
+
+L'allowlist di cui sopra decide *quale* chiave può firmare un aggiornamento di modulo. Una modifica successiva (`ENGINE_VERSION` 5) chiude il rischio adiacente dall'altro lato: cosa un feed validamente firmato è persino autorizzato a toccare. Un feed pubblicato porta l'intero albero del modulo, e quell'albero include la directory `vdlu/` propria del modulo - l'engine, lo shim `vdlu-verify`, i binari `verify/`, il keyring e la config. Quelle sono l'ancora di fiducia. Se un aggiornamento potesse riscriverle, una singola chiave di firma trapelata potrebbe spedire un nuovo verificatore o un nuovo keyring e persistere root indefinitamente.
+
+Quindi l'engine **ignora** ogni path `vdlu/` in un piano recuperato. Non li recupera, applica o elimina mai, anche quando il manifest li elenca, e non rifiuta nemmeno il manifest: il resto del modulo si aggiorna comunque normalmente, e solo i path `vdlu/` vengono scartati silenziosamente. L'ancora di fiducia può cambiare **solo** tramite un re-flash firmato completo dello zip del modulo, mai via cavo. Questo completa l'esclusione lato-producer in `vdlu-pack` (che tiene quei path fuori dal feed in primo luogo) con un secondo guard indipendente sul dispositivo. La stessa modifica ha anche abbassato le soglie di hardening a **128 MiB per file** e **2 MiB per manifest**. Segnalato da Solomag (VD-Modules#1).
 
 ---
 

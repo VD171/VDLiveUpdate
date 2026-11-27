@@ -10,6 +10,25 @@ Cette page est l'histoire complète de confiance. Voir [[Feed Format]] pour le s
 
 ---
 
+## Versions supportées
+
+Les correctifs de sécurité arrivent dans le dernier `ENGINE_VERSION` ; un manifeste signé déclare
+l'engine minimum dont il a besoin via `engine_min`, et l'engine sur l'appareil refuse un manifeste
+qui demande plus que ce qu'il implémente. Les engines vendorisés plus anciens sont censés
+**re-vendorer** pour récupérer un correctif, pas être patchés sur place.
+
+| ENGINE_VERSION | statut |
+|---|---|
+| 7 (actuel) | supporté - ne jamais revenir sur un module en avance sur le feed (le `versionCode` installé en direct sert de plancher à la version "from"), auto-réparation au boot d'un plan de downgrade obsolète |
+| 6 | dépassé - auto-réparation au boot d'un journal obsolète avec `target <= 0` (le baseline 0 laissé par un stub supprimé ne déclenche plus aucune UI ni action de boot) |
+| 5 | dépassé - exclusion de l'ancre de confiance côté engine (le répertoire `vdlu/` est ignoré même si un feed le porte), plafonds de 128 MiB par fichier / 2 MiB de manifeste |
+| 4 | dépassé - allowlist `key_id`, rejet des paths dot-segment/trailing-slash, plafonds de taille, lock au check-time |
+| <= 3 | non supporté - re-vendorer l'engine actuel |
+
+Tout changement dans la vérification de l'engine ou la logique d'apply incrémente `ENGINE_VERSION`.
+
+---
+
 ## L'idée centrale : fail-closed, avant que quoi que ce soit ne se produise
 
 `validate_plan()` s'exécute dans la phase `check`/diff, **avant** tout fetch et **avant** tout apply. Il parcourt chaque entrée de l'arborescence de fichiers planifiée et chaque entrée de `delete[]`, et si une seule entrée est malformée il **rejette le manifeste entier** et la transaction ne démarre jamais. Il n'y a pas d'acceptation partielle, pas de "sauter le mauvais et appliquer le reste". Un seul champ invalide empoisonne le lot, à dessein.
@@ -124,6 +143,14 @@ Le correctif épingle le `key_id` de mise à jour de module accepté à une **li
 Parce que la vérification s'exécute avant la sélection de la clé publique, un manifeste nommant une clé présente mais non autorisée est rejeté sans que le vérificateur ne charge jamais cette clé. L'ensemble résolu est répercuté dans `vdlu-verify` via `VDLU_KEYID_ALLOW`, de sorte que le vérificateur mince sur l'appareil applique le même épinglage et que les deux ne peuvent pas diverger. Cela vaut dans les **deux** profils : `hardened` et `trusted` consultent tous deux la liste d'autorisation, car la liste d'autorisation décide *quelle clé* est une racine valide de mise à jour de module, non pas *si* une signature est requise.
 
 Le feed de fingerprint garde sa propre racine de confiance épinglée séparée, `FEED_KEY_ID`. C'est une racine distincte avec un rôle distinct, jamais atteignable par le chemin de mise à jour de module ci-dessus, de sorte qu'épingler la liste d'autorisation de mise à jour de module n'y touche pas et qu'une clé de feed fuitée ne peut toujours pas signer une mise à jour de module. Ce changement a fait passer `ENGINE_VERSION` à 4.
+
+---
+
+## L'exclusion de l'ancre de confiance côté moteur
+
+La liste d'autorisation ci-dessus décide *quelle* clé peut signer une mise à jour de module. Un changement ultérieur (`ENGINE_VERSION` 5) ferme le risque adjacent de l'autre côté : ce à quoi un feed valablement signé est seulement autorisé à toucher. Un feed publié porte tout l'arbre du module, et cet arbre inclut le propre répertoire `vdlu/` du module - le moteur, le shim `vdlu-verify`, les binaires `verify/`, le keyring et la config. Ce sont l'ancre de confiance. Si une mise à jour pouvait les réécrire, une seule clé de signature ayant fuité pourrait livrer un nouveau vérificateur ou un nouveau keyring et persister root indéfiniment.
+
+Donc le moteur **ignore** chaque chemin `vdlu/` dans un plan récupéré. Il ne les récupère, applique, ni supprime jamais, même lorsque le manifeste les liste, et il ne rejette pas le manifeste non plus : le reste du module se met quand même à jour normalement, et seuls les chemins `vdlu/` sont silencieusement abandonnés. L'ancre de confiance ne peut changer **que** par un re-flash signé complet du zip du module, jamais par le réseau. Cela complète l'exclusion côté producer dans `vdlu-pack` (qui tient ces chemins hors du feed en premier lieu) par une seconde garde, indépendante, sur l'appareil. Le même changement a aussi abaissé les plafonds de durcissement à **128 MiB par fichier** et **2 MiB par manifeste**. Signalé par Solomag (VD-Modules#1).
 
 ---
 

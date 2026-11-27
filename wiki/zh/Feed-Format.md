@@ -24,7 +24,7 @@
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Feed 只承载**模块自己的内容**。一组固定的路径被刻意地排�
 
 | 被排除 | 为什么 |
 |---|---|
-| `vdlu/keyring/`、`vdlu/verify/`（信任根：原始公钥 + 校验器二进制） | **这是核心的安全理由。**信任锚（trust anchor）是**仅经刷入的**。如果 keyring 或校验器可经 feed 交付，一个清单就可能覆盖那个校验它自身的东西。把它们保持在网络之外意味着一个清单永远无法重写设备上的信任锚。 |
+| `vdlu/keyring/`、`vdlu/verify/`（信任根：原始公钥 + 校验器二进制） | **这是核心的安全理由。**信任锚（trust anchor）是**仅经刷入的**。如果 keyring 或校验器可经 feed 交付，一个清单就可能覆盖那个校验它自身的东西。把它们保持在网络之外意味着一个清单永远无法重写设备上的信任锚。作为第二道、独立的防护（`ENGINE_VERSION` 5），engine 还会**忽略**一个被抓取计划中的每一个 `vdlu/` path，因此即使一个携带它们的 feed 也无法触碰信任锚。 |
 | `vdlu/baseline.json` | 它是已签名清单的一份副本（安装种子）；打包它会是一个自引用环。 |
 | `.vd/` 刷入基础设施 | 在 zip 中交付的 flash-gate 脚手架，从不实时应用。 |
 | `update.json`、`update-mmrl.json` | 它们的 size/sha 由 CI 在 zip 构建*之后*填入，因此所交付的副本与任何 feed 副本都不同。提供它们会在每次安装的首次自更新时导致一次幻影式的单文件拉取，而且它们在设备上无论如何都是残留的（管理器读取远端的原始 update JSON）。 |

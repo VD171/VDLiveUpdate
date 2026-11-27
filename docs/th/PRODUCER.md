@@ -36,7 +36,7 @@ producer/vdlu-sign  ./out/manifest.json  ./keys/release-2026.pem  release-2026
 
 ### การตัดสินใจ `enc` (vdlu-pack)
 
-`sha256` เป็นของเนื้อหาต้นฉบับ (uncompressed) **เสมอ**; `enc` เพียงแค่บอกว่า blob ถูกเก็บอย่างไร
+`sha256` เป็นของเนื้อหาต้นฉบับ (uncompressed) **เสมอ**, `enc` เพียงแค่บอกว่า blob ถูกเก็บอย่างไร
 
 - `gz` เมื่อ `size >= 4096` **และ** gzip (`-9 -n`, deterministic) ประหยัดได้อย่างน้อย 10% (`comp <= raw*0.90`)
 - `raw` ในกรณีอื่น (ข้อความเล็ก ๆ ที่ HTTP gzip ครอบคลุมอยู่แล้ว, หรือข้อมูลที่บีบอัดไม่ได้อยู่แล้ว)
@@ -47,7 +47,7 @@ decompress ด้วย toybox `gunzip` (มีอยู่เสมอ), ดั
 
 ### การตัดสินใจ `class` (vdlu-pack) - taxonomy ของ reboot
 
-Derive มาจาก path (INTERFACES §3, doc §4) เป็นค่าดีฟอลต์เท่านั้น; กฎของ path ไม่เคยลดระดับ `reboot`->`live`
+Derive มาจาก path (INTERFACES §3, doc §4) เป็นค่าดีฟอลต์เท่านั้น, กฎของ path ไม่เคยลดระดับ `reboot`->`live`
 
 | class | จับคู่โดย | การนำไปใช้ |
 |---|---|---|
@@ -66,7 +66,7 @@ manifest ที่ reproducible
 เพื่อให้อุปกรณ์เกิดมา "current" (ไม่มี from:0, ไม่มี re-fetch) เอนจินปฏิบัติกับมันเป็น **local trusted seed**
 (มันมาใน zip ที่ flash, ซึ่งคือขอบเขตความเชื่อถือของการติดตั้ง) และ **ไม่ ตรวจสอบลายเซ็นของมัน** -
 เฉพาะ manifest ที่ FETCHED จากฟีดเท่านั้นที่ผ่าน `vdlu-verify` ดังนั้น baseline จึง **ไม่ต้องการคีย์**: มันเป็นเพียง
-output ของ `vdlu-pack` เหนือต้นไม้ที่ ship (unsigned; `sig`/`key_id` ยังคงว่าง) CI จึงสามารถ
+output ของ `vdlu-pack` เหนือต้นไม้ที่ ship (unsigned, `sig`/`key_id` ยังคงว่าง) CI จึงสามารถ
 สร้างมันแบบ **keyless**, โดยเก็บคีย์สำหรับเซ็นให้อยู่ นอก CI 100% - เฉพาะ FEED ที่ publish เท่านั้นที่ถูกเซ็น (operator,
 locally) `vdlu-pack` กัน `baseline.json` ออกจาก manifest ของตัวเอง (anti self-reference) ไม่ fatal หาก
 ขาดหาย: อุปกรณ์แค่เริ่มจาก from:0 ในการอัปเดตครั้งแรก, ไม่เคยพัง
@@ -98,19 +98,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` เป็นส่วนหนึ่งของรูป canonical (ลบเฉพาะ `sig`); `vdlu-sign` ตั้ง `key_id` **ก่อน**
+`key_id` เป็นส่วนหนึ่งของรูป canonical (ลบเฉพาะ `sig`), `vdlu-sign` ตั้ง `key_id` **ก่อน**
 hashing ค่า placeholder ที่เป็น empty (`"sig":""`, ตอนเซ็น) หรือเติมแล้ว (ตอน verify) ให้
 ไบต์ canonical ที่เหมือนกัน, ดังนั้น sign และ verify จึงตรงกันโดยโครงสร้าง
 
 Python reproduce มันเป็น `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` แล้ว sha256 - ใช้
-เฉพาะเพื่อ cross-check; producer ที่เป็นผู้มีอำนาจคือเครื่องมือ sh สองตัว
+เฉพาะเพื่อ cross-check, producer ที่เป็นผู้มีอำนาจคือเครื่องมือ sh สองตัว
 
 ## ลายเซ็น (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   สำหรับ signing/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (ed25519
   SPKI DER คือ prefix 12 ไบต์ + คีย์ 32 ไบต์, ดังนั้น `tail -c 32` คือ คีย์) มันปล่อยออกมา ทั้งคู่
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` เหนือ canonical sha256 hex; ลายเซ็นเก็บเป็น base64
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` เหนือ canonical sha256 hex, ลายเซ็นเก็บเป็น base64
 - `vdlu-verify` (**device, slim**): `ed25519-mini <pubkey32> <msg> <sig64>` - อ่าน keyring เป็น pubkey **RAW 32B**,
   ไม่มี openssl บนอุปกรณ์ `key_id` ถูก path-sanitize (ไม่มี `/`, `.`, `..`, `"`) 🚨 keyring ship
   **`.pub.raw` (32B)**, ไม่เคย `.pub` PEM (113B): PEM เป็น PC-side เท่านั้นและ `ed25519-mini` อ่านมันไม่ได้

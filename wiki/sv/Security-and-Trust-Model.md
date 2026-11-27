@@ -10,6 +10,25 @@ Denna sida är den fullständiga förtroendeberättelsen. Se [[Feed Format]] fö
 
 ---
 
+## Versioner som stöds
+
+Säkerhetsfixar landar i den senaste `ENGINE_VERSION`; ett signerat manifest deklarerar den
+minimala engine det behöver via `engine_min`, och engine på enheten vägrar ett manifest som
+ber om mer än den implementerar. Äldre vendorade engine förväntas bli **om-vendorade** för att
+plocka upp en fix, inte efterlappade på plats.
+
+| ENGINE_VERSION | status |
+|---|---|
+| 7 (aktuell) | stöds - aldrig återställa en modul som ligger före flödet (den live-installerade `versionCode` utgör golvet för "from"-versionen), self-heal vid boot av en inaktuell downgrade-plan |
+| 6 | ersatt - self-heal vid boot av en inaktuell journal med `target <= 0` (baseline 0 som en borttagen stub lämnade driver inte längre någon UI- eller boot-åtgärd) |
+| 5 | ersatt - engine-sidig exkludering av tillitsankaret (`vdlu/`-katalogen ignoreras även om ett flöde bär den), tak på 128 MiB per fil / 2 MiB för manifestet |
+| 4 | ersatt - `key_id`-allowlist, avvisning av sökväg med dot-segment/avslutande-snedstreck, storleksgränser, lock vid check-tid |
+| <= 3 | stöds inte - om-vendora den aktuella engine |
+
+Varje ändring av engine-verifiering eller apply-logik höjer `ENGINE_VERSION`.
+
+---
+
 ## Kärnidén: fail-closed, innan något händer
 
 `validate_plan()` körs inuti `check`/diff-fasen, **innan** någon hämtning och **innan** någon tillämpning. Den går igenom varje post i det planerade filträdet och varje post i `delete[]`, och om en enda post är felformad **förkastar den hela manifestet** och transaktionen startar aldrig. Det finns inget partiellt godtagande, inget "hoppa över den dåliga och tillämpa resten". Ett dåligt fält förgiftar hela satsen, med flit.
@@ -124,6 +143,14 @@ Fixet nålar fast det accepterade moduluppdaterings-`key_id` till en fail-closed
 Eftersom kontrollen körs innan pubnyckelvalet, förkastas ett manifest som namnger en nyckel som finns men inte är tillåtlistad utan att verifieraren någonsin laddar den nyckeln. Den upplösta mängden speglas in i `vdlu-verify` genom `VDLU_KEYID_ALLOW`, så den slimmade kontrollen på enheten tvingar samma fastnålning och de två kan inte vara oense. Detta gäller i **båda** profilerna: `hardened` och `trusted` konsulterar båda tillåtlistan, eftersom tillåtlistan avgör *vilken nyckel* som är en giltig moduluppdateringsrot, inte *om* en signatur krävs.
 
 Fingeravtrycksflödet behåller sin egen separata fastnålade förtroenderot, `FEED_KEY_ID`. Det är en distinkt rot med en distinkt uppgift, aldrig nåbar genom moduluppdateringsvägen ovan, så att nåla fast moduluppdateringstillåtlistan rör den inte och en läckt flödesnyckel kan fortfarande inte signera en moduluppdatering. Denna ändring höjde `ENGINE_VERSION` till 4.
+
+---
+
+## Den engine-sidiga exkluderingen av förtroendeankaret
+
+Allowlisten ovan avgör *vilken* nyckel som får signera en moduluppdatering. En senare ändring (`ENGINE_VERSION` 5) stänger den angränsande risken från andra hållet: vad ett giltigt signerat flöde ens får röra. Ett publicerat flöde bär hela modulträdet, och det trädet inkluderar modulens egen `vdlu/`-katalog - engine, `vdlu-verify`-shimmen, `verify/`-binärerna, nyckelringen och konfigurationen. Dessa är förtroendeankaret. Om en uppdatering kunde skriva om dem skulle en enda läckt signeringsnyckel kunna leverera en ny verifierare eller en ny nyckelring och bevara root på obestämd tid.
+
+Så engine **ignorerar** varje `vdlu/`-sökväg i en hämtad plan. Den hämtar, tillämpar eller raderar dem aldrig, även när manifestet listar dem, och den avvisar inte heller manifestet: resten av modulen uppdateras ändå normalt, och endast `vdlu/`-sökvägarna släpps tyst. Förtroendeankaret kan ändras **endast** genom en fullständig signerad om-flash av modul-zippen, aldrig över nätet. Detta kompletterar producent-sidans exkludering i `vdlu-pack` (som håller de sökvägarna borta från flödet från första början) med en andra, oberoende vakt på enheten. Samma ändring sänkte också hardening-taken till **128 MiB per fil** och **2 MiB per manifest**. Rapporterad av Solomag (VD-Modules#1).
 
 ---
 

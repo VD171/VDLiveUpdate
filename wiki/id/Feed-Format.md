@@ -24,7 +24,7 @@ Manifest adalah deskripsi lengkap dari satu rilis: setiap file dalam tree target
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Feed membawa **hanya konten milik modul sendiri**. Sekumpulan path tetap dijauhk
 
 | Dikecualikan | Mengapa |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (trust root: raw public key + biner verifier) | **Ini adalah alasan keamanan inti.** Trust anchor bersifat **flash-only**. Jika keyring atau verifier dapat dikirim lewat feed, sebuah manifest dapat menimpa hal yang memvalidasinya. Menjauhkannya dari kabel berarti sebuah manifest tidak pernah dapat menulis ulang trust anchor di perangkat. |
+| `vdlu/keyring/`, `vdlu/verify/` (trust root: raw public key + biner verifier) | **Ini adalah alasan keamanan inti.** Trust anchor bersifat **flash-only**. Jika keyring atau verifier dapat dikirim lewat feed, sebuah manifest dapat menimpa hal yang memvalidasinya. Menjauhkannya dari kabel berarti sebuah manifest tidak pernah dapat menulis ulang trust anchor di perangkat. Sebagai penjaga kedua yang independen (`ENGINE_VERSION` 5), engine juga **mengabaikan** setiap path `vdlu/` dalam sebuah plan yang diambil, sehingga bahkan feed yang membawanya tidak dapat menyentuh anchor. |
 | `vdlu/baseline.json` | Ia adalah salinan dari manifest yang ditandatangani (install seed); mem-pack-nya akan menjadi loop referensi-diri. |
 | infrastruktur flash `.vd/` | Scaffolding flash-gate yang dikirim dalam zip, tidak pernah diterapkan live. |
 | `update.json`, `update-mmrl.json` | size/sha-nya diisi oleh CI *setelah* zip dibangun, jadi salinan yang dikirim berbeda dari salinan feed mana pun. Mem-feed-nya akan menyebabkan phantom single-file fetch pada setiap self-update pertama instalasi, dan keduanya vestigial di perangkat toh (manager membaca update JSON raw jarak jauh). |

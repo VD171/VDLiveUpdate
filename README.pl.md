@@ -22,9 +22,28 @@
   ======================================================================
 -->
 
-# VDLiveUpdate
+# VD Live Update
 
-> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · Polski · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+
+<p align="center">
+  <img src="images/logo-wordmark.png" alt="VD Live Update" width="320">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1a7f37" alt="License"></a>
+  <a href="https://github.com/VD171/VDLiveUpdate/stargazers"><img src="https://img.shields.io/github/stars/VD171/VDLiveUpdate?color=d29922" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="docs/QUICKSTART.md">Quickstart</a> ·
+  <a href="docs/ENGINE.md">Engine</a> ·
+  <a href="docs/PRODUCER.md">Producer</a> ·
+  <a href="docs/WEBUI.md">WebUI</a> ·
+  <a href="docs/INTERFACES.md">Interfaces</a> ·
+  <a href="docs/AI-AGENTS.md">AI agents</a> ·
+  <a href="docs/TRUST-MODEL.md">Trust model</a>
+</p>
 
 **VDLU** to przyrostowy, bezflashowy silnik samoaktualizacji dla modułów **KernelSU / APatch / Magisk**. Zainstalowany moduł aktualizuje się sam, pobierając **tylko pliki, które się zmieniły** (bloby adresowane treścią + podpisany manifest), stosuje te działające na żywo **bez restartu**, a te nieliczne, które restartu wymagają (`.so`, nakładka `/system`, `sepolicy.rule`), przygotowuje i oznacza. Bez menedżera roota, bez ponownego pobierania całego `.zip`, bez restartu poza tymi przygotowanymi plikami.
 
@@ -36,7 +55,7 @@ Zwykła aktualizacja modułu dostarcza cały `.zip` jeszcze raz. Dla dużego mod
 
 ## Jak to działa
 
-- **Producent (PC / wydanie):** `vdlu-pack` zamienia drzewo modułu w feed adresowany treścią (`manifest.json` + `blobs/<sha256>`, gzip, deduplikacja, `delete[]`); `vdlu-keygen` / `vdlu-sign` (ed25519); `vdlu-gc` usuwa osierocone bloby na podstawie referencji do ostatnich N manifestów (fail-safe, domyślnie dry-run).
+- **Producent (PC / wydanie):** `vdlu-pack` zamienia drzewo modułu w feed adresowany treścią (`manifest.json` + `blobs/<sha256>`, gzip, deduplikacja, `delete[]`), `vdlu-keygen` / `vdlu-sign` (ed25519), `vdlu-gc` usuwa osierocone bloby na podstawie referencji do ostatnich N manifestów (fail-safe, domyślnie dry-run).
 - **Silnik (urządzenie):** POSIX sh, bez `jq`. `update.sh` (`check | run | resume | boot | status | cancel`) wykonuje DIFF -> FETCH -> APPLY -> COMMIT jako **wznawialną transakcję** (dziennik), z wycofywaniem i blokadą `mkdir`. Podpis jest weryfikowany przez wbudowany `ed25519-mini` (bez `openssl` na urządzeniu).
 - **WebUI:** gotowy do wpięcia panel Updates (toast postępu, anulowanie, baner restartu), czysty JS.
 
@@ -47,14 +66,14 @@ Zwykła aktualizacja modułu dostarcza cały `.zip` jeszcze raz. Dla dużego mod
 
 ## Wdróż go w swoim module
 
-Wbuduj `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` do `<module>/vdlu/`, osadź swój **surowy 32-bajtowy klucz publiczny** jako `vdlu/keyring/<id>.pub`, dodaj `config` (profil + źródło), podepnij wyzwalacze (`post-fs-data.sh` przed zygote dla autoaktualizacji przy starcie; wyzwalacz otwarcia WebUI) i dodaj `vdlu-pack` + `vdlu-sign` do swojego wydania. Zobacz [`docs/QUICKSTART.md`](docs/QUICKSTART.md) dla gotowego szablonu.
+Wbuduj `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` do `<module>/vdlu/`, osadź swój **surowy 32-bajtowy klucz publiczny** jako `vdlu/keyring/<id>.pub`, dodaj `config` (profil + źródło), podepnij wyzwalacze (`post-fs-data.sh` przed zygote dla autoaktualizacji przy starcie, wyzwalacz otwarcia WebUI) i dodaj `vdlu-pack` + `vdlu-sign` do swojego wydania. Zobacz [`docs/QUICKSTART.md`](docs/QUICKSTART.md) dla gotowego szablonu.
 
 ## Bezpieczeństwo
 
 - **Każde pole manifestu to wrogie wejście.** `validate_plan()` odrzuca cały manifest fail-closed przy ścieżce absolutnej lub z `..`, przy `sha256`, który nie ma 64 znaków hex, albo przy nieprawidłowym mode / class / encoding, **zanim** nastąpi jakikolwiek fetch czy apply.
-- **Prywatny klucz podpisujący nigdy nie dotyka CI ani urządzenia**; osadzany jest wyłącznie surowy klucz publiczny, a weryfikacja używa `ed25519-mini`, nie `openssl`.
+- **Prywatny klucz podpisujący nigdy nie dotyka CI ani urządzenia**, osadzany jest wyłącznie surowy klucz publiczny, a weryfikacja używa `ed25519-mini`, nie `openssl`.
 - `hardened` jest fail-closed przez inwersję: cokolwiek innego niż dosłowne `trusted` jest traktowane jako `hardened`, więc uszkodzona wartość profilu nigdy nie może po cichu zaakceptować niepodpisanego manifestu.
-- Pliki klasy restartu (`.so`, nakładka `/system`, `sepolicy.rule`) są **przygotowywane, nigdy nie zapisywane na żywym inode**; cała reszta stosuje się na żywo. Nieudany apply przerywa działanie, zamiast nadpisać bez kopii zapasowej.
+- Pliki klasy restartu (`.so`, nakładka `/system`, `sepolicy.rule`) są **przygotowywane, nigdy nie zapisywane na żywym inode**, cała reszta stosuje się na żywo. Nieudany apply przerywa działanie, zamiast nadpisać bez kopii zapasowej.
 
 ## Budowanie / testowanie
 
@@ -69,9 +88,13 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # potem run /
 
 `sh -n engine/*.sh`, `node --check webui/vdlu.js` oraz otwarcie `webui/demo.html` w przeglądarce (symuluje mostek do urządzenia).
 
+## Agenci AI
+
+Silnik jest sterowany w całości z powłoki (`sh engine/update.sh <check|run|resume|boot|status|cancel>` wypisuje status czytelny maszynowo), więc agent AI może sprawdzić, zastosować i wznowić aktualizację bez interfejsu. Kontrakt styku między komponentami znajduje się w [`docs/INTERFACES.md`](docs/INTERFACES.md), a łatki od AI podlegają tej samej ocenie co wszystkie inne.
+
 ## Dokumentacja
 
-- [`INTERFACES.md`](docs/INTERFACES.md): kontrakt szwu między komponentami (prawo konwergencji; traktuj je jako niezmienne).
+- [`INTERFACES.md`](docs/INTERFACES.md): kontrakt szwu między komponentami (prawo konwergencji, traktuj je jako niezmienne).
 - [`ENGINE.md`](docs/ENGINE.md): silnik po stronie urządzenia (`update.sh`): wznawialna transakcja DIFF -> FETCH -> APPLY -> COMMIT.
 - [`PRODUCER.md`](docs/PRODUCER.md): strona PC/wydania: budowanie i podpisywanie adresowanego treścią feedu (`vdlu-pack`, `vdlu-sign`).
 - [`WEBUI.md`](docs/WEBUI.md): gotowy widget panelu Updates (toast postępu, anulowanie, baner restartu).
@@ -102,14 +125,14 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # potem run /
 
 ## Licencja
 
-Własny kod VDLiveUpdate jest objęty licencją **Apache-2.0**; zobacz [LICENSE](LICENSE). Projekt wbudowuje mały
-weryfikator `ed25519-mini` oraz statyczny `curl` na potrzeby bootstrapu pobierania, każdy na własnej licencji; zobacz
+Własny kod VDLiveUpdate jest objęty licencją **Apache-2.0**, zobacz [LICENSE](LICENSE). Projekt wbudowuje mały
+weryfikator `ed25519-mini` oraz statyczny `curl` na potrzeby bootstrapu pobierania, każdy na własnej licencji, zobacz
 [NOTICE.md](NOTICE.md) oraz pliki `PROVENANCE.json` obok dołączonych plików binarnych.
 
 ## Znaki towarowe
 
 VDLiveUpdate to niezależny, nieoficjalny projekt, niepowiązany z żadną stroną trzecią ani przez nią niepopierany.
-"Android" jest znakiem towarowym Google LLC; "KernelSU", "Magisk" i "APatch" są znakami ich
+"Android" jest znakiem towarowym Google LLC, "KernelSU", "Magisk" i "APatch" są znakami ich
 odpowiednich autorów. VDLU działa w całości na Twoim urządzeniu i na Twoim własnym hoście wydań.
 
 ## Tags
@@ -118,4 +141,4 @@ odpowiednich autorów. VDLU działa w całości na Twoim urządzeniu i na Twoim 
 
 ---
 
-📣 **Join the channel for updates:** @Priv8_VD https://t.me/Priv8_VD
+📣 **Dołącz do kanału po aktualizacje:** @Priv8_VD https://t.me/Priv8_VD

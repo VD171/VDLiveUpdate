@@ -9,7 +9,7 @@ Flashless, inkrementální update klient pro moduly KSU/Magisk. Implementuje cyk
 konvergence).
 
 Čisté POSIX sh (mksh/busybox/toybox). **ŠTÍHLÉ:** závisí jen na toyboxu (`sha256sum`/`gzip`/`base64`/`date`) +
-vestavěném `ed25519-mini` (ed25519 verify; **žádný openssl na zařízení**) + statickém `curl`, který se **stáhne** při
+vestavěném `ed25519-mini` (ed25519 verify, **žádný openssl na zařízení**) + statickém `curl`, který se **stáhne** při
 prvním https updatu (WebUI provede `fetch()`, persistuje ho v Tier-2 a `install-tool` ověří jeho
 podpis+hash PŘED použitím). `file://` curl nepotřebuje. Nulová závislost na `jq`.
 
@@ -20,8 +20,8 @@ VDLU_DIR=/data/adb/<mod>/vdlu MODULE_DIR=/data/adb/modules/<mod> MODID=<mod> \
   sh $MODULE_DIR/vdlu/update.sh <cmd>
 ```
 
-`rc 0` = ok; `rc != 0` = chyba (důvod na stderr). `vdlu-verify` dodává jiná komponenta
-(podpis v `INTERFACES.md §6`); engine ho jen volá.
+`rc 0` = ok, `rc != 0` = chyba (důvod na stderr). `vdlu-verify` dodává jiná komponenta
+(podpis v `INTERFACES.md §6`), engine ho jen volá.
 
 | cmd | dela |
 |---|---|
@@ -40,32 +40,38 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 `DONE` až když přehašování VŠEHO souhlasí. Pokud byl stageován jakýkoli REBOOT-hard => `PENDING_REBOOT` (nikdy
 falešné `DONE`). `ERROR` při jakémkoli selhání, bez poškození modulu (aplikované LIVE soubory se vrátí
-z `rollback/<v>/`; nic "napůl aplikovaného, co o tom lze"). Neškodný výstup fáze `fetch`: **`DEFERRED`** -
-stahování bylo odloženo `net_policy` (síť nepovolena); plan/target zůstávají a obnoví se při dalším
+z `rollback/<v>/`, nic "napůl aplikovaného, co o tom lze"). Neškodný výstup fáze `fetch`: **`DEFERRED`** -
+stahování bylo odloženo `net_policy` (síť nepovolena), plan/target zůstávají a obnoví se při dalším
 checku/bootu (WebUI zobrazí modrý info toast "waiting for X network", ne chybu).
 
 ## Záruky přísnosti
 
-- **FETCH:** hlídáno `net_policy` (any/wifi/mobile; jen http/https, `file://` nikdy) - nepovolená síť =>
+- **FETCH:** hlídáno `net_policy` (any/wifi/mobile, jen http/https, `file://` nikdy) - nepovolená síť =>
   `DEFERRED` (obnovitelné), bez utracení dat. Stahuje jen to, co chybí, do `<sha>.part` (curl s
   `--connect-timeout` + `--speed-time`, nikdy se nezasekne), dekomprimuje `gz` (toybox `gunzip`), kontroluje `sha256sum` ==
   manifest, atomické `mv` do `blobs/<sha>`. Cachovaný+ok blob se přeskočí. Může naseedovat blob z nezměněného
   lokálního souboru (dedup/offline). **3 selhání na stejném blobu = fáze abortuje bez aplikace čehokoli.** Stane se
-  `FETCHED` až když jsou VŠECHNY bloby plánu přítomné+ověřené.
+  `FETCHED` až když jsou VŠECHNY bloby plánu přítomné+ověřené. Při nastavení toolchainu loguje
+  vyřešenou TLS důvěru (cesta k CA + čitelnost, velikost bundlu a počet certifikátů), takže
+  curl `rc 77` při bootu je v `boot.log` samovysvětlující - rozliší prázdný store od
+  nečitelného (případ SELinux kontextu při bootu).
 - **APPLY** (jen z `FETCHED`): `live`/`soft` -> záloha do `rollback/<v>/` -> `.vdlu-tmp` -> `chmod` -> verify ->
   atomické `rename`. `reboot` -> materializuje do `staged/<path>.vdlu-new` (NEDOTÝKÁ se živého inode).
   `delete[]` -> záloha -> odstranit. Idempotentní (soubor už na cílovém hashi se přeskočí).
-- **COMMIT:** přehašování každého `live`/`soft`; teprve pak zapíše `current.json`. Se stageovanými soubory =>
+- **COMMIT:** přehašování každého `live`/`soft`, teprve pak zapíše `current.json`. Se stageovanými soubory =>
   `PENDING_REBOOT`. `boot` provede `mv -f staged/....vdlu-new $MODULE_DIR/<path>` (pre-zygote) + znovu ověří +
   `DONE`.
-- **cancel:** kontrolováno mezi soubory (bezpečný bod); odstraní rozpracované `.vdlu-tmp`/`.part`, smaže `cancel`,
+- **cancel:** kontrolováno mezi soubory (bezpečný bod), odstraní rozpracované `.vdlu-tmp`/`.part`, smaže `cancel`,
   ponechá journal obnovitelný (`cancelled:true`, `error:null`).
-- **mkdir-lock `$VDLU_DIR/lock.d`** serializuje (flock je na toyboxu nepoužitelný; stale-recovery podle PID).
+- **mkdir-lock `$VDLU_DIR/lock.d`** serializuje (flock je na toyboxu nepoužitelný, stale-recovery podle PID).
   TRPĚLIVÝ boot-retry nedrží zámek během čekání (`acquire_lock_try`+release mezi pokusy) ani
   wakelock - šetrný k baterii. Pád/síť/reboot uprostřed -> `resume`/`boot` pokračuje.
-- **profile=hardened** => `vdlu-verify` povinné na manifestu PŘED použitím; selhání = abort; downgrade zablokován
+- **profile=hardened** => `vdlu-verify` povinné na manifestu PŘED použitím, selhání = abort, downgrade zablokován
   (monotónní verze). **trusted** => verify je best-effort, ale hash každého blobu se VŽDY kontroluje.
-- **Allowlist klíče pro module-update (oba profiles):** `verify_manifest` odmítá, fail-closed, jakýkoli manifest, jehož `key_id` není v nakonfigurované `key_id` allowlistu (viz INTERFACES §5/§6), NEŽ se vybere pubkey, takže klíč nižší důvěry, který jen leží v keyringu (např. klíč fingerprint-feedu), nikdy nemůže podepsat flashless root aktualizaci. Bezpečné ve výchozím stavu, když nenastaveno: keyring s jedním klíčem = jen ten jeden klíč; víceklíčový keyring = odmítnuto, dokud není `key_id` připnuto.
+- **Allowlist klíče pro module-update (oba profiles):** `verify_manifest` odmítá, fail-closed, jakýkoli manifest, jehož `key_id` není v nakonfigurované `key_id` allowlistu (viz INTERFACES §5/§6), NEŽ se vybere pubkey, takže klíč nižší důvěry, který jen leží v keyringu (např. klíč fingerprint-feedu), nikdy nemůže podepsat flashless root aktualizaci. Bezpečné ve výchozím stavu, když nenastaveno: keyring s jedním klíčem = jen ten jeden klíč, víceklíčový keyring = odmítnuto, dokud není `key_id` připnuto.
+- **Vyloučení kotvy důvěry (VDLU#2):** engine IGNORUJE každou cestu `vdlu/` ve staženém plánu (`update.sh`, `vdlu-verify`, `verify/*`, `keyring/*`, config) - nikdy nestažena, neaplikována ani nesmazána - i když je podepsaný feed nese. Feed nikdy nemůže vyměnit verifier ani podepisovací klíč na zařízení, kotva důvěry se mění jen úplným podepsaným re-flashem, takže jediný uniklý podepisovací klíč nemůže přetrvat root po síti.
+- **Odklad kvůli zaneprázdnění (opt-in `apply_busy_file`):** s nastaveným `apply_busy_file` (absolutní cesta, které se hostitelský modul dotýká během svých vlastních operací, např. běžící záloha) je APPLY odložen, dokud ta cesta existuje - update nikdy nevymění soubory modulu uprostřed operace. Bloby jsou již stažené, takže další spoušť aplikuje bez opětovného stahování.
+- **Stropy velikosti:** 128 MiB na soubor (`MAX_FILE_BYTES`) a 2 MiB na manifest (`MAX_MANIFEST_BYTES`), vynucené před čtením v `update.sh` i `vdlu-verify` (anti dekompresní bomba / anti-OOM).
 - Degraduje elegantně: chybějící binary / síť dole / plný disk -> jasná chyba na stderr + `state:ERROR` v
   journalu, bez poškození modulu.
 
@@ -74,14 +80,14 @@ checku/bootu (WebUI zobrazí modrý info toast "waiting for X network", ne chybu
 Flattener ve stylu gron v `awk` (čisté POSIX: `substr`/`index`/`gsub`/`split`/`printf` + lokály předané jako
 parametry) tokenizuje manifest znak po znaku a emituje jeden řádek `path<TAB>value` na skalární list
 (`files/0/sha256<TAB>ab..`, `version<TAB>6`, `delete/0<TAB>etc/x`). Robustní vůči kompaktnímu NEBO pretty-printed
-JSON. `sh` ho konzumuje přes `grep`/`cut`; plán po souborech se znovu sestaví v 2. `awk` do TSV
+JSON. `sh` ho konzumuje přes `grep`/`cut`, plán po souborech se znovu sestaví v 2. `awk` do TSV
 (`class st mode enc sha size path`), které se stane `$VDLU_DIR/plan.tsv`.
 
 ## Stavové soubory (v `$VDLU_DIR`, Tier-2)
 
 | soubor | role |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; viz INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/…; viz INTERFACES §5) |
 | `current.json` | manifest AKTIVNÍ verze (diff base); chybí = nikdy neaktualizováno |
 | `target.json` | připnutý manifest rozpracované transakce (přítomnost = aktivní transakce); stane se `current.json` při `DONE` |
 | `plan.tsv` / `plan.del` | plán + průběh po souborech (st) / cesty ke smazání |
@@ -97,4 +103,4 @@ JSON. `sh` ho konzumuje přes `grep`/`cut`; plán po souborech se znovu sestaví
 
 ---
 
-> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány; viz [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány, viz [CONTRIBUTING.md](CONTRIBUTING.md)._

@@ -10,6 +10,25 @@ This page is the full trust story. See [[Feed Format]] for the manifest schema i
 
 ---
 
+## Supported versions
+
+Security fixes land in the latest `ENGINE_VERSION`; a signed manifest declares the
+minimum engine it needs via `engine_min`, and the on-device engine refuses a manifest
+that asks for more than it implements. Older vendored engines are expected to
+**re-vendor** to pick up a fix, not to be back-patched in place.
+
+| ENGINE_VERSION | status |
+|---|---|
+| 7 (current) | supported - never revert a module ahead of the feed (the live installed `versionCode` floors the "from" version), boot self-heal of a stale downgrade plan |
+| 6 | superseded - boot self-heal of a stale `target <= 0` journal (a removed stub's baseline 0 no longer drives any UI or boot action) |
+| 5 | superseded - engine-side trust-anchor exclusion (the `vdlu/` dir is ignored even if a feed carries it), 128 MiB per-file / 2 MiB manifest ceilings |
+| 4 | superseded - `key_id` allowlist, dot-segment/trailing-slash path rejection, size caps, check-time lock |
+| <= 3 | unsupported - re-vendor the current engine |
+
+Any change to engine verification or apply logic bumps `ENGINE_VERSION`.
+
+---
+
 ## The core idea: fail-closed, before anything happens
 
 `validate_plan()` runs inside the `check`/diff phase, **before** any fetch and **before** any apply. It walks every entry in the planned file tree and every entry in `delete[]`, and if any single entry is malformed it **rejects the whole manifest** and the transaction never starts. There is no partial accept, no "skip the bad one and apply the rest". One bad field poisons the batch, on purpose.
@@ -124,6 +143,14 @@ The fix pins the accepted module-update `key_id` to a fail-closed **allowlist**,
 Because the check runs before pubkey selection, a manifest naming a key that is present but not allowlisted is rejected without the verifier ever loading that key. The resolved set is mirrored into `vdlu-verify` through `VDLU_KEYID_ALLOW`, so the slim on-device checker enforces the same pin and the two cannot disagree. This holds in **both** profiles: `hardened` and `trusted` both consult the allowlist, because the allowlist decides *which key* is a valid module-update root, not *whether* a signature is required.
 
 The fingerprint feed keeps its own separate pinned trust root, `FEED_KEY_ID`. It is a distinct root with a distinct job, never reachable through the module-update path above, so pinning the module-update allowlist does not touch it and a leaked feed key still cannot sign a module update. This change bumped `ENGINE_VERSION` to 4.
+
+---
+
+## The engine-side trust-anchor exclusion
+
+The allowlist above decides *which* key may sign a module update. A later change (`ENGINE_VERSION` 5) closes the adjacent risk from the other side: what a validly signed feed is even allowed to touch. A published feed carries the whole module tree, and that tree includes the module's own `vdlu/` directory - the engine, the `vdlu-verify` shim, the `verify/` binaries, the keyring and the config. Those are the trust anchor. If an update could rewrite them, a single leaked signing key could ship a new verifier or a new keyring and persist root indefinitely.
+
+So the engine **ignores** every `vdlu/` path in a fetched plan. It never fetches, applies, or deletes them, even when the manifest lists them, and it does not reject the manifest either: the rest of the module still updates normally, and only the `vdlu/` paths are silently dropped. The trust anchor can change **only** by a full signed re-flash of the module zip, never over the wire. This complements the producer-side exclusion in `vdlu-pack` (which keeps those paths off the feed in the first place) with a second, independent guard on the device. The same change also lowered the hardening ceilings to **128 MiB per file** and **2 MiB per manifest**. Reported by Solomag (VD-Modules#1).
 
 ---
 

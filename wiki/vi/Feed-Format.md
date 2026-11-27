@@ -24,7 +24,7 @@ Manifest là mô tả đầy đủ của một bản phát hành: mọi tệp tr
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Feed chỉ mang **nội dung của riêng module**. Một tập hợp đường 
 
 | Bị loại trừ | Tại sao |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (trust root: các khóa công khai thô + nhị phân bộ xác minh) | **Đây là lý do bảo mật cốt lõi.** Mỏ neo tin cậy (trust anchor) là **chỉ-qua-flash**. Nếu keyring hoặc bộ xác minh có thể được giao qua feed, một manifest có thể ghi đè chính thứ xác thực nó. Giữ chúng ngoài đường truyền nghĩa là một manifest không bao giờ có thể viết lại mỏ neo tin cậy trên thiết bị. |
+| `vdlu/keyring/`, `vdlu/verify/` (trust root: các khóa công khai thô + nhị phân bộ xác minh) | **Đây là lý do bảo mật cốt lõi.** Mỏ neo tin cậy (trust anchor) là **chỉ-qua-flash**. Nếu keyring hoặc bộ xác minh có thể được giao qua feed, một manifest có thể ghi đè chính thứ xác thực nó. Giữ chúng ngoài đường truyền nghĩa là một manifest không bao giờ có thể viết lại mỏ neo tin cậy trên thiết bị. Như một lớp bảo vệ thứ hai, độc lập (`ENGINE_VERSION` 5), engine cũng **bỏ qua** mọi path `vdlu/` trong một kế hoạch được tải về, nên ngay cả một feed mang chúng cũng không thể chạm tới mỏ neo. |
 | `vdlu/baseline.json` | Nó là một bản sao của manifest đã ký (mầm cài đặt); pack nó sẽ là một vòng lặp tự tham chiếu. |
 | hạ tầng flash `.vd/` | Giàn giáo flash-gate được ship trong zip, không bao giờ áp dụng live. |
 | `update.json`, `update-mmrl.json` | Kích thước/sha của chúng được CI điền *sau khi* các zip được dựng, nên bản sao được ship khác với bất kỳ bản sao feed nào. Feed chúng sẽ gây một lần fetch một-tệp bóng ma ở mỗi lần tự cập nhật đầu tiên của mỗi bản cài, và dù sao chúng cũng là vết tích trên thiết bị (manager đọc JSON cập nhật thô từ xa). |

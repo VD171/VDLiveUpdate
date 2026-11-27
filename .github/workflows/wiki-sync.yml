@@ -39,7 +39,12 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@v7
+
+      # Guard the translated docs before publishing: fail if an accented-Latin
+      # translation was ASCII-folded (diacritics stripped). Guards docs, never a release.
+      - name: Guard translations (i18n accents)
+        run: sh .github/scripts/i18n-accents.sh docs wiki
 
       - name: Assemble wiki/ and sync into the Wiki
         env:

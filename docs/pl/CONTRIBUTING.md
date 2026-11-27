@@ -12,9 +12,9 @@ Wkład jest mile widziany.
 - Testuj od końca do końca przed PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, następnie engine
   (`check` / `run` / `boot`). Także `sh -n engine/*.sh` i `node --check webui/vdlu.js`.
 - Bezpieczeństwo jest nienegocjowalne: każde pole manifestu to wrogi input, a `validate_plan()` pozostaje
-  fail-closed; prywatny klucz podpisujący nigdy nie dotyka CI ani urządzenia.
-- POSIX sh na urządzeniu (bez bashizmów poza `local`, bez `jq`); trzymaj komentarze zwięzłe.
-- Jedna logiczna zmiana na PR; powiedz, co się zmieniło i dlaczego.
+  fail-closed, prywatny klucz podpisujący nigdy nie dotyka CI ani urządzenia.
+- POSIX sh na urządzeniu (bez bashizmów poza `local`, bez `jq`), trzymaj komentarze zwięzłe.
+- Jedna logiczna zmiana na PR, powiedz, co się zmieniło i dlaczego.
 
 ## Kontakty
 
@@ -26,4 +26,4 @@ Wkład jest mile widziany.
 
 ---
 
-> _Ta dokumentacja została wygenerowana za pomocą Claude (Anthropic) i jest utrzymywana przez VD171. Poprawki i ulepszenia są mile widziane; zobacz [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Ta dokumentacja została wygenerowana za pomocą Claude (Anthropic) i jest utrzymywana przez VD171. Poprawki i ulepszenia są mile widziane, zobacz [CONTRIBUTING.md](CONTRIBUTING.md)._

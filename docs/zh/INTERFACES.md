@@ -55,7 +55,7 @@ Blob/清单来源：config 中的 `source`。`<source>` + `/manifest.json`、`/b
 
 ```json
 { "schema":1, "module":"<id>", "version":<int>, "version_name":"<str>", "built":"<ISO8601>",
-  "engine_min":3, "key_id":"<str>", "channel":"stable",
+  "engine_min":5, "key_id":"<str>", "channel":"stable",
   "files":[ {"path":"webroot/index.html","sha256":"<hex64>","size":<int>,"mode":"0644","enc":"raw|gz","class":"live|soft|reboot"} ],
   "delete":["<path>"], "sig":"<base64>" }
 ```
@@ -66,6 +66,10 @@ Blob/清单来源：config 中的 `source`。`<source>` + `/manifest.json`、`/b
 - `enc`：`gz`（gzip `-9 -n`，确定性；设备上用 toybox gunzip）仅当压缩良好 **且**
   大小可观时；`sha256` 始终是原始内容的。
 - `sig`：对不含 `sig` 字段的规范清单的签名（verify 的 §4）。
+- **信任锚排除（engine 侧，VDLU#2）：** engine 会从计划中丢弃 `vdlu/` 下的任何 `files[]`/`delete[]` path
+  （它自己的 `update.sh`/`vdlu-verify`/`verify/*`/`keyring/*`/config） - 从不抓取、应用或删除 - 即使一个
+  已签名的 feed 携带它们。设备上的信任锚只通过一次完整的已签名 re-flash 才改变，而非通过网络；`vdlu-pack`
+  也在 producer 侧排除 `vdlu/`，因此这是针对泄露签名密钥的第二道、engine 侧的防护。
 
 ## 4. journal.json（ENGINE 写，WEBUI 读 - 进度契约）
 
@@ -97,7 +101,11 @@ key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), 
                        # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
                        # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+ca_cert=               # empty = auto-build a CA bundle from the trust store; set a path to a bundle to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+apply_busy_file=       # OPT-IN: absolute path the host module touches during its own operations (e.g. a
+                       # backup). While it EXISTS, APPLY is deferred to the next trigger (blobs already
+                       # fetched, no re-download) so an update never swaps module files mid-operation. UNSET = off.
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
 boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
                        # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free

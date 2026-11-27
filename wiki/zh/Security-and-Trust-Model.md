@@ -10,6 +10,24 @@ VDLU 以 root 身份、通过网络、就地更新一个模块。这是对准一
 
 ---
 
+## 受支持的版本
+
+安全修复落入最新的 `ENGINE_VERSION`；一个已签名的清单通过 `engine_min` 声明它所需的最低 engine，
+而设备上的 engine 会拒绝一个要求超出其实现的清单。较旧的已 vendor engine 预期应**重新 vendor**
+以获取修复，而非就地 back-patch。
+
+| ENGINE_VERSION | 状态 |
+|---|---|
+| 7（当前） | 受支持 - 绝不回退领先于 feed 的模块（实时安装的 `versionCode` 作为 "from" 版本的下限），启动时自愈陈旧的 downgrade 计划 |
+| 6 | 已被取代 - 启动时自愈陈旧的 `target <= 0` journal（被移除的 stub 残留的 baseline 0 不再驱动任何 UI 或启动动作） |
+| 5 | 已被取代 - engine 侧信任锚排除（即使一个 feed 携带 `vdlu/` 目录也会被忽略）、每文件 128 MiB / 清单 2 MiB 上限 |
+| 4 | 已被取代 - `key_id` allowlist、dot-segment/trailing-slash path 拒绝、size cap、check-time lock |
+| <= 3 | 不受支持 - 重新 vendor 当前 engine |
+
+对 engine 验证或 apply 逻辑的任何更改都会提升 `ENGINE_VERSION`。
+
+---
+
 ## 核心理念：故障即关闭，先于任何事情发生
 
 `validate_plan()` 在 `check`/diff 阶段内运行，**先于**任何 fetch 且**先于**任何 apply。它遍历计划文件树中的每个条目以及 `delete[]` 中的每个条目，如果有任何单个条目是畸形的，它就**拒绝整个清单**，事务永不开始。没有部分接受，没有"跳过坏的、应用其余的"。一个坏字段毒害整批，这是故意的。
@@ -124,6 +142,14 @@ keyring 在刷入时交付在模块内部，不会被更新引擎重写。在重
 由于该检查在 pubkey 选择之前运行，一个指名了存在但不在允许列表中的密钥的清单会被拒绝，而校验器根本不会加载那个密钥。解析出的集合通过 `VDLU_KEYID_ALLOW` 镜像进 `vdlu-verify`，于是精简的设备端校验器强制同一个钉定，二者不会分歧。这在**两个**配置档中都成立：`hardened` 和 `trusted` 都会查阅允许列表，因为允许列表决定的是*哪个密钥*是有效的模块更新根，而不是*是否*需要一个签名。
 
 指纹 feed 保留它自己独立的、钉定的信任根，`FEED_KEY_ID`。它是一个独立的根、负有独立的工作，永远无法经由上述模块更新路径到达，因此钉定模块更新允许列表并不触及它，而一个泄露的 feed 密钥仍然无法签名一次模块更新。此项改动把 `ENGINE_VERSION` 提升到 4。
+
+---
+
+## engine 侧的信任锚排除
+
+上面的允许列表决定*哪个*密钥可以签名一次模块更新。一项较晚的改动（`ENGINE_VERSION` 5）从另一侧堵住了相邻的风险：一个有效签名的 feed 究竟被允许触碰什么。一个已发布的 feed 携带整个模块树，而那棵树包含模块自己的 `vdlu/` 目录 - engine、`vdlu-verify` 垫片、`verify/` 二进制、keyring 和 config。这些就是信任锚。如果一次更新能够重写它们，一个泄露的签名密钥就可能发送一个新的校验器或一个新的 keyring 并无限期地持久化 root。
+
+因此 engine 会**忽略**一个被抓取计划中的每一个 `vdlu/` path。它从不抓取、应用或删除它们，即使清单列出了它们，而且它也不拒绝清单：模块的其余部分仍正常更新，只有 `vdlu/` 这些 path 被静默丢弃。信任锚**只能**通过模块 zip 的一次完整的已签名 re-flash 才改变，绝不通过网络。这为 `vdlu-pack` 中 producer 侧的排除（它从一开始就把那些 path 挡在 feed 之外）补上了设备上第二道、独立的防护。同一项改动还把加固上限降到**每文件 128 MiB**和**每清单 2 MiB**。由 Solomag 报告（VD-Modules#1）。
 
 ---
 

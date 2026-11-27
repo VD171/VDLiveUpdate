@@ -36,7 +36,7 @@ reescribe, así que la publicación es incremental y el contenido sin cambios / 
 
 ### Decisión de `enc` (vdlu-pack)
 
-`sha256` es **siempre** del contenido original (sin comprimir); `enc` solo nombra cómo se almacena el blob.
+`sha256` es **siempre** del contenido original (sin comprimir), `enc` solo nombra cómo se almacena el blob.
 
 - `gz` cuando `size >= 4096` **y** gzip (`-9 -n`, determinista) ahorra al menos un 10% (`comp <= raw*0.90`).
 - `raw` en caso contrario (texto pequeño que el gzip de HTTP ya cubre, o datos ya incomprimibles).
@@ -47,7 +47,7 @@ descomprime con toybox `gunzip` (siempre presente), así que no se empaqueta zst
 
 ### Decisión de `class` (vdlu-pack) - taxonomía de reboot
 
-Derivada del path (INTERFACES §3, doc §4). Solo defaults; una regla de path nunca degrada `reboot`->`live`.
+Derivada del path (INTERFACES §3, doc §4). Solo defaults, una regla de path nunca degrada `reboot`->`live`.
 
 | class | detectada por | aplicada |
 |---|---|---|
@@ -66,7 +66,7 @@ manifiestos reproducibles.
 instalación fresca para que el dispositivo nazca "al día" (sin from:0, sin re-fetch). El engine lo trata como una
 **semilla local confiable** (llegó en el zip flasheado, que es la frontera de confianza de la instalación) y
 **NO verifica su firma** - solo el manifiesto OBTENIDO del feed pasa por `vdlu-verify`. Así que el baseline no
-necesita **ninguna clave**: es solo la salida de `vdlu-pack` sobre el árbol entregado (sin firma; `sig`/`key_id`
+necesita **ninguna clave**: es solo la salida de `vdlu-pack` sobre el árbol entregado (sin firma, `sig`/`key_id`
 quedan vacíos). Una CI puede por tanto generarlo **sin clave**, manteniendo la clave de firma 100% fuera de la CI
 - solo el FEED publicado se firma (operador, localmente). `vdlu-pack` excluye `baseline.json` de su propio
 manifiesto (anti auto-referencia). No fatal si está ausente: el dispositivo simplemente parte de from:0 en la
@@ -100,19 +100,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` es parte de la forma canónica (solo `sig` se quita); `vdlu-sign` fija `key_id` **antes** de
+`key_id` es parte de la forma canónica (solo `sig` se quita), `vdlu-sign` fija `key_id` **antes** de
 hashear. El placeholder de valor vacío (`"sig":""`, al firmar) o lleno (al verificar) da los
 bytes canónicos idénticos, así que firma y verify concuerdan por construcción.
 
 Python lo reproduce como `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` luego sha256 - usado
-solo para el cross-check; los productores autoritativos son las dos herramientas sh.
+solo para el cross-check, los productores autoritativos son las dos herramientas sh.
 
 ## Firma (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   para firma/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (el DER SPKI
   ed25519 es un prefijo de 12 bytes + la clave de 32 bytes, así que `tail -c 32` ES la clave). Emite AMBAS.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` sobre el sha256 hex canónico; firma almacenada en base64.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` sobre el sha256 hex canónico, firma almacenada en base64.
 - `vdlu-verify` (**dispositivo, slim**): `ed25519-mini <pubkey32> <msg> <sig64>` - lee el keyring como la pubkey
   **RAW 32B**, SIN openssl en el dispositivo. `key_id` es path-sanitized (sin `/`, `.`, `..`, `"`). 🚨 El keyring
   entrega el **`.pub.raw` (32B)**, nunca el `.pub` PEM (113B): el PEM es solo PC-side y `ed25519-mini` no puede
@@ -139,4 +139,4 @@ el engine. El keyring es **estable** entre releases (solo la rotación de clave 
 
 ---
 
-> _Esta documentación se generó con Claude (Anthropic) y la mantiene VD171. Las correcciones y mejoras son bienvenidas; consulta [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Esta documentación se generó con Claude (Anthropic) y la mantiene VD171. Las correcciones y mejoras son bienvenidas, consulta [CONTRIBUTING.md](CONTRIBUTING.md)._

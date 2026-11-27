@@ -50,7 +50,9 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   `--connect-timeout` + `--speed-time`로, 결코 멈추지 않음), `gz`를 압축 해제하고 (toybox `gunzip`), `sha256sum` ==
   manifest를 검사하고, 원자적 `mv`로 `blobs/<sha>`로. 캐시됨+ok인 blob은 건너뜀. 변경되지 않은
   로컬 파일에서 blob을 seed할 수 있다 (dedup/오프라인). **같은 blob에서 3회 실패 = 단계가 아무것도 적용하지 않고 중단된다.**
-  plan의 모든 blob이 존재+검증되어야만 `FETCHED`가 된다.
+  plan의 모든 blob이 존재+검증되어야만 `FETCHED`가 된다. 툴체인 설정 시, 해결된 TLS 신뢰 (CA 경로 +
+  가독성, 번들 크기와 인증서 수)를 로그에 남기므로 boot 시점의 curl `rc 77`은 `boot.log`에서 자기 설명적이
+  된다 - 빈 저장소와 읽을 수 없는 저장소 (boot의 SELinux 컨텍스트 경우)를 구별한다.
 - **APPLY** (`FETCHED`에서만): `live`/`soft` → `rollback/<v>/`에 백업 → `.vdlu-tmp` → `chmod` → 검증 →
   원자적 `rename`. `reboot` → `staged/<path>.vdlu-new`로 실체화한다 (라이브 inode는 건드리지 않음).
   `delete[]` → 백업 → 제거. 멱등 (이미 타겟 해시인 파일은 건너뜀).
@@ -64,7 +66,10 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   없다 - 배터리 안전. 중간의 크래시/네트워크/reboot → `resume`/`boot`이 계속한다.
 - **profile=hardened** ⇒ 사용 **전에** manifest에 대한 `vdlu-verify` 필수. 실패 = 중단. 다운그레이드 차단
   (단조 버전). **trusted** ⇒ 검증은 best-effort이지만, 모든 blob의 해시는 **항상** 검사된다.
-- **module-update 키 allowlist (두 profiles 모두):** `verify_manifest`는 `key_id`가 구성된 `key_id` allowlist (INTERFACES §5/§6 참조)에 없는 manifest를 pubkey가 선택되기 전에 fail-closed로 거부한다. 따라서 단지 keyring에 들어 있을 뿐인 신뢰도가 낮은 키 (예: fingerprint-feed 키)는 결코 flashless root 업데이트에 서명할 수 없다. 미설정 시 기본 안전: 단일 키 keyring = 그 하나의 키만; 다중 키 keyring = `key_id`가 고정될 때까지 거부.
+- **module-update 키 allowlist (두 profiles 모두):** `verify_manifest`는 `key_id`가 구성된 `key_id` allowlist (INTERFACES §5/§6 참조)에 없는 manifest를 pubkey가 선택되기 전에 fail-closed로 거부한다. 따라서 단지 keyring에 들어 있을 뿐인 신뢰도가 낮은 키 (예: fingerprint-feed 키)는 결코 flashless root 업데이트에 서명할 수 없다. 미설정 시 기본 안전: 단일 키 keyring = 그 하나의 키만, 다중 키 keyring = `key_id`가 고정될 때까지 거부.
+- **신뢰 앵커 제외 (VDLU#2):** 엔진은 가져온 plan 안의 모든 `vdlu/` 경로 (`update.sh`, `vdlu-verify`, `verify/*`, `keyring/*`, config)를 **무시한다** - 서명된 피드가 그것들을 담고 있어도 결코 가져오거나, 적용하거나, 삭제하지 않는다. 피드는 결코 기기 상의 verifier나 서명 키를 교체할 수 없으며, 신뢰 앵커는 완전한 서명된 재플래시로만 바뀌므로, 유출된 단일 서명 키가 유선으로 root를 지속시킬 수 없다.
+- **비지 지연 (옵트인 `apply_busy_file`):** `apply_busy_file`이 설정되면 (호스트 모듈이 자신의 작업 중에 touch하는 절대 경로, 예: 실행 중인 백업), 그 경로가 존재하는 동안 APPLY가 지연된다 - 업데이트가 작업 도중에 모듈 파일을 교체하는 일은 결코 없다. blob은 이미 가져와 있으므로, 다음 트리거는 재다운로드 없이 적용한다.
+- **크기 상한:** 파일당 128 MiB (`MAX_FILE_BYTES`)와 manifest당 2 MiB (`MAX_MANIFEST_BYTES`)로, `update.sh`와 `vdlu-verify` 양쪽 모두에서 읽기 전에 강제된다 (anti 압축 해제 폭탄 / anti-OOM).
 - 우아하게 저하됨: 바이너리 누락 / 네트워크 끊김 / 디스크 가득 → stderr에 명확한 에러 + journal의 `state:ERROR`.
   모듈은 손상시키지 않음.
 
@@ -80,7 +85,7 @@ JSON에 대해 견고함. `sh`는 `grep`/`cut`로 그것을 소비한다. 파일
 
 | 파일 | 역할 |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…. INTERFACES §5 참조) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/…. INTERFACES §5 참조) |
 | `current.json` | ACTIVE 버전의 manifest (diff 기준). 부재 = 한 번도 업데이트 안 됨 |
 | `target.json` | 진행 중 트랜잭션의 고정된 manifest (존재 = 활성 트랜잭션). `DONE`에서 `current.json`이 됨 |
 | `plan.tsv` / `plan.del` | plan + 파일별 진행 (st) / 삭제할 경로 |

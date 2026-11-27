@@ -58,7 +58,7 @@ Pokud vynecháno, widget použije své vlastní:
   (rc≠0) - přesně signatura `ex()` z Demo `webroot/index.html`. Interní fallback volá
   `ksu.exec(cmd, '{}', cb)` se stejným kontraktem.
 - **`toast(msg)`** = krátké přechodné oznámení (fallback vstřikuje vlastní mini-toast).
-- **`confirm(title,msg,ok,danger,fn)`** = modal (dnes používaný jen hostitelem; widget nevyžaduje v žádném toku žádné
+- **`confirm(title,msg,ok,danger,fn)`** = modal (dnes používaný jen hostitelem, widget nevyžaduje v žádném toku žádné
   potvrzení).
 
 Předání hostitelových vlastních nechá widget mluvit skrze STEJNOU serializovanou frontu a vizuály jako zbytek
@@ -83,7 +83,7 @@ Toast (rohový overlay, neblokující) a banner (nahoře, trvalý) vstřikuje wi
 
 ### Tok stavu, který toast odráží (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` kdykoli.
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` kdykoli.
 Toast zobrazuje **lištu + `phase done/total · current · bytes`**. Finály:
 - **`DONE`** → zelený toast "v&lt;target&gt; applied".
 - **`PENDING_REBOOT`** (nebo `reboot_pending=true`) → zelený toast + **trvalý banner** "⚠️ Reboot to
@@ -94,7 +94,7 @@ Toast zobrazuje **lištu + `phase done/total · current · bytes`**. Finály:
 ## Spuštění demo
 
 Otevři `demo.html` v prohlížeči (`xdg-open webui/demo.html`). Mocknuté `ksu.exec` simuluje `update.sh` a
-vyvíjející se `journal.json`; tlačítka přepínají mezi scénáři **LIVE→DONE**, **reboot_pending**, **error mid-way**
+vyvíjející se `journal.json`, tlačítka přepínají mezi scénáři **LIVE→DONE**, **reboot_pending**, **error mid-way**
 a **cancellable**. Je to stejné `vdlu.js`/`vdlu.css` jako na zařízení.
 
 ## i18n (jazyk)
@@ -108,7 +108,7 @@ jakýkoli klíč předáním mapy v `init`:
 ```
 
 - **Částečný** merge je v pořádku: chybějící klíč spadne zpět na anglický výchozí.
-- Klíče fáze/stavu jsou `ph_<phase>` / `st_<STATE>`; zbytek je plochý (`cancel`, `updateNow`, …).
+- Klíče fáze/stavu jsou `ph_<phase>` / `st_<STATE>`, zbytek je plochý (`cancel`, `updateNow`, …).
 - Úplná mapa klíčů = objekt `DEFAULT_I18N` v `vdlu.js` (také exponovaný jako `VDLU.i18n`).
 - Hotový překlad je poskytnut jako zpracovaný příklad: `i18n/pt-BR.js`. Nové jazyky = soubor
   `i18n/<lang>.js` ve stejné formě, nebo hostitel sestaví mapu z vlastního i18n systému.
@@ -117,12 +117,12 @@ jakýkoli klíč předáním mapy v `init`:
 
 Tyto `vdlu.js`/`vdlu.css` jsou **kanonická kopie**. Každý modul, který widget vkládá,
 **re-vendoruje** tuto kopii bajt po bajtu do svého `webroot/` - **nikdy** needituje
-svou vlastní na místě. Nová featura widgetu se rodí zde a teče dolů re-vendorem; opačný směr plodí tichý
+svou vlastní na místě. Nová featura widgetu se rodí zde a teče dolů re-vendorem, opačný směr plodí tichý
 drift (stalo se to v praxi: vložená kopie zaostala a chyběl jí `net_policy`, `DEFERRED`
 toast a pole `boot_retry`).
 
 Strážce: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) najde každou kopii ve zdrojovém stromu a označí
-ty, které se odchylují od kanonické (jen `vdlu.js`/`vdlu.css`; keyring je "ověřit, ne kopírovat").
+ty, které se odchylují od kanonické (jen `vdlu.js`/`vdlu.css`, keyring je "ověřit, ne kopírovat").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -130,10 +130,10 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 Keyring (`keyring/<id>.pub` RAW 32B) a engine (`vdlu/update.sh`) mají vlastní kadenci
-> re-vendoru; tento strážce pokrývá **jen** WebUI widget.
+> re-vendoru, tento strážce pokrývá **jen** WebUI widget.
 
 <!-- doc-footer -->
 
 ---
 
-> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány; viz [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány, viz [CONTRIBUTING.md](CONTRIBUTING.md)._

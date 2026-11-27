@@ -10,6 +10,26 @@ Diese Seite ist die vollständige Vertrauensgeschichte. Siehe [[Feed Format]] f�
 
 ---
 
+## Unterstützte Versionen
+
+Sicherheitsfixes landen in der neuesten `ENGINE_VERSION`; ein signiertes Manifest deklariert
+über `engine_min` die minimale Engine, die es braucht, und die On-Device-Engine lehnt ein
+Manifest ab, das mehr verlangt, als sie implementiert. Von älteren vendorisierten Engines
+wird erwartet, dass sie **neu vendorisiert** werden, um einen Fix zu übernehmen, nicht dass
+sie an Ort und Stelle nachgepatcht werden.
+
+| ENGINE_VERSION | Status |
+|---|---|
+| 7 (aktuell) | unterstützt - ein Modul, das dem Feed voraus ist, nie zurücksetzen (der live installierte `versionCode` bildet die Untergrenze der "from"-Version), Boot-Self-Heal eines veralteten Downgrade-Plans |
+| 6 | abgelöst - Boot-Self-Heal eines veralteten Journals mit `target <= 0` (die Baseline 0 eines entfernten Stubs steuert keine UI- oder Boot-Aktion mehr) |
+| 5 | abgelöst - engine-seitiger Trust-Anchor-Ausschluss (das `vdlu/`-Verzeichnis wird ignoriert, selbst wenn ein Feed es trägt), 128 MiB pro Datei / 2 MiB Manifest-Obergrenzen |
+| 4 | abgelöst - `key_id`-Allowlist, Ablehnung von Dot-Segment-/Trailing-Slash-Pfaden, Größen-Caps, Lock zur Check-Zeit |
+| <= 3 | nicht unterstützt - die aktuelle Engine neu vendorisieren |
+
+Jede Änderung an der Engine-Verifizierungs- oder Apply-Logik bumpt `ENGINE_VERSION`.
+
+---
+
 ## Die Kernidee: fail-closed, bevor irgendetwas geschieht
 
 `validate_plan()` läuft innerhalb der `check`/diff-Phase, **vor** jedem Fetch und **vor** jedem Apply. Es geht jeden Eintrag im geplanten Dateibaum und jeden Eintrag in `delete[]` durch, und wenn ein einziger Eintrag fehlerhaft ist, **verwirft es das gesamte Manifest** und die Transaktion startet nie. Es gibt keine partielle Annahme, kein "den schlechten überspringen und den Rest anwenden". Ein schlechtes Feld vergiftet die Charge, mit Absicht.
@@ -124,6 +144,14 @@ Die Korrektur fixiert das akzeptierte Modul-Update-`key_id` auf eine fail-closed
 Weil die Prüfung vor der Pubkey-Auswahl läuft, wird ein Manifest, das einen Schlüssel benennt, der vorhanden, aber nicht in der Allowlist ist, abgelehnt, ohne dass der Verifizierer diesen Schlüssel je lädt. Die aufgelöste Menge wird über `VDLU_KEYID_ALLOW` in `vdlu-verify` gespiegelt, sodass der schlanke geräteseitige Checker dieselbe Fixierung durchsetzt und die beiden nicht uneinig sein können. Das gilt in **beiden** Profilen: `hardened` und `trusted` konsultieren beide die Allowlist, weil die Allowlist entscheidet, *welcher Schlüssel* eine gültige Modul-Update-Wurzel ist, nicht *ob* eine Signatur erforderlich ist.
 
 Der Fingerprint-Feed behält seine eigene separate fixierte Vertrauenswurzel, `FEED_KEY_ID`. Sie ist eine eigenständige Wurzel mit einer eigenständigen Aufgabe, nie über den obigen Modul-Update-Pfad erreichbar, sodass das Fixieren der Modul-Update-Allowlist sie nicht berührt und ein geleakter Feed-Schlüssel dennoch kein Modul-Update signieren kann. Diese Änderung hob `ENGINE_VERSION` auf 4 an.
+
+---
+
+## Der engine-seitige Vertrauensanker-Ausschluss
+
+Die obige Allowlist entscheidet, *welcher* Schlüssel ein Modul-Update signieren darf. Eine spätere Änderung (`ENGINE_VERSION` 5) schließt das angrenzende Risiko von der anderen Seite: was ein gültig signierter Feed überhaupt berühren darf. Ein publizierter Feed trägt den gesamten Modulbaum, und dieser Baum schließt das eigene `vdlu/`-Verzeichnis des Moduls ein - die Engine, das `vdlu-verify`-Shim, die `verify/`-Binaries, den Keyring und die Konfig. Das ist der Vertrauensanker. Könnte ein Update sie neu schreiben, könnte ein einzelner geleakter Signaturschlüssel einen neuen Verifizierer oder einen neuen Keyring ausliefern und Root unbegrenzt persistieren.
+
+Daher **ignoriert** die Engine jeden `vdlu/`-Pfad in einem geholten Plan. Sie holt, wendet oder löscht sie nie, selbst wenn das Manifest sie auflistet, und sie lehnt das Manifest auch nicht ab: der Rest des Moduls aktualisiert dennoch normal, und nur die `vdlu/`-Pfade werden stillschweigend verworfen. Der Vertrauensanker kann sich **nur** durch ein vollständiges signiertes Re-Flash des Modul-Zips ändern, nie über die Leitung. Das ergänzt den producer-seitigen Ausschluss in `vdlu-pack` (der diese Pfade von vornherein vom Feed fernhält) um einen zweiten, unabhängigen Schutz auf dem Gerät. Dieselbe Änderung senkte auch die Härtungs-Obergrenzen auf **128 MiB pro Datei** und **2 MiB pro Manifest**. Gemeldet von Solomag (VD-Modules#1).
 
 ---
 

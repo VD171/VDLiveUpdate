@@ -24,7 +24,7 @@ Manifestet är den fullständiga beskrivningen av en release: varje fil i måltr
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Flödet bär **bara modulens eget innehåll**. En fast uppsättning sökvägar h
 
 | Uteslutet | Varför |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (förtroenderoten: råa publika nycklar + verifierarbinären) | **Detta är kärnans säkerhetsskäl.** Förtroendeankaret är **flash-only**. Om nyckelringen eller verifieraren vore flödesleveranserbara skulle ett manifest kunna skriva över just det som validerar det. Att hålla dem borta från tråden betyder att ett manifest aldrig kan skriva om förtroendeankaret på enheten. |
+| `vdlu/keyring/`, `vdlu/verify/` (förtroenderoten: råa publika nycklar + verifierarbinären) | **Detta är kärnans säkerhetsskäl.** Förtroendeankaret är **flash-only**. Om nyckelringen eller verifieraren vore flödesleveranserbara skulle ett manifest kunna skriva över just det som validerar det. Att hålla dem borta från tråden betyder att ett manifest aldrig kan skriva om förtroendeankaret på enheten. Som en andra, oberoende vakt (`ENGINE_VERSION` 5) **ignorerar** engine också varje `vdlu/`-sökväg i en hämtad plan, så att inte ens ett flöde som bär dem kan röra ankaret. |
 | `vdlu/baseline.json` | Det är en kopia av det signerade manifestet (installationsseed); att packa det skulle vara en självreferensloop. |
 | `.vd/`-flashinfrastruktur | Flash-gate-ställning som levereras i zippen, aldrig tillämpad i realtid. |
 | `update.json`, `update-mmrl.json` | Deras storlek/sha fylls i av CI *efter* att zippfilerna byggts, så att den levererade kopian skiljer sig från varje flödeskopia. Att mata dem skulle orsaka en fantom-hämtning av en enda fil vid varje installations första självuppdatering, och de är ändå rudimentära på enheten (hanteraren läser den fjärranslutna råa uppdaterings-JSON:en). |

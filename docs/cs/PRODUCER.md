@@ -36,7 +36,7 @@ nepřepisuje, takže publikování je inkrementální a nezměněný / vrácený
 
 ### Rozhodnutí `enc` (vdlu-pack)
 
-`sha256` je **vždy** z původního (nekomprimovaného) obsahu; `enc` jen pojmenovává, jak je blob uložen.
+`sha256` je **vždy** z původního (nekomprimovaného) obsahu, `enc` jen pojmenovává, jak je blob uložen.
 
 - `gz` když `size >= 4096` **a** gzip (`-9 -n`, deterministické) ušetří aspoň 10% (`comp <= raw*0.90`).
 - `raw` jinak (malý text, který HTTP gzip už pokrývá, nebo už nekomprimovatelná data).
@@ -47,7 +47,7 @@ dekomprimuje toyboxovým `gunzip` (vždy přítomný), takže se nebundluje žá
 
 ### Rozhodnutí `class` (vdlu-pack) - reboot taxonomie
 
-Odvozeno z cesty (INTERFACES §3, doc §4). Jen výchozí; pravidlo cesty nikdy nesnižuje `reboot`->`live`.
+Odvozeno z cesty (INTERFACES §3, doc §4). Jen výchozí, pravidlo cesty nikdy nesnižuje `reboot`->`live`.
 
 | class | matchnuto přes | aplikováno |
 |---|---|---|
@@ -66,7 +66,7 @@ reprodukovatelné manifesty.
 aby se zařízení narodilo "current" (žádný from:0, žádný re-fetch). Engine ho bere jako **lokální důvěryhodný seed**
 (přišel v flashnutém zipu, což je instalační hranice důvěry) a **NEověřuje jeho podpis** -
 jen manifest STAŽENÝ z feedu projde `vdlu-verify`. Baseline tedy nepotřebuje **žádný klíč**: je to
-prostě výstup `vdlu-pack` nad dodaným stromem (nepodepsané; `sig`/`key_id` zůstávají prázdné). CI ho tedy může
+prostě výstup `vdlu-pack` nad dodaným stromem (nepodepsané, `sig`/`key_id` zůstávají prázdné). CI ho tedy může
 generovat **bez klíče** a držet podpisový klíč 100% mimo CI - jen publikovaný FEED se podepisuje (operátor,
 lokálně). `vdlu-pack` vylučuje `baseline.json` z vlastního manifestu (anti self-reference). Nefatální pokud
 chybí: zařízení prostě začne from:0 při prvním updatu, nikdy rozbité.
@@ -99,19 +99,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` je součástí kanonické formy (odstraňuje se jen `sig`); `vdlu-sign` nastavuje `key_id` **před**
+`key_id` je součástí kanonické formy (odstraňuje se jen `sig`), `vdlu-sign` nastavuje `key_id` **před**
 hashováním. Placeholder hodnoty, ať prázdný (`"sig":""`, čas podpisu) nebo vyplněný (čas ověření), dává
 identické kanonické bajty, takže podpis a ověření se shodují konstrukcí.
 
 Python to reprodukuje jako `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` pak sha256 - použito
-jen pro křížovou kontrolu; autoritativní producenti jsou dva sh nástroje.
+jen pro křížovou kontrolu, autoritativní producenti jsou dva sh nástroje.
 
 ## Podpis (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   pro podepisování/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (ed25519
   SPKI DER je 12bajtový prefix + 32bajtový klíč, takže `tail -c 32` JE klíč). Emituje OBĚ.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` nad kanonickým sha256 hexem; podpis uložen base64.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` nad kanonickým sha256 hexem, podpis uložen base64.
 - `vdlu-verify` (**zařízení, štíhlé**): `ed25519-mini <pubkey32> <msg> <sig64>` - čte keyring jako **RAW 32B**
   veřejný klíč, ŽÁDNÝ openssl na zařízení. `key_id` je path-sanitizován (žádné `/`, `.`, `..`, `"`). 🚨 Keyring dodává
   **`.pub.raw` (32B)**, nikdy `.pub` PEM (113B): PEM je jen PC-side a `ed25519-mini` ho neumí přečíst.
@@ -137,4 +137,4 @@ nepřepsat PC-side `.pub` PEM.
 
 ---
 
-> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány; viz [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány, viz [CONTRIBUTING.md](CONTRIBUTING.md)._

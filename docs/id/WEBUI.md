@@ -58,7 +58,7 @@ Jika dihilangkan, widget menggunakan miliknya sendiri:
   (rc≠0) - persis tanda tangan `ex()` milik `webroot/index.html` Demo. Fallback internal memanggil
   `ksu.exec(cmd, '{}', cb)` dengan kontrak yang sama.
 - **`toast(msg)`** = notifikasi transien singkat (fallback menyuntikkan mini-toast-nya sendiri).
-- **`confirm(title,msg,ok,danger,fn)`** = sebuah modal (saat ini hanya digunakan oleh host; widget tidak membutuhkan
+- **`confirm(title,msg,ok,danger,fn)`** = sebuah modal (saat ini hanya digunakan oleh host, widget tidak membutuhkan
   konfirmasi dalam alur apa pun).
 
 Meneruskan milik host sendiri membuat widget berbicara melalui antrean terserialisasi dan visual yang SAMA seperti sisanya dari
@@ -83,7 +83,7 @@ Toast (overlay sudut, non-blocking) dan banner (atas, persisten) disuntikkan ole
 
 ### Alur state yang direfleksikan toast (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` kapan saja. Toast
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` kapan saja. Toast
 menampilkan **sebuah bar + `phase done/total · current · bytes`**. Terminal:
 - **`DONE`** → toast hijau "v&lt;target&gt; diterapkan".
 - **`PENDING_REBOOT`** (atau `reboot_pending=true`) → toast hijau + **banner persisten** "⚠️ Reboot untuk
@@ -94,7 +94,7 @@ menampilkan **sebuah bar + `phase done/total · current · bytes`**. Terminal:
 ## Menjalankan demo
 
 Buka `demo.html` di browser (`xdg-open webui/demo.html`). `ksu.exec` yang di-mock menyimulasikan `update.sh` dan
-`journal.json` yang berkembang; tombol-tombol beralih antara skenario **LIVE→DONE**, **reboot_pending**, **error di tengah**
+`journal.json` yang berkembang, tombol-tombol beralih antara skenario **LIVE→DONE**, **reboot_pending**, **error di tengah**
 dan **dapat dibatalkan**. Ia adalah `vdlu.js`/`vdlu.css` yang sama seperti di perangkat.
 
 ## i18n (bahasa)
@@ -108,7 +108,7 @@ kunci apa pun dengan meneruskan sebuah map di `init`:
 ```
 
 - Merge **parsial** boleh: sebuah kunci yang hilang jatuh kembali ke default bahasa Inggris.
-- Kunci phase/state adalah `ph_<phase>` / `st_<STATE>`; sisanya datar (`cancel`, `updateNow`, …).
+- Kunci phase/state adalah `ph_<phase>` / `st_<STATE>`, sisanya datar (`cancel`, `updateNow`, …).
 - Map kunci lengkap = objek `DEFAULT_I18N` di `vdlu.js` (juga diekspos sebagai `VDLU.i18n`).
 - Sebuah terjemahan siap disediakan sebagai contoh kerja: `i18n/pt-BR.js`. Bahasa baru = sebuah file
   `i18n/<lang>.js` dalam cetakan yang sama, atau host membangun map dari sistem i18n-nya sendiri.
@@ -117,12 +117,12 @@ kunci apa pun dengan meneruskan sebuah map di `init`:
 
 `vdlu.js`/`vdlu.css` ini adalah **salinan kanonik**. Setiap modul yang menyematkan widget
 **me-re-vendor** salinan ini byte-per-byte ke dalam `webroot/`-nya - ia **tidak pernah** mengedit
-miliknya sendiri in place. Sebuah fitur widget baru lahir di sini dan mengalir ke bawah melalui re-vendor; sebaliknya menghasilkan drift
+miliknya sendiri in place. Sebuah fitur widget baru lahir di sini dan mengalir ke bawah melalui re-vendor, sebaliknya menghasilkan drift
 senyap (telah terjadi dalam praktik: sebuah salinan yang di-vendor tertinggal dan kehilangan `net_policy`, toast
 `DEFERRED`, dan field `boot_retry`).
 
 Penjaga: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) menemukan setiap salinan di pohon sumber dan menandai
-yang menyimpang dari yang kanonik (hanya `vdlu.js`/`vdlu.css`; keyring adalah "verifikasi, bukan salin").
+yang menyimpang dari yang kanonik (hanya `vdlu.js`/`vdlu.css`, keyring adalah "verifikasi, bukan salin").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -136,4 +136,4 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 
 ---
 
-> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan; lihat [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan, lihat [CONTRIBUTING.md](CONTRIBUTING.md)._

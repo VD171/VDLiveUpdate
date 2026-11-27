@@ -7,7 +7,7 @@
 **กฎแห่งการบรรจบ (Law of convergence):** ทุกคอมโพเนนต์ต้องสอดคล้องกับไฟล์นี้ ชิ้นส่วนจาก 4 เอเจนต์ต้อง **ประกอบเข้ากันได้** - ลายเซ็น
 CLI, ชื่อไฟล์ และคีย์ JSON ด้านล่างนี้ **เปลี่ยนแปลงไม่ได้** (การเปลี่ยนแปลงหมายถึงต้องปรับให้ตรงกันที่นี่ก่อน)
 
-หลักการที่สืบทอดมาจากรีโพ: **pure POSIX sh** บนอุปกรณ์ (ไม่มี bashism; รันด้วย toybox/busybox +
+หลักการที่สืบทอดมาจากรีโพ: **pure POSIX sh** บนอุปกรณ์ (ไม่มี bashism, รันด้วย toybox/busybox +
 `sha256sum`/`gzip`/`base64` ของ toybox + `curl` ที่ดึงมา + `ed25519-mini` ที่ฝังไว้ - เรียว ไม่มีชุด bin
 ติดมาด้วย), **ไม่มีคอมเมนต์ที่ไม่จำเป็น**, **เป็น release เสมอ**, **เข้มงวดเมื่อล้มเหลว** (ทรานแซกชันที่กลับมาทำต่อได้, ไม่มีอะไร
 "เสร็จแล้ว" แบบปลอม ๆ, ไม่มีอะไรสูญหาย), **ไม่ผ่อนปรนอะไร**
@@ -29,7 +29,7 @@ $VDLU_DIR = /data/adb/<module>/vdlu
   target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
   plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
-`cancelled:true` ใน journal = เอนจินหยุดเพราะการยกเลิก (สถานะที่ยังไม่สิ้นสุด, กลับมาทำต่อได้; `error`
+`cancelled:true` ใน journal = เอนจินหยุดเพราะการยกเลิก (สถานะที่ยังไม่สิ้นสุด, กลับมาทำต่อได้, `error`
 ยังคงเป็น null)
 
 เอนจินถูก vendor เข้าไปในโมดูล: `$MODULE_DIR/vdlu/update.sh` (+ `vdlu-verify`) `$MODULE_DIR =
@@ -55,17 +55,22 @@ $VDLU_DIR = /data/adb/<module>/vdlu
 
 ```json
 { "schema":1, "module":"<id>", "version":<int>, "version_name":"<str>", "built":"<ISO8601>",
-  "engine_min":3, "key_id":"<str>", "channel":"stable",
+  "engine_min":5, "key_id":"<str>", "channel":"stable",
   "files":[ {"path":"webroot/index.html","sha256":"<hex64>","size":<int>,"mode":"0644","enc":"raw|gz","class":"live|soft|reboot"} ],
   "delete":["<path>"], "sig":"<base64>" }
 ```
 
 - `files[]` = ต้นไม้เป้าหมายแบบครบถ้วน `class`: `live` (webroot/bin/lib/confs/scripts-on-demand/module.prop) ·
   `soft` (service.sh/post-fs-data.sh/boot-completed.sh) · `reboot` (`zygisk/**/*.so`, `system/**`, `*.rule`)
-  ค่าดีฟอลต์ตาม path; ไม่เคยลดระดับ `reboot`->`live`
-- `enc`: `gz` (gzip `-9 -n`, deterministic; toybox gunzip บนอุปกรณ์) เฉพาะเมื่อบีบอัดได้ดี และ
-  ขนาดมีนัยสำคัญ; `sha256` เป็นของเนื้อหาต้นฉบับ เสมอ
+  ค่าดีฟอลต์ตาม path, ไม่เคยลดระดับ `reboot`->`live`
+- `enc`: `gz` (gzip `-9 -n`, deterministic, toybox gunzip บนอุปกรณ์) เฉพาะเมื่อบีบอัดได้ดี และ
+  ขนาดมีนัยสำคัญ, `sha256` เป็นของเนื้อหาต้นฉบับ เสมอ
 - `sig`: ลายเซ็นของ manifest เชิง canonical โดยไม่มีฟิลด์ `sig` (§4 ของ verify)
+- **การกัน trust anchor (ฝั่ง engine, VDLU#2):** engine ทิ้งจาก plan ทุก path `files[]`/`delete[]` ที่อยู่
+  ภายใต้ `vdlu/` (`update.sh`/`vdlu-verify`/`verify/*`/`keyring/*`/config ของตัวเอง) - ไม่เคย fetch, apply,
+  หรือลบ - แม้ว่าฟีดที่เซ็นแล้วจะพกมันมา trust anchor บนอุปกรณ์เปลี่ยนได้เฉพาะด้วยการ re-flash ที่เซ็นแล้ว
+  เต็มรูปแบบ ไม่ใช่ผ่านเครือข่าย, `vdlu-pack` ก็กัน `vdlu/` ออกฝั่ง producer ด้วย ดังนั้นนี่จึงเป็น guard ที่สอง
+  ฝั่ง engine ต่อคีย์สำหรับเซ็นที่รั่วไหล
 
 ## 4. journal.json (ENGINE เขียน, WEBUI อ่าน - สัญญาเรื่องความคืบหน้า)
 
@@ -82,7 +87,7 @@ $VDLU_DIR = /data/adb/<module>/vdlu
 จากเฟส `fetch`: `ERROR` (ความล้มเหลวร้ายแรง) หรือ `DEFERRED` (net_policy บล็อกการดาวน์โหลด - ไม่เป็นอันตราย/กลับมาทำต่อได้,
 ไม่ใช่ error)
 
-## 5. config (key=value, หนึ่งต่อบรรทัด; แก้ไขได้ใน WEBUI)
+## 5. config (key=value, หนึ่งต่อบรรทัด, แก้ไขได้ใน WEBUI)
 
 ```
 auto_on_webui_open=0
@@ -97,7 +102,11 @@ key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), 
                        # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
                        # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+ca_cert=               # empty = auto-build a CA bundle from the trust store; set a path to a bundle to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+apply_busy_file=       # OPT-IN: absolute path the host module touches during its own operations (e.g. a
+                       # backup). While it EXISTS, APPLY is deferred to the next trigger (blobs already
+                       # fetched, no re-download) so an update never swaps module files mid-operation. UNSET = off.
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
 boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
                        # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
@@ -107,11 +116,11 @@ boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot;
 manifest ล้มเหลวเพราะ เครือข่าย (`fetch_offline` จำแนกจาก exit ของ fetcher) มันจะรอแล้วลองใหม่จนกว่าจะ
 สำเร็จ หรือ จนกว่า AWAKE-time จำนวน `boot_retry_minutes` จะหมดลง การออกแบบที่ **ไม่ยึดอะไรไว้และไม่ดูดแบตเตอรี่**:
 - **Zero wakelock:** ระหว่างรอบมันคือ `sleep` ซึ่งถูกแช่แข็งใน deep-sleep -> อุปกรณ์หลับได้ตามปกติ
-  (~แบตเตอรี่เป็นศูนย์); การลองใหม่จะหยุดชั่วคราวและกลับมาทำต่อเมื่ออุปกรณ์ตื่นอยู่แล้ว
+  (~แบตเตอรี่เป็นศูนย์), การลองใหม่จะหยุดชั่วคราวและกลับมาทำต่อเมื่ออุปกรณ์ตื่นอยู่แล้ว
 - **Zero held lock:** `acquire_lock_try`+release ระหว่างรอบ (ไม่ยึด lock ไว้ขณะรอ) ->
-  `run`/การ check ด้วยมือไม่เคยถูกบล็อก; ถ้าการ run ด้วยมือ stage TARGET ในระหว่างนั้น boot จะเลื่อนออกไป
+  `run`/การ check ด้วยมือไม่เคยถูกบล็อก, ถ้าการ run ด้วยมือ stage TARGET ในระหว่างนั้น boot จะเลื่อนออกไป
 - **ไม่ปลุกวิทยุ (radio) โดยไม่จำเป็น:** การ probe แบบ `net_allowed` (ผ่าน `net_type`/`ip route get`, การ
-  lookup route ของ kernel ที่เคารพ policy-routing ของ Android; ไม่มีแพ็กเก็ต) คอยคุมแต่ละรอบ - มันใช้ fetch
+  lookup route ของ kernel ที่เคารพ policy-routing ของ Android, ไม่มีแพ็กเก็ต) คอยคุมแต่ละรอบ - มันใช้ fetch
   ก็ต่อเมื่อเครือข่ายปรากฏขึ้นแล้วเท่านั้น
 - ไม่เคย ลองใหม่กับความล้มเหลวแบบ deterministic (manifest/sig/downgrade) `--connect-timeout 15` บน fetch (ไม่
   ค้างกับ captive portal) `service.sh` รันมันเป็น background (boot ไม่เคยค้าง)
@@ -121,15 +130,15 @@ manifest ล้มเหลวเพราะ เครือข่าย (`fetc
   เป็น footgun เมื่อจะเปิดใช้งาน ให้ vendor เอนจินปัจจุบัน
 
 **`net_policy` (any|wifi|mobile):** คอยคุม **การดาวน์โหลด** ตามประเภทเครือข่าย `net_type()` จำแนก egress
-ของ `ip route get` (cellular iface `rmnet/ccmni/v4-*/clat` = mobile; อย่างอื่นทั้งหมด = wifi; kernel lookup, ไม่มี
+ของ `ip route get` (cellular iface `rmnet/ccmni/v4-*/clat` = mobile, อย่างอื่นทั้งหมด = wifi, kernel lookup, ไม่มี
 แพ็กเก็ต) `net_allowed()` เปรียบเทียบกับ `net_policy` และคอยคุม `do_fetch` (blobs) + การ probe ของ boot-retry
-แบบอดทน **การ check manifest ยังคงฟรี** (เล็ก -> UI รายงานว่ามีอัปเดตบนเครือข่ายใดก็ได้); เฉพาะการดาวน์โหลด
+แบบอดทน **การ check manifest ยังคงฟรี** (เล็ก -> UI รายงานว่ามีอัปเดตบนเครือข่ายใดก็ได้), เฉพาะการดาวน์โหลด
 เท่านั้นที่รอเครือข่ายที่อนุญาต การดาวน์โหลดบนเครือข่ายที่ไม่อนุญาต = สถานะ **`DEFERRED`** ใน journal
-(ไม่ใช่ ERROR; toast INFO สีน้ำเงินอย่างนุ่มนวล "waiting for X network"; plan/target ยังคงอยู่, มันกลับมาทำต่อในการ
+(ไม่ใช่ ERROR, toast INFO สีน้ำเงินอย่างนุ่มนวล "waiting for X network", plan/target ยังคงอยู่, มันกลับมาทำต่อในการ
 check/boot ครั้งถัดไปบนเครือข่ายที่ถูกต้อง) `net_policy` **แทนที่** `allow_metered` (ซึ่งไม่เคยถูกบริโภค)
 เอนจิน `97baf887`+ (`file://` ไม่เคยถูกคุม)
 
-## 6. ลายเซ็น (PRODUCER เซ็นบน PC ผ่าน openssl; ENGINE ตรวจสอบบนอุปกรณ์ผ่าน ed25519-mini)
+## 6. ลายเซ็น (PRODUCER เซ็นบน PC ผ่าน openssl, ENGINE ตรวจสอบบนอุปกรณ์ผ่าน ed25519-mini)
 
 - Canonicalization: manifest ที่ไม่มี `sig`, คีย์เรียงลำดับ, JSON แบบ compact (ไม่มีช่องว่างเกิน), UTF-8
   สิ่งที่ถูกเซ็น/ตรวจสอบ = `sha256` hex ของรูป canonical นั้น (ให้ determinism ข้ามเครื่องมือ)
@@ -137,16 +146,16 @@ check/boot ครั้งถัดไปบนเครือข่ายที
 - `engine/vdlu-verify <manifest.json> <keyring_dir>` -> rc 0 ถ้า `sig` ตรงกับ pubkey `<key_id>.pub` ใน
   keyring (SLIM: pubkey **RAW 32 bytes**) ภายใน ไม่มี openssl: toybox `sha256sum`/`base64 -d` + ไบนารี
   `ed25519-mini` ที่ฝังไว้ (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=valid/1=invalid/2=usage)
-  rc!=0 = reject **`profile=hardened` => verify จำเป็น; ล้มเหลว = abort**
+  rc!=0 = reject **`profile=hardened` => verify จำเป็น, ล้มเหลว = abort**
   `profile=trusted` => verify เป็น best-effort (แหล่งเชื่อถือแล้วผ่าน SSH), แต่ hash ของทุก blob ถูกตรวจสอบ เสมอ
-- **allowlist ของคีย์ module-update (fail-closed, ก่อนการเลือก pubkey):** `key_id` ของ manifest ต้องเป็นคีย์ MODULE-UPDATE ที่ยอมรับแล้วก่อนที่จะเลือก `<key_id>.pub` - `key_id` ของ config (§5) คือ allowlist นั้น keyring อาจพกคีย์ที่ความเชื่อถือต่ำกว่าได้ด้วย (เช่น คีย์ fingerprint-feed, อัตโนมัติ, คนละบัญชี) หากไม่มี allowlist, manifest ที่เซ็นด้วยคีย์นั้นจะผ่านการตรวจสอบและใช้การอัปเดต flashless root เต็มรูปแบบหากรั่วไหล `verify_manifest` บังคับใช้ในทั้งสอง profiles และส่งเซ็ตที่แก้แล้วให้ `vdlu-verify` ผ่าน env `VDLU_KEYID_ALLOW` (เพื่อให้ verifier แบบ standalone เห็นตรงกัน) ไม่ได้ตั้งค่า = ปลอดภัยโดยปริยาย (keyring คีย์เดียว: เฉพาะคีย์นั้น; keyring หลายคีย์: ปฏิเสธจนกว่าจะปักหมุด `key_id`) รากความเชื่อถือของ fingerprint-feed เป็นเส้นทางแยกต่างหากที่มีคีย์ปักหมุดของตัวเอง และไม่ได้รับผลกระทบ
+- **allowlist ของคีย์ module-update (fail-closed, ก่อนการเลือก pubkey):** `key_id` ของ manifest ต้องเป็นคีย์ MODULE-UPDATE ที่ยอมรับแล้วก่อนที่จะเลือก `<key_id>.pub` - `key_id` ของ config (§5) คือ allowlist นั้น keyring อาจพกคีย์ที่ความเชื่อถือต่ำกว่าได้ด้วย (เช่น คีย์ fingerprint-feed, อัตโนมัติ, คนละบัญชี) หากไม่มี allowlist, manifest ที่เซ็นด้วยคีย์นั้นจะผ่านการตรวจสอบและใช้การอัปเดต flashless root เต็มรูปแบบหากรั่วไหล `verify_manifest` บังคับใช้ในทั้งสอง profiles และส่งเซ็ตที่แก้แล้วให้ `vdlu-verify` ผ่าน env `VDLU_KEYID_ALLOW` (เพื่อให้ verifier แบบ standalone เห็นตรงกัน) ไม่ได้ตั้งค่า = ปลอดภัยโดยปริยาย (keyring คีย์เดียว: เฉพาะคีย์นั้น, keyring หลายคีย์: ปฏิเสธจนกว่าจะปักหมุด `key_id`) รากความเชื่อถือของ fingerprint-feed เป็นเส้นทางแยกต่างหากที่มีคีย์ปักหมุดของตัวเอง และไม่ได้รับผลกระทบ
 - `producer/vdlu-keygen <id> <out>` -> สร้าง `<id>.pem` (priv) + `<id>.pub` (PEM, สำหรับ tooling บน PC) +
   `<id>.pub.raw` (**RAW 32B** = `<id>.pub` ของ keyring แบบเรียวบนอุปกรณ์) openssl `genpkey -algorithm ed25519`
 
 ## 7. Blob - การตรวจสอบ (ENGINE)
 
 ดาวน์โหลด `<source>/blobs/<sha>` (หรือ `.gz` ถ้า `enc=gz`), เขียน `.part`, ถ้าเป็น `gz` ก็ decompress (`gunzip`),
-ตรวจสอบ `sha256sum` == `sha256` ของ manifest; ตรงกัน -> `mv` แบบ atomic ไปยัง `$VDLU_DIR/blobs/<sha>` ล้มเหลว 3 ครั้งบน
+ตรวจสอบ `sha256sum` == `sha256` ของ manifest, ตรงกัน -> `mv` แบบ atomic ไปยัง `$VDLU_DIR/blobs/<sha>` ล้มเหลว 3 ครั้งบน
 blob เดียวกัน = ยกเลิกเฟส (ไม่มีการ apply อะไร) blob ที่อยู่ใน `$VDLU_DIR/blobs/<sha>` แล้วและมี hash ที่ถูกต้อง =
 ข้ามการดาวน์โหลด
 
@@ -161,12 +170,12 @@ blob เดียวกัน = ยกเลิกเฟส (ไม่มีก�
 ## 9. WEBUI <-> ENGINE (คอมโพเนนต์ WEBUI)
 
 - ยิง: `ksu.exec("sh $MODULE_DIR/vdlu/update.sh run")` (background)
-- ความคืบหน้า: poll เบา ๆ `ksu.exec("cat $VDLU_DIR/journal.json")` ทุก ~1s; เรนเดอร์ `{phase,state,total,done,current,bytes}`
+- ความคืบหน้า: poll เบา ๆ `ksu.exec("cat $VDLU_DIR/journal.json")` ทุก ~1s, เรนเดอร์ `{phase,state,total,done,current,bytes}`
 - Liveness: journal หายไป 8 ticks => "no response" journal FROZEN (ค่าเดิม) 20 ticks => เช็ค `lock.d`: ยังมีชีวิต = ทำต่อ (fetch blob 1 ตัวช้า), ตาย = error + Resume หากไม่มีสิ่งนี้ การ run ที่ตายกลางการ fetch จะทำให้ toast ค้างอยู่ที่ "updating"
 - Cancel: `ksu.exec("touch $VDLU_DIR/cancel")`
 - Config: อ่าน/เขียน `$VDLU_DIR/config` (key=value) ในแท็บ "Updates"
-- Toast: บาร์ + `phase done/total · current`; เมื่อจบด้วย `reboot_pending` => แบนเนอร์ถาวร "reboot to activate the .so"
-- Auto-open (`auto_on_webui_open=1`): ทำ `check()` แบบ เงียบ ก่อน (ไม่มี toast ความคืบหน้า); จะยิง `run`+toast ถาวรก็ต่อเมื่อ `update && fetch>0` ทันสมัยแล้ว/ล้ำหน้า/ไม่มีอะไรใหม่ = ผลลัพธ์ inline ในแผง, ไม่มี toast ค้าง ไม่รบกวนเหมือนปุ่มกดเอง (toast ปรากฏเฉพาะเมื่อมีการดาวน์โหลดจริง) การ bootstrap curl เป็นครั้งเดียว
+- Toast: บาร์ + `phase done/total · current`, เมื่อจบด้วย `reboot_pending` => แบนเนอร์ถาวร "reboot to activate the .so"
+- Auto-open (`auto_on_webui_open=1`): ทำ `check()` แบบ เงียบ ก่อน (ไม่มี toast ความคืบหน้า), จะยิง `run`+toast ถาวรก็ต่อเมื่อ `update && fetch>0` ทันสมัยแล้ว/ล้ำหน้า/ไม่มีอะไรใหม่ = ผลลัพธ์ inline ในแผง, ไม่มี toast ค้าง ไม่รบกวนเหมือนปุ่มกดเอง (toast ปรากฏเฉพาะเมื่อมีการดาวน์โหลดจริง) การ bootstrap curl เป็นครั้งเดียว
 
 ## 10. การ Integrate เข้ากับ demo (คอมโพเนนต์ INTEGRATION) - SNIPPET, อย่าแก้ไฟล์ที่ใช้งานจริง
 
@@ -188,18 +197,18 @@ verify/<abi>/ed25519-mini, baseline.json}` **ไม่มี** `bin/` (openssl/c
 สุดท้ายของ `source` เป็น `vdlu-tools`, เช่น `https://<user>.github.io/<repo>/vdlu-tools`) มี:
 - `tools-manifest.json` - manifest `vdlu-pack` ที่ SIGNED แล้ว เหนือต้นไม้ `<abi>/curl`, ปัก `sha256` ของ
   curl แต่ละตัว (คีย์ `release-2026` เดียวกัน)
-- `<abi>/curl` - curl แบบ **static** ดิบ (self-contained, ~1MB; curl 8.11.1 + mbedTLS) 🪤 mbedTLS ไม่
+- `<abi>/curl` - curl แบบ **static** ดิบ (self-contained, ~1MB, curl 8.11.1 + mbedTLS) 🪤 mbedTLS ไม่
   มี CA bundle: `fetch_url` ส่ง `--capath` (auto-detect ของ Android trust store: `/system/etc/security/cacerts`
-  -> APEX conscrypt; `ca_path` override) ไม่มี capath = error 60 ความถูกต้องคือ ed25519; การเช็ค cert เป็น defense-in-depth
+  -> APEX conscrypt, `ca_path` override) ไม่มี capath = error 60 ความถูกต้องคือ ed25519, การเช็ค cert เป็น defense-in-depth
 
 **install-tool** (ENGINE): `update.sh install-tool <abi>` อ่าน `$VDLU_DIR/.work/{tools-manifest.json, tool.<abi>}`
 (WEBUI ดาวน์โหลดมันผ่าน `fetch()` และเขียนไว้ที่นั่น), **ตรวจสอบลายเซ็นของ tools-manifest (ed25519-mini,
 จำเป็นในทุกโปรไฟล์)** + hash ของ curl == manifest, แล้วจึงติดตั้งไปที่ `$VDLU_DIR/tools/<abi>/curl` (0755) เท่านั้น
 curl รันในฐานะ root -> sig+hash ก่อน exec ปิดช่อง RCE คงอยู่ใน Tier-2: ไม่เคยดาวน์โหลดใหม่ (ยกเว้นตอน uninstall)
 
-**fetch-bootstrap** (WEBUI, `ensureToolchain()`): รันก่อน check/run/resume `file://` = no-op; curl พร้อมใช้งานอยู่แล้ว
+**fetch-bootstrap** (WEBUI, `ensureToolchain()`): รันก่อน check/run/resume `file://` = no-op, curl พร้อมใช้งานอยู่แล้ว
 (Tier-2, หรือ `module/bin/<abi>/curl` จากโมดูลที่ **bundle มาเอง**, หรือ system) = no-op
-(VDLU ใช้ curl ที่มีอยู่ซ้ำ); เฉพาะ `https` **ที่ไม่มี curl เลย** เท่านั้นที่ดาวน์โหลด curl + tools-manifest ผ่าน webview, เขียน
+(VDLU ใช้ curl ที่มีอยู่ซ้ำ), เฉพาะ `https` **ที่ไม่มี curl เลย** เท่านั้นที่ดาวน์โหลด curl + tools-manifest ผ่าน webview, เขียน
 ไว้ที่ `.work` (base64 เป็น chunk ผ่าน `ksu.exec`), เรียก `install-tool` ความเชื่อถือ = การเช็คบนอุปกรณ์, ไม่ใช่การดาวน์โหลด
 
 > 🪤 **Slim (fetch-bootstrap) != จำเป็น** โมดูลที่มี `bin/` อยู่เพื่อฟีเจอร์ของ ตัวเอง (เช่น bundle
@@ -208,7 +217,7 @@ curl รันในฐานะ root -> sig+hash ก่อน exec ปิดช
 > เท่านั้นที่ได้รับ ~2MB เพิ่ม
 
 **baseline.json** (fix from:0): release คัดลอก `manifest.json` ที่ SIGNED แล้ว ของเวอร์ชันที่ ship ไปยัง
-`vdlu/baseline.json`; ในการติดตั้งใหม่เอนจิน seed `current.json` จากมัน (`init_paths`, เฉพาะเมื่อไม่มี) -> อุปกรณ์
+`vdlu/baseline.json`, ในการติดตั้งใหม่เอนจิน seed `current.json` จากมัน (`init_paths`, เฉพาะเมื่อไม่มี) -> อุปกรณ์
 เกิดมา "current" โดยไม่มีการ auto-update ตัวเองและไม่มีการ re-fetch
 
 <!-- doc-footer -->

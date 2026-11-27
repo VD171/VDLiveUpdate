@@ -36,7 +36,7 @@ riscritto, quindi la pubblicazione è incrementale e il contenuto invariato / ri
 
 ### Decisione `enc` (vdlu-pack)
 
-`sha256` è **sempre** del contenuto originale (non compresso); `enc` nomina solo come il blob viene memorizzato.
+`sha256` è **sempre** del contenuto originale (non compresso), `enc` nomina solo come il blob viene memorizzato.
 
 - `gz` quando `size >= 4096` **e** gzip (`-9 -n`, deterministico) risparmia almeno il 10% (`comp <= raw*0.90`).
 - `raw` altrimenti (testo piccolo che il gzip di HTTP copre già, o dati già incomprimibili).
@@ -47,7 +47,7 @@ decomprime con toybox `gunzip` (sempre presente), quindi non viene imbarcato zst
 
 ### Decisione `class` (vdlu-pack) - tassonomia del reboot
 
-Derivata dal path (INTERFACES §3, doc §4). Solo default; una regola di path non fa mai il downgrade `reboot`->`live`.
+Derivata dal path (INTERFACES §3, doc §4). Solo default, una regola di path non fa mai il downgrade `reboot`->`live`.
 
 | class | corrisposta da | applicata |
 |---|---|---|
@@ -66,7 +66,7 @@ manifest riproducibili.
 così il dispositivo nasce "corrente" (niente da:0, niente re-fetch). L'engine lo tratta come un **seme locale fidato**
 (è arrivato nello zip flashato, che è il confine di fiducia dell'installazione) e **NON ne verifica la firma** -
 solo il manifest RECUPERATO dal feed passa per `vdlu-verify`. Quindi la baseline non ha bisogno di **nessuna chiave**: è
-semplicemente l'output di `vdlu-pack` sull'albero spedito (non firmata; `sig`/`key_id` restano vuoti). Una CI può quindi
+semplicemente l'output di `vdlu-pack` sull'albero spedito (non firmata, `sig`/`key_id` restano vuoti). Una CI può quindi
 generarla **senza chiave**, tenendo la chiave di firma al 100% fuori dalla CI - solo il FEED pubblicato viene firmato (operatore,
 localmente). `vdlu-pack` esclude `baseline.json` dal proprio manifest (anti auto-riferimento). Non fatale se
 assente: il dispositivo parte semplicemente da:0 al primo aggiornamento, mai rotto.
@@ -99,19 +99,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` fa parte della forma canonica (solo `sig` viene tolto); `vdlu-sign` imposta `key_id` **prima**
+`key_id` fa parte della forma canonica (solo `sig` viene tolto), `vdlu-sign` imposta `key_id` **prima**
 dell'hashing. Il segnaposto del valore, vuoto (`"sig":""`, al momento della firma) o riempito (al momento del verify), produce gli
 identici byte canonici, quindi sign e verify concordano per costruzione.
 
 Python lo riproduce come `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` poi sha256 - usato
-solo per cross-check; i produttori autoritativi sono i due tool sh.
+solo per cross-check, i produttori autoritativi sono i due tool sh.
 
 ## Firma (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   per firma/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (il DER SPKI
   ed25519 è un prefisso di 12 byte + la chiave di 32 byte, quindi `tail -c 32` È la chiave). Emette ENTRAMBE.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` sullo sha256 esadecimale canonico; firma memorizzata base64.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` sullo sha256 esadecimale canonico, firma memorizzata base64.
 - `vdlu-verify` (**dispositivo, snello**): `ed25519-mini <pubkey32> <msg> <sig64>` - legge il keyring come la pubkey **RAW 32B**,
   NIENTE openssl sul dispositivo. `key_id` è sanificato come path (niente `/`, `.`, `..`, `"`). 🚨 Il keyring spedisce la
   **`.pub.raw` (32B)**, mai la `.pub` PEM (113B): il PEM è solo PC-side e `ed25519-mini` non può leggerlo.
@@ -137,4 +137,4 @@ sovrascriverlo con la `.pub` PEM PC-side.
 
 ---
 
-> _Questa documentazione è stata generata con Claude (Anthropic) ed è gestita da VD171. Correzioni e miglioramenti sono benvenuti; vedi [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Questa documentazione è stata generata con Claude (Anthropic) ed è gestita da VD171. Correzioni e miglioramenti sono benvenuti, vedi [CONTRIBUTING.md](CONTRIBUTING.md)._

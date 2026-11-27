@@ -58,7 +58,7 @@
   (rc≠0) - точно сигнатура `ex()` з Demo `webroot/index.html`. Внутрішній fallback викликає
   `ksu.exec(cmd, '{}', cb)` з тим самим контрактом.
 - **`toast(msg)`** = коротке транзієнтне сповіщення (fallback впорскує власний міні-тост).
-- **`confirm(title,msg,ok,danger,fn)`** = модалка (сьогодні використовується лише хостом; віджет не вимагає жодного
+- **`confirm(title,msg,ok,danger,fn)`** = модалка (сьогодні використовується лише хостом, віджет не вимагає жодного
   підтвердження в жодному потоці).
 
 Передача власних хостових змушує віджет говорити через ТУ САМУ серіалізовану чергу та візуали, що й решта
@@ -83,7 +83,7 @@ WebUI.
 
 ### Потік станів, який відображає тост (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` у будь-який момент.
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` у будь-який момент.
 Тост показує **смугу + `phase done/total · current · bytes`**. Термінали:
 - **`DONE`** → зелений тост "v&lt;target&gt; applied".
 - **`PENDING_REBOOT`** (або `reboot_pending=true`) → зелений тост + **постійний банер** "⚠️ Reboot to
@@ -94,7 +94,7 @@ WebUI.
 ## Запуск демо
 
 Відкрийте `demo.html` у браузері (`xdg-open webui/demo.html`). Замоканий `ksu.exec` симулює `update.sh` та
-`journal.json`, що еволюціонують; кнопки перемикають між сценаріями **LIVE→DONE**, **reboot_pending**, **error mid-way**
+`journal.json`, що еволюціонують, кнопки перемикають між сценаріями **LIVE→DONE**, **reboot_pending**, **error mid-way**
 та **cancellable**. Це той самий `vdlu.js`/`vdlu.css`, що й на пристрої.
 
 ## i18n (мова)
@@ -108,7 +108,7 @@ WebUI.
 ```
 
 - **Часткове** злиття підходить: відсутній ключ повертається до англійського значення за замовчуванням.
-- Ключі phase/state - це `ph_<phase>` / `st_<STATE>`; решта пласка (`cancel`, `updateNow`, …).
+- Ключі phase/state - це `ph_<phase>` / `st_<STATE>`, решта пласка (`cancel`, `updateNow`, …).
 - Повний map ключів = об'єкт `DEFAULT_I18N` у `vdlu.js` (також експонований як `VDLU.i18n`).
 - Готовий переклад надається як пророблений приклад: `i18n/pt-BR.js`. Нові мови = файл
   `i18n/<lang>.js` у тому ж шаблоні, або хост будує map зі своєї власної системи i18n.
@@ -117,12 +117,12 @@ WebUI.
 
 Ці `vdlu.js`/`vdlu.css` є **канонічною копією**. Кожен модуль, що вбудовує віджет,
 **повторно вендоризує** цю копію байт-у-байт у свій `webroot/` - він **ніколи** не редагує
-свою власну на місці. Нова функція віджета народжується тут і тече вниз через повторну вендоризацію; зворотнє породжує тихий
+свою власну на місці. Нова функція віджета народжується тут і тече вниз через повторну вендоризацію, зворотнє породжує тихий
 drift (це траплялося на практиці: вендоризована копія відстала і їй бракувало `net_policy`, тосту `DEFERRED`
 і полів `boot_retry`).
 
 Вартовий: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) знаходить кожну копію в дереві джерела і помічає
-ті, що розходяться з канонічною (лише `vdlu.js`/`vdlu.css`; keyring - це "verify, not copy").
+ті, що розходяться з канонічною (лише `vdlu.js`/`vdlu.css`, keyring - це "verify, not copy").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -136,4 +136,4 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 
 ---
 
-> _Ця документація створена за допомогою Claude (Anthropic) і підтримується VD171. Виправлення та покращення вітаються; див. [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Ця документація створена за допомогою Claude (Anthropic) і підтримується VD171. Виправлення та покращення вітаються, див. [CONTRIBUTING.md](CONTRIBUTING.md)._

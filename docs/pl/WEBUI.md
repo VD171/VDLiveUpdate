@@ -58,7 +58,7 @@ Jeśli pominięte, widget używa swoich własnych:
   (rc≠0) - dokładnie sygnatura `ex()` z `webroot/index.html` Demo. Wewnętrzny fallback wywołuje
   `ksu.exec(cmd, '{}', cb)` z tym samym kontraktem.
 - **`toast(msg)`** = krótkie przejściowe powiadomienie (fallback wstrzykuje własny mini-toast).
-- **`confirm(title,msg,ok,danger,fn)`** = modal (dziś używany tylko przez hosta; widget nie wymaga
+- **`confirm(title,msg,ok,danger,fn)`** = modal (dziś używany tylko przez hosta, widget nie wymaga
   potwierdzenia w żadnym przepływie).
 
 Przekazanie własnych hosta sprawia, że widget rozmawia przez TĘ SAMĄ zserializowaną kolejkę i wizualia co reszta
@@ -83,7 +83,7 @@ Toast (narożny overlay, nieblokujący) i baner (góra, trwały) są wstrzykiwan
 
 ### Przepływ stanów, który toast odzwierciedla (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` w każdej chwili. Toast
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` w każdej chwili. Toast
 pokazuje **pasek + `phase done/total · current · bytes`**. Terminale:
 - **`DONE`** → zielony toast "v&lt;target&gt; zastosowana".
 - **`PENDING_REBOOT`** (lub `reboot_pending=true`) → zielony toast + **trwały baner** "⚠️ Zrestartuj, aby
@@ -94,7 +94,7 @@ pokazuje **pasek + `phase done/total · current · bytes`**. Terminale:
 ## Uruchamianie demo
 
 Otwórz `demo.html` w przeglądarce (`xdg-open webui/demo.html`). Zamockowany `ksu.exec` symuluje ewolucję `update.sh` i
-`journal.json`; przyciski przełączają między scenariuszami **LIVE→DONE**, **reboot_pending**, **błąd w środku**
+`journal.json`, przyciski przełączają między scenariuszami **LIVE→DONE**, **reboot_pending**, **błąd w środku**
 i **anulowalny**. To ten sam `vdlu.js`/`vdlu.css` co na urządzeniu.
 
 ## i18n (język)
@@ -108,7 +108,7 @@ dowolny klucz, przekazując mapę w `init`:
 ```
 
 - **Częściowy** merge jest ok: brakujący klucz spada do angielskiego domyślnego.
-- Klucze phase/state to `ph_<phase>` / `st_<STATE>`; reszta jest płaska (`cancel`, `updateNow`, …).
+- Klucze phase/state to `ph_<phase>` / `st_<STATE>`, reszta jest płaska (`cancel`, `updateNow`, …).
 - Pełna mapa kluczy = obiekt `DEFAULT_I18N` w `vdlu.js` (również eksponowany jako `VDLU.i18n`).
 - Gotowe tłumaczenie jest dostarczone jako opracowany przykład: `i18n/pt-BR.js`. Nowe języki = plik
   `i18n/<lang>.js` w tej samej formie, lub host buduje mapę z własnego systemu i18n.
@@ -117,12 +117,12 @@ dowolny klucz, przekazując mapę w `init`:
 
 Te `vdlu.js`/`vdlu.css` są **kanoniczną kopią**. Każdy moduł osadzający widget
 **re-wendoruje** tę kopię bajt-w-bajt do swojego `webroot/` - **nigdy** nie edytuje
-swojej na miejscu. Nowa funkcja widgetu rodzi się tutaj i spływa w dół przez re-wendoring; odwrotność produkuje
+swojej na miejscu. Nowa funkcja widgetu rodzi się tutaj i spływa w dół przez re-wendoring, odwrotność produkuje
 cichy dryf (zdarzyło się w praktyce: wendorowana kopia została w tyle i brakowało jej `net_policy`, toasta
 `DEFERRED` i pól `boot_retry`).
 
 Strażnik: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) znajduje każdą kopię w drzewie źródeł i oznacza
-te, które rozchodzą się z kanoniczną (tylko `vdlu.js`/`vdlu.css`; keyring to "weryfikuj, nie kopiuj").
+te, które rozchodzą się z kanoniczną (tylko `vdlu.js`/`vdlu.css`, keyring to "weryfikuj, nie kopiuj").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -136,4 +136,4 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 
 ---
 
-> _Ta dokumentacja została wygenerowana za pomocą Claude (Anthropic) i jest utrzymywana przez VD171. Poprawki i ulepszenia są mile widziane; zobacz [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Ta dokumentacja została wygenerowana za pomocą Claude (Anthropic) i jest utrzymywana przez VD171. Poprawki i ulepszenia są mile widziane, zobacz [CONTRIBUTING.md](CONTRIBUTING.md)._

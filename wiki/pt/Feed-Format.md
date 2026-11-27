@@ -24,7 +24,7 @@ O manifesto é a descrição completa de um release: todo arquivo na árvore alv
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ O feed carrega **apenas o conteúdo próprio do módulo**. Um conjunto fixo de c
 
 | Excluído | Por que |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (a raiz de confiança: chaves públicas brutas + o binário verificador) | **Esta é a razão de segurança central.** O âncora de confiança é **flash-only**. Se o keyring ou o verificador fossem entregáveis por feed, um manifesto poderia sobrescrever exatamente a coisa que o valida. Mantê-los fora do fio significa que um manifesto nunca pode reescrever o âncora de confiança no dispositivo. |
+| `vdlu/keyring/`, `vdlu/verify/` (a raiz de confiança: chaves públicas brutas + o binário verificador) | **Esta é a razão de segurança central.** O âncora de confiança é **flash-only**. Se o keyring ou o verificador fossem entregáveis por feed, um manifesto poderia sobrescrever exatamente a coisa que o valida. Mantê-los fora do fio significa que um manifesto nunca pode reescrever o âncora de confiança no dispositivo. Como uma segunda guarda, independente (`ENGINE_VERSION` 5), o engine também **ignora** todo path `vdlu/` em um plano buscado, então mesmo um feed que os carrega não pode tocar o âncora. |
 | `vdlu/baseline.json` | É uma cópia do manifesto assinado (o seed de instalação); empacotá-lo seria um loop de auto-referência. |
 | `.vd/` infraestrutura de flash | Scaffolding de flash-gate que vem no zip, nunca aplicado ao vivo. |
 | `update.json`, `update-mmrl.json` | Seu size/sha são preenchidos pelo CI *depois* que os zips são construídos, então a cópia enviada difere de qualquer cópia de feed. Alimentá-los causaria um fetch fantasma de arquivo único na primeira autoatualização de toda instalação, e eles são vestigiais no dispositivo de qualquer forma (o manager lê o JSON de update remoto bruto). |

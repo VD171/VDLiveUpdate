@@ -8,7 +8,7 @@
 aşağıdaki CLI imzaları, dosya adları ve JSON anahtarları **değişmezdir** (bir değişiklik önce burada hizalama anlamına
 gelir).
 
-Repolardan devralınan ilkeler: cihazda **saf POSIX sh** (bashism yok; toybox/busybox + toybox'ın
+Repolardan devralınan ilkeler: cihazda **saf POSIX sh** (bashism yok, toybox/busybox + toybox'ın
 `sha256sum`/`gzip`/`base64` + getirilen `curl` + gömülü `ed25519-mini` ile çalışır - ince, bin paketi yok),
 **sıfır gereksiz yorum**, **her zaman release**, **başarısızlıkta titizlik** (devam ettirilebilir işlem, hiçbir şey
 sahte şekilde "tamamlandı" değil, hiçbir şey kaybolmaz), **hiçbir şey gevşetilmez**.
@@ -30,7 +30,7 @@ $VDLU_DIR = /data/adb/<module>/vdlu
   target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
   plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
-Günlükteki `cancelled:true` = motor bir iptalde durdu (terminal olmayan, devam ettirilebilir bir durum; `error`
+Günlükteki `cancelled:true` = motor bir iptalde durdu (terminal olmayan, devam ettirilebilir bir durum, `error`
 null kalır).
 
 Modülde vendor edilen motor: `$MODULE_DIR/vdlu/update.sh` (+ `vdlu-verify`). `$MODULE_DIR =
@@ -56,17 +56,22 @@ Blob/manifest kaynağı: yapılandırmadan `source`. `<source>` + `/manifest.jso
 
 ```json
 { "schema":1, "module":"<id>", "version":<int>, "version_name":"<str>", "built":"<ISO8601>",
-  "engine_min":3, "key_id":"<str>", "channel":"stable",
+  "engine_min":5, "key_id":"<str>", "channel":"stable",
   "files":[ {"path":"webroot/index.html","sha256":"<hex64>","size":<int>,"mode":"0644","enc":"raw|gz","class":"live|soft|reboot"} ],
   "delete":["<path>"], "sig":"<base64>" }
 ```
 
 - `files[]` = TAM hedef ağacı. `class`: `live` (webroot/bin/lib/confs/scripts-on-demand/module.prop) ·
   `soft` (service.sh/post-fs-data.sh/boot-completed.sh) · `reboot` (`zygisk/**/*.so`, `system/**`, `*.rule`).
-  Yola göre varsayılan; asla `reboot`→`live` indirmez.
-- `enc`: `gz` (gzip `-9 -n`, deterministik; cihazda toybox gunzip) yalnızca iyi sıkıştırdığında VE
-  boyut önemli olduğunda; `sha256` HER ZAMAN orijinal içeriğindir.
+  Yola göre varsayılan, asla `reboot`→`live` indirmez.
+- `enc`: `gz` (gzip `-9 -n`, deterministik, cihazda toybox gunzip) yalnızca iyi sıkıştırdığında VE
+  boyut önemli olduğunda, `sha256` HER ZAMAN orijinal içeriğindir.
 - `sig`: `sig` alanı OLMADAN kanonik manifestin imzası (verify'nin §4'ü).
+- **Güven çıpası hariç tutma (engine tarafı, VDLU#2):** engine, `vdlu/` altındaki her `files[]`/`delete[]`
+  yolunu (kendi `update.sh`/`vdlu-verify`/`verify/*`/`keyring/*`/config'i) plandan DÜŞÜRÜR - asla getirilmez,
+  uygulanmaz veya silinmez - imzalı bir besleme onları taşısa bile. Cihazdaki güven çıpası yalnızca tam imzalı
+  bir yeniden-flaş ile değişir, ağ üzerinden değil, `vdlu-pack` ayrıca `vdlu/`'yu üretici tarafında hariç
+  tutar, bu yüzden bu, sızmış bir imzalama anahtarına karşı ikinci, engine tarafı bir korumadır.
 
 ## 4. journal.json (ENGINE yazar, WEBUI okur - ilerleme sözleşmesi)
 
@@ -83,7 +88,7 @@ Durum makinesi (sabit sıra): `PLANNED→FETCHING→FETCHED→APPLYING→APPLIED
 değil). `fetch` aşamasından çıkışlar: `ERROR` (sert başarısızlık) veya `DEFERRED` (net_policy indirmeyi engelledi -
 iyi huylu/devam ettirilebilir, bir hata değil).
 
-## 5. config (key=value, satır başına bir tane; WEBUI'de düzenlenebilir)
+## 5. config (key=value, satır başına bir tane, WEBUI'de düzenlenebilir)
 
 ```
 auto_on_webui_open=0
@@ -98,7 +103,11 @@ key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), 
                        # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
                        # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+ca_cert=               # empty = auto-build a CA bundle from the trust store; set a path to a bundle to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+apply_busy_file=       # OPT-IN: absolute path the host module touches during its own operations (e.g. a
+                       # backup). While it EXISTS, APPLY is deferred to the next trigger (blobs already
+                       # fetched, no re-download) so an update never swaps module files mid-operation. UNSET = off.
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
 boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
                        # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
@@ -109,11 +118,11 @@ Manifest getirme AĞ nedeniyle başarısız olursa (`fetch_offline` getiricinin 
 olana VEYA `boot_retry_minutes`'luk UYANIK-zaman tükenene kadar bekler ve yeniden dener. **Hiçbir şey tutmayan ve
 tüketmeyen** bir tasarım:
 - **Sıfır wakelock:** denemeler arasında `sleep`'tir, derin uykuda donar → cihaz normal şekilde uyur
-  (~sıfır pil); yeniden deneme duraklar ve cihaz zaten uyandığında devam eder.
+  (~sıfır pil), yeniden deneme duraklar ve cihaz zaten uyandığında devam eder.
 - **Sıfır tutulan kilit:** denemeler ARASINDA `acquire_lock_try`+release (beklerken kilidi tutmaz) →
-  `run`/manuel check asla engellemez; bu arada manuel bir run bir TARGET hazırlarsa, boot erteler.
+  `run`/manuel check asla engellemez, bu arada manuel bir run bir TARGET hazırlarsa, boot erteler.
 - **Radyoyu boş yere uyandırmaz:** her denemeyi bir `net_allowed` sondası (via `net_type`/`ip route get`, Android'in
-  politika-yönlendirmesine saygı duyan bir çekirdek rota araması; paket yok) geçitler - yalnızca ağ ortaya çıktığında
+  politika-yönlendirmesine saygı duyan bir çekirdek rota araması, paket yok) geçitler - yalnızca ağ ortaya çıktığında
   bir getirme harcar.
 - Deterministik bir başarısızlığı (manifest/sig/indirgeme) ASLA yeniden denemez. Getirmede `--connect-timeout 15`
   (bir captive portal'da takılmaz). `service.sh` onu arka plana alır (boot asla takılmaz).
@@ -123,15 +132,15 @@ tüketmeyen** bir tasarım:
   Etkinleştirirken mevcut motoru vendor et.
 
 **`net_policy` (any|wifi|mobile):** **İNDİRMEYİ** ağ türüne göre geçitler. `net_type()` `ip route get`'in çıkışını
-sınıflandırır (hücresel arayüz `rmnet/ccmni/v4-*/clat` = mobile; diğer her şey = wifi; çekirdek araması, paket yok).
+sınıflandırır (hücresel arayüz `rmnet/ccmni/v4-*/clat` = mobile, diğer her şey = wifi, çekirdek araması, paket yok).
 `net_allowed()` `net_policy`'ye karşı karşılaştırır ve `do_fetch`'i (bloblar) + sabırlı boot-yeniden-deneme sondasını
-geçitler. **Manifest kontrolü ücretsiz kalır** (küçük → arayüz herhangi bir ağda bir güncelleme bildirir); yalnızca
+geçitler. **Manifest kontrolü ücretsiz kalır** (küçük → arayüz herhangi bir ağda bir güncelleme bildirir), yalnızca
 indirme izin verilen ağı bekler. İzin verilmeyen bir ağda bir indirme = günlükteki **`DEFERRED`** durumu (ERROR
-DEĞİL; nazik mavi bir INFO toast "waiting for X network"; plan/target kalıcıdır, doğru ağda bir sonraki check/boot'ta
+DEĞİL, nazik mavi bir INFO toast "waiting for X network", plan/target kalıcıdır, doğru ağda bir sonraki check/boot'ta
 devam eder). `net_policy` `allow_metered`'ı **geçersiz kılar** (ki asla tüketilmedi). Motor `97baf887`+ (`file://`
 asla geçitlenmez).
 
-## 6. İmza (PRODUCER PC'de openssl aracılığıyla imzalar; ENGINE cihazda ed25519-mini aracılığıyla doğrular)
+## 6. İmza (PRODUCER PC'de openssl aracılığıyla imzalar, ENGINE cihazda ed25519-mini aracılığıyla doğrular)
 
 - Kanonikleştirme: `sig` OLMADAN manifest, anahtarlar sıralı, kompakt JSON (gereksiz boşluk yok), UTF-8.
   İmzalanan/doğrulanan = o kanonik formun `sha256` hex'i (araçlar arası determinizm sağlar).
@@ -139,16 +148,16 @@ asla geçitlenmez).
 - `engine/vdlu-verify <manifest.json> <keyring_dir>` → `sig` keyring'deki `<key_id>.pub` pubkey ile eşleşiyorsa rc 0
   (SLIM: pubkey **HAM 32 bayt**). Dahili olarak, openssl yok: toybox `sha256sum`/`base64 -d` + gömülü
   `ed25519-mini` ikilisi (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=geçerli/1=geçersiz/2=kullanım).
-  rc!=0 = reddet. **`profile=hardened` ⇒ verify zorunlu; başarısızlık = iptal.**
+  rc!=0 = reddet. **`profile=hardened` ⇒ verify zorunlu, başarısızlık = iptal.**
   `profile=trusted` ⇒ verify en-iyi-çaba (kaynak SSH aracılığıyla zaten güvenilir), ancak her blob'un hash'i HER ZAMAN kontrol edilir.
-- **module-update anahtar allowlist'i (fail-closed, pubkey seçiminden önce):** manifestin `key_id`'si, `<key_id>.pub` seçilmeden önce kabul edilmiş bir MODULE-UPDATE anahtarı olmalıdır - config'in `key_id`'si (§5) bu allowlist'tir. Bir keyring, daha düşük güvenli bir anahtarı DA taşıyabilir (ör. bir fingerprint-feed anahtarı, otomatik, farklı hesap); allowlist olmadan, o anahtarla imzalanmış bir manifest sızarsa doğrulanır ve tam bir flashless root güncellemesi uygular. `verify_manifest` bunu HER İKİ profiles'ta da uygular ve çözümlenen kümeyi `VDLU_KEYID_ALLOW` env'i aracılığıyla `vdlu-verify`'a geçirir (böylece bağımsız doğrulayıcı da uyumludur). Ayarlanmamış hali varsayılan-güvenlidir (tek anahtarlı keyring: yalnızca o anahtar; çok anahtarlı keyring: `key_id` sabitlenene kadar reddedilir). Fingerprint-feed güven kökü, kendi sabitlenmiş anahtarıyla AYRI bir yoldur ve etkilenmez.
+- **module-update anahtar allowlist'i (fail-closed, pubkey seçiminden önce):** manifestin `key_id`'si, `<key_id>.pub` seçilmeden önce kabul edilmiş bir MODULE-UPDATE anahtarı olmalıdır - config'in `key_id`'si (§5) bu allowlist'tir. Bir keyring, daha düşük güvenli bir anahtarı DA taşıyabilir (ör. bir fingerprint-feed anahtarı, otomatik, farklı hesap), allowlist olmadan, o anahtarla imzalanmış bir manifest sızarsa doğrulanır ve tam bir flashless root güncellemesi uygular. `verify_manifest` bunu HER İKİ profiles'ta da uygular ve çözümlenen kümeyi `VDLU_KEYID_ALLOW` env'i aracılığıyla `vdlu-verify`'a geçirir (böylece bağımsız doğrulayıcı da uyumludur). Ayarlanmamış hali varsayılan-güvenlidir (tek anahtarlı keyring: yalnızca o anahtar, çok anahtarlı keyring: `key_id` sabitlenene kadar reddedilir). Fingerprint-feed güven kökü, kendi sabitlenmiş anahtarıyla AYRI bir yoldur ve etkilenmez.
 - `producer/vdlu-keygen <id> <out>` → `<id>.pem` (priv) + `<id>.pub` (PEM, PC'deki araçlar için) +
   `<id>.pub.raw` (**HAM 32B** = cihazdaki ince keyring'in `<id>.pub`'u) üretir. openssl `genpkey -algorithm ed25519`.
 
 ## 7. Blob - doğrulama (ENGINE)
 
 `<source>/blobs/<sha>` indirir (veya `enc=gz` ise `.gz`), `.part` yazar, `gz` ise açar (`gunzip`),
-`sha256sum` == manifestin `sha256`'sı mı diye kontrol eder; eşleşme → `$VDLU_DIR/blobs/<sha>`'ya atomik `mv`. Aynı
+`sha256sum` == manifestin `sha256`'sı mı diye kontrol eder, eşleşme → `$VDLU_DIR/blobs/<sha>`'ya atomik `mv`. Aynı
 blob'da 3 başarısızlık = aşamayı iptal eder (hiçbir şey uygulanmaz). `$VDLU_DIR/blobs/<sha>`'da ok bir hash ile zaten
 bulunan bir blob = indirmeyi atlar.
 
@@ -163,12 +172,12 @@ bulunan bir blob = indirmeyi atlar.
 ## 9. WEBUI ↔ ENGINE (WEBUI bileşeni)
 
 - Ateşler: `ksu.exec("sh $MODULE_DIR/vdlu/update.sh run")` (arka plan).
-- İlerleme: her ~1s'de hafif bir yoklama `ksu.exec("cat $VDLU_DIR/journal.json")`; `{phase,state,total,done,current,bytes}` oluşturur.
+- İlerleme: her ~1s'de hafif bir yoklama `ksu.exec("cat $VDLU_DIR/journal.json")`, `{phase,state,total,done,current,bytes}` oluşturur.
 - Canlılık: günlük 8 tik boyunca yok ⇒ "no response". Günlük 20 tik boyunca DONMUŞ (aynı değerler) ⇒ `lock.d`'yi kontrol eder: canlı = devam eder (1 blob'un yavaş getirilmesi), ölü = hata + Resume. Bu olmadan, getirmenin ortasında ölen bir run toast'ı "updating"de dondururdu.
 - İptal: `ksu.exec("touch $VDLU_DIR/cancel")`.
 - Config: bir "Updates" sekmesinde `$VDLU_DIR/config`'i (key=value) okur/yazar.
-- Toast: çubuk + `phase done/total · current`; `reboot_pending` ile bitişte ⇒ kalıcı bir afiş "reboot to activate the .so".
-- Auto-open (`auto_on_webui_open=1`): önce SESSİZ bir `check()` yapar (ilerleme toast'ı yok); yalnızca `update && fetch>0` ise `run`+kalıcı toast'ı ateşler. Güncel/ileri/yeni-bir-şey-yok = panelde satır içi bir sonuç, sıfır artık toast. Manuel düğme gibi müdahaleci değil (toast yalnızca gerçek bir indirme olduğunda görünür). curl bootstrap tek seferliktir.
+- Toast: çubuk + `phase done/total · current`, `reboot_pending` ile bitişte ⇒ kalıcı bir afiş "reboot to activate the .so".
+- Auto-open (`auto_on_webui_open=1`): önce SESSİZ bir `check()` yapar (ilerleme toast'ı yok), yalnızca `update && fetch>0` ise `run`+kalıcı toast'ı ateşler. Güncel/ileri/yeni-bir-şey-yok = panelde satır içi bir sonuç, sıfır artık toast. Manuel düğme gibi müdahaleci değil (toast yalnızca gerçek bir indirme olduğunda görünür). curl bootstrap tek seferliktir.
 
 ## 10. Demoya entegrasyon (INTEGRATION bileşeni) - PARÇACIKLAR, canlı dosyaları düzenlemeyin
 
@@ -190,18 +199,18 @@ ABI'sine kadar budayabilir (`vdlu-verify` mini'yi `<dir>/ed25519-mini` VEYA `<di
 segmentini `vdlu-tools` ile değiştirir, ör. `https://<user>.github.io/<repo>/vdlu-tools`). İçerir:
 - `tools-manifest.json` - `<abi>/curl` ağacı üzerinde İMZALI bir `vdlu-pack` manifesti, her curl'un `sha256`'sını
   sabitler (aynı `release-2026` anahtarı).
-- `<abi>/curl` - HAM **statik** curl (kendi kendine yeten, ~1MB; curl 8.11.1 + mbedTLS). 🪤 mbedTLS bir CA paketi
+- `<abi>/curl` - HAM **statik** curl (kendi kendine yeten, ~1MB, curl 8.11.1 + mbedTLS). 🪤 mbedTLS bir CA paketi
   TAŞIMAZ: `fetch_url` `--capath` geçirir (Android güven deposunun otomatik algılanması: `/system/etc/security/cacerts`
-  → APEX conscrypt; `ca_path` geçersiz kılar). capath yok = hata 60. Bütünlük ed25519'dur; sertifika kontrolü derinlemesine savunmadır.
+  → APEX conscrypt, `ca_path` geçersiz kılar). capath yok = hata 60. Bütünlük ed25519'dur, sertifika kontrolü derinlemesine savunmadır.
 
 **install-tool** (ENGINE): `update.sh install-tool <abi>` `$VDLU_DIR/.work/{tools-manifest.json, tool.<abi>}`'i okur
 (WEBUI bunu `fetch()` aracılığıyla indirir ve oraya yazar), **tools-manifest imzasını doğrular (ed25519-mini,
 herhangi bir profilde ZORUNLU)** + curl'un hash'i == manifest, ve yalnızca o zaman onu `$VDLU_DIR/tools/<abi>/curl`'a (0755) kurar.
 curl root olarak çalışır → exec'ten önce sig+hash RCE'yi kapatır. Tier-2'de kalıcıdır: asla yeniden indirilmez (kaldırma hariç).
 
-**fetch-bootstrap** (WEBUI, `ensureToolchain()`): check/run/resume'den önce çalışır. `file://` = işlem yok; curl ZATEN
+**fetch-bootstrap** (WEBUI, `ensureToolchain()`): check/run/resume'den önce çalışır. `file://` = işlem yok, curl ZATEN
 mevcut (Tier-2, VEYA **kendi kendine paketlenmiş** bir modülden `module/bin/<abi>/curl`, VEYA sistem) = işlem yok
-(VDLU mevcut curl'u yeniden kullanır); yalnızca `https` **hiç curl olmadan** curl + tools-manifest'i webview aracılığıyla indirir, bunları
+(VDLU mevcut curl'u yeniden kullanır), yalnızca `https` **hiç curl olmadan** curl + tools-manifest'i webview aracılığıyla indirir, bunları
 `.work`'e yazar (`ksu.exec` aracılığıyla parçalı base64), `install-tool`'u çağırır. Güven = cihaz üzerindeki kontrol, indirme değil.
 
 > 🪤 **Slim (fetch-bootstrap) ≠ zorunlu.** `bin/`'i KENDİ ÖZELLİKLERİ için var olan bir modül (ör. restic/rclone/age/tar/curl...
@@ -209,11 +218,11 @@ mevcut (Tier-2, VEYA **kendi kendine paketlenmiş** bir modülden `module/bin/<a
 > araç zincirini **yeniden kullanır**. Yalnızca kendi araç zinciri olmayan modüller ~2MB kazanır.
 
 **baseline.json** (from:0 düzeltmesi): release gönderilen sürümün İMZALI `manifest.json`'ını `vdlu/baseline.json`'a
-kopyalar; yeni bir kurulumda motor `current.json`'ı ondan tohumlar (`init_paths`, yalnızca yoksa) → cihaz "güncel"
+kopyalar, yeni bir kurulumda motor `current.json`'ı ondan tohumlar (`init_paths`, yalnızca yoksa) → cihaz "güncel"
 doğar, kendisinin otomatik güncellemesi olmadan ve yeniden getirme olmadan.
 
 <!-- doc-footer -->
 
 ---
 
-> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır; bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır, bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._

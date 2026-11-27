@@ -51,7 +51,10 @@ check/boot で再開する (WebUI はエラーではなく青い情報トース�
   `--connect-timeout` + `--speed-time` 付きで、決してハングしない)、`gz` を展開し (toybox `gunzip`)、`sha256sum` ==
   manifest をチェックし、アトミックに `blobs/<sha>` へ `mv`。キャッシュ済み+ok の blob はスキップされる。変更のない
   ローカルファイルから blob を seed できる (dedup/オフライン)。**同じ blob で 3 回失敗 = フェーズは何も適用せずに中止する。**
-  plan のすべての blob が存在+検証済みになって初めて `FETCHED` になる。
+  plan のすべての blob が存在+検証済みになって初めて `FETCHED` になる。ツールチェーンのセットアップ時に、
+  解決された TLS 信頼 (CA パス + 可読性、バンドルサイズと証明書数) をログに記録するため、boot 時の curl
+  `rc 77` は `boot.log` で自己説明的になる - 空のストアと読めないストア (boot の SELinux コンテキストの
+  ケース) を区別する。
 - **APPLY** (`FETCHED` からのみ): `live`/`soft` → `rollback/<v>/` にバックアップ → `.vdlu-tmp` → `chmod` → 検証 →
   アトミックな `rename`。`reboot` → `staged/<path>.vdlu-new` に実体化する (ライブの inode には触れない)。
   `delete[]` → バックアップ → 削除。冪等 (既にターゲットのハッシュであるファイルはスキップされる)。
@@ -66,6 +69,9 @@ check/boot で再開する (WebUI はエラーではなく青い情報トース�
 - **profile=hardened** ⇒ 使用**前に** manifest に対する `vdlu-verify` が必須。失敗 = 中止。ダウングレードはブロック
   (単調なバージョン)。**trusted** ⇒ 検証はベストエフォートだが、すべての blob のハッシュは**常に**チェックされる。
 - **module-update 鍵の allowlist (両方の profiles):** `verify_manifest` は、`key_id` が設定済みの `key_id` allowlist (INTERFACES §5/§6 参照) にない manifest を、pubkey が選択される前に fail-closed で拒否する。そのため、単に keyring に置かれているだけの信頼の低い鍵 (例: fingerprint-feed の鍵) が flashless root 更新に署名することは決してできない。未設定時はデフォルトで安全: 単一鍵の keyring = その 1 つの鍵のみ。複数鍵の keyring = `key_id` が固定されるまで拒否。
+- **信頼アンカー除外 (VDLU#2):** エンジンは取得された plan 内のすべての `vdlu/` パス (`update.sh`、`vdlu-verify`、`verify/*`、`keyring/*`、config) を**無視する** - 署名されたフィードがそれらを運んでも、決して取得・適用・削除しない。フィードがデバイス上の検証器や署名鍵をすり替えることは決してできず、信頼アンカーはフルの署名付き再フラッシュによってのみ変わるため、漏洩した単一の署名鍵がワイヤ越しに root を永続化することはできない。
+- **ビジー時の延期 (オプトインの `apply_busy_file`):** `apply_busy_file` が設定されていると (ホストモジュールが自身の操作中に touch する絶対パス。例えば実行中のバックアップ)、そのパスが存在する間は APPLY が延期される - 更新が操作の途中でモジュールファイルをすり替えることは決してない。blob は既に取得済みなので、次のトリガーは再ダウンロードなしに適用する。
+- **サイズ上限:** ファイルあたり 128 MiB (`MAX_FILE_BYTES`) と manifest あたり 2 MiB (`MAX_MANIFEST_BYTES`) で、`update.sh` と `vdlu-verify` の両方で読み込み前に強制される (anti 展開爆弾 / anti-OOM)。
 - 優雅に劣化する: バイナリ欠落 / ネットワーク不通 / ディスクフル → stderr に明確なエラー + journal の `state:ERROR`。
   モジュールは壊さない。
 
@@ -81,7 +87,7 @@ JSON に対して堅牢。`sh` は `grep`/`cut` でそれを消費する。フ�
 
 | ファイル | 役割 |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…。INTERFACES §5 参照) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/…。INTERFACES §5 参照) |
 | `current.json` | ACTIVE バージョンの manifest (diff ベース)。不在 = 一度も更新されていない |
 | `target.json` | 進行中トランザクションのピン留め manifest (存在 = アクティブなトランザクション)。`DONE` で `current.json` になる |
 | `plan.tsv` / `plan.del` | plan + ファイルごとの進捗 (st) / 削除するパス |

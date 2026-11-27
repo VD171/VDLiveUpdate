@@ -1,121 +1,61 @@
-> **Languages:** [English](../SECURITY.md) · [العربية](../ar/SECURITY.md) · [Čeština](../cs/SECURITY.md) · [Deutsch](../de/SECURITY.md) · [Español](../es/SECURITY.md) · [فارسی](../fa/SECURITY.md) · Français · [हिन्दी](../hi/SECURITY.md) · [Bahasa Indonesia](../id/SECURITY.md) · [Italiano](../it/SECURITY.md) · [日本語](../ja/SECURITY.md) · [한국어](../ko/SECURITY.md) · [Nederlands](../nl/SECURITY.md) · [Polski](../pl/SECURITY.md) · [Português](../pt/SECURITY.md) · [Русский](../ru/SECURITY.md) · [Svenska](../sv/SECURITY.md) · [ไทย](../th/SECURITY.md) · [Türkçe](../tr/SECURITY.md) · [Українська](../uk/SECURITY.md) · [Tiếng Việt](../vi/SECURITY.md) · [中文](../zh/SECURITY.md)
+> **Languages:** [English](../../SECURITY.md) · [العربية](../ar/SECURITY.md) · [Čeština](../cs/SECURITY.md) · [Deutsch](../de/SECURITY.md) · [Español](../es/SECURITY.md) · [فارسی](../fa/SECURITY.md) · Français · [हिन्दी](../hi/SECURITY.md) · [Bahasa Indonesia](../id/SECURITY.md) · [Italiano](../it/SECURITY.md) · [日本語](../ja/SECURITY.md) · [한국어](../ko/SECURITY.md) · [Nederlands](../nl/SECURITY.md) · [Polski](../pl/SECURITY.md) · [Português](../pt/SECURITY.md) · [Русский](../ru/SECURITY.md) · [Svenska](../sv/SECURITY.md) · [ไทย](../th/SECURITY.md) · [Türkçe](../tr/SECURITY.md) · [Українська](../uk/SECURITY.md) · [Tiếng Việt](../vi/SECURITY.md) · [中文](../zh/SECURITY.md)
 
 ---
 
-# Politique de sécurité et modèle de confiance
+# Politique de sécurité
 
-VDLiveUpdate (VDLU) applique des **mises à jour root flashless** à un module vivant : il écrit
-dans `/data/adb/modules/<mod>` et swappe un `.so` Zygisk au boot. Chaque champ d'un
-manifeste récupéré (`path`, `sha256`, `delete[]`, `mode`, ...) est une **entrée hostile** - un
-feed empoisonné ou un MITM le livre. Cette page est le modèle de confiance et la politique de
-divulgation responsable. Pour le contrat de couture complet voir [`INTERFACES.md`](INTERFACES.md),
-et les internes engine/producer dans [`ENGINE.md`](ENGINE.md) et
-[`PRODUCER.md`](PRODUCER.md) ; la page wiki **Security-and-Trust-Model** porte le
-même modèle pour les lecteurs hors du repo.
-
-## Versions supportées
-
-Les correctifs de sécurité arrivent dans le dernier `ENGINE_VERSION` ; un manifeste signé déclare
-l'engine minimum dont il a besoin via `engine_min`, et l'engine sur l'appareil refuse un manifeste
-qui demande plus que ce qu'il implémente. Les engines vendorisés plus anciens sont censés
-**re-vendorer** pour récupérer un correctif, pas être patchés sur place.
-
-| ENGINE_VERSION | statut |
-|---|---|
-| 4 (actuel) | supporté - allowlist `key_id`, rejet des paths dot-segment/trailing-slash, plafonds de taille, lock au check-time |
-| 3 | dépassé - default `hardened`, `profile` fail-closed par inversion, bind module/MODID, blocage de downgrade |
-| <= 2 | non supporté - re-vendorer l'engine actuel |
-
-Tout changement dans la vérification de l'engine ou la logique d'apply incrémente `ENGINE_VERSION`.
+VDLiveUpdate (VDLU) applique des mises à jour flashless avec root à un module en cours
+d'exécution : il écrit dans le répertoire du module lui-même et remplace un `.so` Zygisk
+au démarrage, en s'exécutant dans le contexte root du module. Nous prenons la sécurité au
+sérieux.
 
 ## Signaler une vulnérabilité
 
-Signale en privé. **N'ouvre pas** d'issue, de PR ou de post de forum publics pour un bug de
-sécurité. Utilise les contacts du projet (voir [`CONTRIBUTING.md`](../CONTRIBUTING.md)) :
+- **Site:** https://vd171.ru
+- **Site:** https://vd.priv8.ru
+- **Issues:** https://github.com/VD171/VDLiveUpdate/issues
+- **GitHub:** [@VD171](https://github.com/VD171)
+- **XDA-Developers:** [@VD171](https://xdaforums.com/m/vd171.4699873/)
+- **Telegram:** [@VD_Priv8](https://t.me/VD_Priv8)
+- **Channel:** [@Priv8_VD](https://t.me/Priv8_VD)
+- **Discord:** [@VD.Priv8](https://discord.com/users/1296831918989639721)
+- **E-mail:** vd.priv8@pm.me
 
-- Telegram : **@VD_Priv8** (https://t.me/VD_Priv8)
-- Canal : **@Priv8_VD** (https://t.me/Priv8_VD)
-- E-mail : **vd.priv8@pm.me**
+Incluez une description claire et, si possible, un manifeste ou un feed qui reproduit le
+problème. Nous répondrons dès que possible et nous vous créditerons si vous le souhaitez.
 
-Merci d'inclure la version de l'engine, le `profile` en usage, et un manifeste ou feed qui
-reproduit le problème. Les correctifs sont publiés comme un nouveau `ENGINE_VERSION` avec une entrée
-`CHANGELOG.md` ; coordonne le calendrier de divulgation sur le fil du signalement.
+## Notes de portée
 
-## Modèle de confiance
-
-- **Signatures ed25519 détachées.** Le producer signe le manifeste canonique sur le
-  PC (openssl) ; l'appareil vérifie avec l'`ed25519-mini` embarqué - **pas d'openssl sur
-  l'appareil**. Le message signé est le sha256 hex du manifeste sans son champ `sig`
-  (clés triées, compact, UTF-8), donc signature et verify dérivent les mêmes octets sur deux
-  runtimes sans librairie JSON sur l'appareil.
-- **Keyring = pubkeys RAW de 32 octets**, flash uniquement. Le keyring de l'appareil livre `<key_id>.pub`
-  comme la clé raw de 32 octets (jamais le PEM) ; `vdlu-pack` **exclut** le keyring et les
-  binaires `verify/` du feed, donc un manifeste ne peut jamais réécrire l'ancre de confiance
-  sur l'appareil par le réseau.
-- **Allowlist `key_id` de module-update (fail-closed, avant la sélection de pubkey).** Un keyring
-  peut légitimement porter plus d'une clé (par exemple une clé de fingerprint-feed de moindre
-  confiance à côté de la clé de release). Avant même que `<key_id>.pub` soit sélectionnée, `verify_manifest`
-  rejette tout manifeste dont le `key_id` n'est pas dans l'allowlist configurée, dans **les deux**
-  profiles, et reflète l'ensemble résolu vers `vdlu-verify` via `VDLU_KEYID_ALLOW`. Cela
-  ferme un contournement où une clé de moindre confiance ayant fuité pourrait sinon signer une
-  mise à jour root flashless complète. Sûr par défaut quand `key_id` n'est pas défini : un keyring
-  **à une clé** s'épingle automatiquement à cette unique clé ; un keyring **multiclé** est rejeté tant que `key_id`
-  n'est pas épinglé (séparé par des virgules pour la rotation).
-- **La racine de confiance du fingerprint-feed est un path séparé et épinglé** avec sa propre clé ; elle
-  n'est jamais atteignable à travers le path de module-update ci-dessus.
-- **Le baseline est une semence locale de confiance.** `baseline.json` arrive dans le zip flashé -
-  la frontière de confiance de l'installation - donc il est sans signature et sans clé et **ne** passe pas par
-  `vdlu-verify` ; seul un manifeste **récupéré** du feed est vérifié. Cela garde la
-  clé de signature hors de la CI.
-
-## Garanties fail-closed
-
-- **`validate_plan` tourne avant tout fetch ou apply.** Dans `do_diff`, fail-closed, il
-  rejette le manifeste **entier** si un `path` est absolu, contient un segment `..` ou `.`,
-  se termine par `/`, ou porte un caractère de contrôle ; si un `sha256` n'est pas
-  `^[0-9a-f]{64}$` ; ou si un `mode`/`class`/`enc` est invalide. Aucun champ hostile n'atteint
-  un shell, et `cmd_check` ne porte aucune interpolation `system()`.
-- **Confinement de path.** Chaque écriture et suppression est confinée à `MODULE_DIR` via
-  `contained()` - apply, delete, et le `stage_file` du reboot passent tous la même garde.
-  Les symlinks dans l'arbre sont sautés par le producer (ne fuitent jamais de contenu de l'extérieur).
-- **Deux profiles, fail-closed par inversion.** `trusted` (source privée, stagée par SSH) est
-  le **seul** opt-in au verify best-effort ; **toute** autre valeur - y compris un typo, un
-  espace/CR de fin, ou une casse différente - est traitée comme `hardened`, où une signature valide
-  est **obligatoire** et un échec abandonne. Le `sha256` de chaque blob est vérifié dans
-  les deux profiles.
-- **Signature + hash avant toute exécution d'outil.** Le `curl` statique récupéré tourne en root, donc
-  `install-tool` vérifie la signature du tools-manifest (ed25519-mini, obligatoire dans **n'importe quel**
-  profile) et le hash du curl **avant** qu'il soit installé et exécuté - sig+hash avant
-  l'exec ferme le RCE.
-- **Transaction reprenable et sûre face au pin.** Le manifeste en vol est épinglé dans `target.json` ;
-  un crash, une perte réseau, ou un reboot reprend depuis le journal sans re-décider le plan.
-  Le downgrade est bloqué (`version` monotone), le champ `module` signé doit égaler
-  `MODID`, et `delete[]` ne tourne qu'au `finalize_done` (un `PENDING_REBOOT` ne supprime
-  rien). Rien n'est jamais "fait" sans un re-hash complet ; rien n'est écrasé sans
-  une sauvegarde `rollback/<v>/` d'abord.
-
-## Durcissement (défense en profondeur)
-
-- **Plafonds de taille.** Le manifeste, le tools-manifest, et le path de téléchargement `wget`/`head -c`
-  sans curl sont tous bornés avant d'être lus (anti-OOM / anti-flood). Un blob échoue
-  sa phase après 3 tentatives.
-- **Lock au check-time.** `check` prend le mkdir-lock avant de reconstruire son répertoire de travail, donc
-  un run concurrent ne peut pas courir en course contre lui.
-- **Confinement du staging.** `stage_file` a la même garde `contained()` que les primitives
-  d'apply vivant, donc un path reboot-hard stagé ne peut pas s'échapper de `MODULE_DIR` non plus.
-- **Le TLS est défense en profondeur, pas la racine de confiance.** Le curl statique utilise mbedTLS avec le
-  trust store Android (`--capath`, override `ca_path`) ; la garantie d'intégrité est la
-  signature ed25519, le contrôle du cert est une seconde couche.
-
-## Voir aussi
-
-- [`INTERFACES.md`](INTERFACES.md) - le contrat de couture immuable (§5 config, §6 signature, §11 toolchain).
-- [`ENGINE.md`](ENGINE.md) - l'engine côté appareil et sa machine à états.
-- [`PRODUCER.md`](PRODUCER.md) - packing, signature, canonicalisation, et rotation de clés.
-- Wiki : **Security-and-Trust-Model**.
+- Les mises à jour sont des blobs content-addressed ainsi qu'un `manifest.json` signé avec
+  ed25519. L'appareil vérifie la signature avec un `ed25519-mini` intégré (pas d'openssl
+  sur l'appareil), et chaque blob est contrôlé par rapport à son `sha256` avant d'être
+  utilisé.
+- Le profil hardened (la valeur par défaut publique) exige une signature valide et bloque
+  le downgrade. La version "de départ" est plafonnée par le `versionCode` du module
+  installé (lu depuis `module.prop`), de sorte qu'un module n'est jamais ramené derrière le
+  feed.
+- La racine de confiance (la clé publique ed25519 brute du `keyring/` et les binaires de
+  `verify/`) est flash-only et n'est jamais renouvelée par le réseau. Le producteur
+  l'exclut du feed et l'engine ignore tout chemin `vdlu/` dans un plan téléchargé, de sorte
+  qu'une clé de signature divulguée ne peut pas remplacer le vérificateur ou la clé et
+  persister en root.
+- Un manifeste valablement signé pour un autre module ne peut pas écrire dans le répertoire
+  d'un module différent. Le champ `module` signé doit être égal au `MODID` de l'appareil
+  (vérification de liaison entre modules), et toute écriture et suppression reste confinée
+  au répertoire du module.
+- L'engine s'exécute dans le propre contexte root du module et ne l'affaiblit jamais. Il
+  n'ajoute aucun privilège et n'interpole aucun champ du manifeste dans un shell, chaque
+  valeur de `path`, `sha256`, `mode` et `delete[]` est validée comme entrée hostile avant
+  utilisation.
+- La posture est fail-closed. Une valeur de `profile` corrompue ou inconnue ne glisse
+  jamais vers l'acceptation de contenu non signé (tout ce qui n'est pas exactement
+  `trusted` est traité comme `hardened`), et une sauvegarde est écrite avant qu'un fichier
+  ne soit écrasé, de sorte qu'un apply en échec ne détruit jamais la version installée.
+- Voir [TRUST-MODEL.md](TRUST-MODEL.md) pour le modèle de confiance complet, les garanties
+  fail-closed et les détails de hardening.
 
 <!-- doc-footer -->
 
 ---
 
-> _Cette documentation a été générée avec Claude (Anthropic) et est maintenue par VD171. Les corrections et améliorations sont les bienvenues ; voir [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Cette documentation a été générée avec Claude (Anthropic) et est maintenue par VD171. Les corrections et améliorations sont les bienvenues, voir [CONTRIBUTING.md](CONTRIBUTING.md)._

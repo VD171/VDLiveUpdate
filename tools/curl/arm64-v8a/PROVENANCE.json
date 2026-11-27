@@ -1,0 +1,18 @@
+{
+  "_comment": "Provenance for the bundled pre-compiled binary in this ABI dir (STANDARDS.md 8, HARD). tooling/provenance-check.sh verifies the binary's name appears under binaries[].file.",
+  "module": "VDLiveUpdate",
+  "abi": "arm64-v8a",
+  "binaries": [
+    {
+      "file": "curl",
+      "source": "https://curl.se/download/curl-8.11.1.tar.xz (curl 8.11.1 + mbedTLS 3.6.7 linked static)",
+      "version": "curl 8.11.1 / mbedTLS 3.6.7",
+      "commit": "n/a (release tarball; curl sha256 c7ca7db48b0909743eaef34250da02c19bc61d4f1dcedd6603f109409536ab56)",
+      "license": "curl (MIT/X derivative)",
+      "sha256": "c0b0721287ef3bd56c6b76f2f257a505434a498cccab502cf7f9ce79750486b8",
+      "build_flags": "HTTP_ONLY, mbedTLS backend, MinSizeRel, stripped; no http2/3/ssh/ldap/psl/idn2/zlib/brotli/zstd",
+      "toolchain": "Android NDK r29 clang, api 28, cmake",
+      "reproduce": "tools/curl/build.sh"
+    }
+  ]
+}

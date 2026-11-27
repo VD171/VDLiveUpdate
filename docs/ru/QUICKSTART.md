@@ -34,7 +34,7 @@
 ```
 
 Изменяемое состояние engine (`config`, `current.json`, journal, lock) живёт в
-Tier-2, `/data/adb/<modid>/vdlu/`, вне каталога модуля; `config.default` засевает его при
+Tier-2, `/data/adb/<modid>/vdlu/`, вне каталога модуля, `config.default` засевает его при
 первом запуске.
 
 ## 1. Вендорьте engine
@@ -48,7 +48,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Поставляйте только те ABI, которые поддерживаете; `customize.sh` может подрезать `verify/` до
+Поставляйте только те ABI, которые поддерживаете, `customize.sh` может подрезать `verify/` до
 ABI устройства во время установки.
 
 ## 2. Сгенерируйте ключ подписи (единоразово)
@@ -86,10 +86,11 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
 Используйте `profile=trusted` только для приватного источника `file://`/SSH (verify по
-возможности; sha256 каждого блоба всё равно проверяется). Любое значение, кроме буквального
+возможности, sha256 каждого блоба всё равно проверяется). Любое значение, кроме буквального
 `trusted`, трактуется как `hardened` (fail-closed).
 
 ## 5. Подключите триггеры
@@ -122,7 +123,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` вендорятся из `webui/`; перевод можно добавить через
+(`vdlu.js` / `vdlu.css` вендорятся из `webui/`, перевод можно добавить через
 `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Подпишите фид в вашем workflow релиза
@@ -153,7 +154,7 @@ cp ./seed/manifest.json <module>/vdlu/baseline.json
 
 ---
 
-Это всё внедрение целиком. `sh -n <module>/vdlu/update.sh` должен пройти; протестируйте
+Это всё внедрение целиком. `sh -n <module>/vdlu/update.sh` должен пройти, протестируйте
 producer и engine от начала до конца, как показано в [`PRODUCER.md`](PRODUCER.md) и в корневом
 README, прежде чем поставлять.
 
@@ -161,4 +162,4 @@ README, прежде чем поставлять.
 
 ---
 
-> _Эта документация создана с помощью Claude (Anthropic) и поддерживается VD171. Исправления и улучшения приветствуются; см. [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Эта документация создана с помощью Claude (Anthropic) и поддерживается VD171. Исправления и улучшения приветствуются, см. [CONTRIBUTING.md](CONTRIBUTING.md)._

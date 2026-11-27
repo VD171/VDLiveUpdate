@@ -24,7 +24,7 @@ Il manifest è la descrizione completa di una release: ogni file nell'albero tar
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Il feed porta **solo il contenuto proprio del modulo**. Un insieme fisso di path
 
 | Escluso | Perché |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (il trust root: chiavi pubbliche raw + il binario verificatore) | **Questa è la ragione di sicurezza centrale.** L'ancora di fiducia è **flash-only**. Se il keyring o il verificatore fossero consegnabili dal feed, un manifest potrebbe sovrascrivere proprio la cosa che lo valida. Tenerli fuori dal filo significa che un manifest non può mai riscrivere l'ancora di fiducia sul dispositivo. |
+| `vdlu/keyring/`, `vdlu/verify/` (il trust root: chiavi pubbliche raw + il binario verificatore) | **Questa è la ragione di sicurezza centrale.** L'ancora di fiducia è **flash-only**. Se il keyring o il verificatore fossero consegnabili dal feed, un manifest potrebbe sovrascrivere proprio la cosa che lo valida. Tenerli fuori dal filo significa che un manifest non può mai riscrivere l'ancora di fiducia sul dispositivo. Come secondo guard indipendente (`ENGINE_VERSION` 5), l'engine **ignora** anche ogni path `vdlu/` in un piano recuperato, così nemmeno un feed che li porta può toccare l'ancora. |
 | `vdlu/baseline.json` | È una copia del manifest firmato (il seme di installazione); impacchettarlo sarebbe un loop di auto-riferimento. |
 | `.vd/` infrastruttura di flash | Impalcatura del flash-gate che viene spedita nello zip, mai applicata dal vivo. |
 | `update.json`, `update-mmrl.json` | La loro size/sha vengono riempite dalla CI *dopo* che gli zip sono costruiti, quindi la copia spedita differisce da qualsiasi copia del feed. Darli in pasto causerebbe un fetch fantasma di un singolo file al primo self-update di ogni installazione, e sono comunque vestigiali sul dispositivo (il manager legge il JSON di aggiornamento raw remoto). |

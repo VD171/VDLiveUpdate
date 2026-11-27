@@ -8,7 +8,7 @@
 **s'emboîter** - les signatures CLI, les noms de fichier et les clés JSON ci-dessous sont **immuables** (un
 changement implique de s'aligner ici d'abord).
 
-Principes hérités des repos : **sh POSIX pur** sur l'appareil (pas de bashismes ; tourne avec toybox/busybox +
+Principes hérités des repos : **sh POSIX pur** sur l'appareil (pas de bashismes, tourne avec toybox/busybox +
 `sha256sum`/`gzip`/`base64` de toybox + le `curl` récupéré + le `ed25519-mini` embarqué - mince, sans bundle de
 binaires), **zéro commentaire gratuit**, **toujours release**, **rigueur face à l'échec** (transaction
 reprenable, rien de faussement "terminé", rien de perdu), **rien de relâché**.
@@ -56,17 +56,18 @@ Source des blobs/manifeste : `source` de la config. `<source>` + `/manifest.json
 
 ```json
 { "schema":1, "module":"<id>", "version":<int>, "version_name":"<str>", "built":"<ISO8601>",
-  "engine_min":3, "key_id":"<str>", "channel":"stable",
+  "engine_min":5, "key_id":"<str>", "channel":"stable",
   "files":[ {"path":"webroot/index.html","sha256":"<hex64>","size":<int>,"mode":"0644","enc":"raw|gz","class":"live|soft|reboot"} ],
   "delete":["<path>"], "sig":"<base64>" }
 ```
 
 - `files[]` = l'arbre cible COMPLET. `class` : `live` (webroot/bin/lib/confs/scripts-on-demand/module.prop) ·
   `soft` (service.sh/post-fs-data.sh/boot-completed.sh) · `reboot` (`zygisk/**/*.so`, `system/**`, `*.rule`).
-  Par défaut selon le path ; ne dégrade jamais `reboot`→`live`.
-- `enc` : `gz` (gzip `-9 -n`, déterministe ; toybox gunzip sur l'appareil) seulement quand ça compresse bien ET
-  que la taille est significative ; `sha256` est TOUJOURS du contenu original.
+  Par défaut selon le path, ne dégrade jamais `reboot`→`live`.
+- `enc` : `gz` (gzip `-9 -n`, déterministe, toybox gunzip sur l'appareil) seulement quand ça compresse bien ET
+  que la taille est significative, `sha256` est TOUJOURS du contenu original.
 - `sig` : signature du manifeste canonique SANS le champ `sig` (§4 de verify).
+- **Exclusion de l'ancre de confiance (côté engine, VDLU#2) :** l'engine RETIRE du plan tout path `files[]`/`delete[]` sous `vdlu/` (ses propres `update.sh`/`vdlu-verify`/`verify/*`/`keyring/*`/config) - jamais récupéré, appliqué, ni supprimé - même si un feed signé les porte. L'ancre de confiance sur l'appareil ne change que par un re-flash signé complet, pas par le réseau, `vdlu-pack` exclut aussi `vdlu/` côté producer, donc c'est une seconde garde, côté engine, contre une clé de signature ayant fuité.
 
 ## 4. journal.json (l'ENGINE écrit, la WEBUI lit - le contrat de progression)
 
@@ -83,7 +84,7 @@ Machine à états (ordre fixe) : `PLANNED→FETCHING→FETCHED→APPLYING→APPL
 `DONE`). Sorties de la phase `fetch` : `ERROR` (échec dur) ou `DEFERRED` (net_policy a bloqué le téléchargement -
 bénin/reprenable, pas une erreur).
 
-## 5. config (key=value, un par ligne ; éditable dans la WEBUI)
+## 5. config (key=value, un par ligne, éditable dans la WEBUI)
 
 ```
 auto_on_webui_open=0
@@ -98,7 +99,11 @@ key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), 
                        # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
                        # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+ca_cert=               # empty = auto-build a CA bundle from the trust store; set a path to a bundle to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+apply_busy_file=       # OPT-IN: absolute path the host module touches during its own operations (e.g. a
+                       # backup). While it EXISTS, APPLY is deferred to the next trigger (blobs already
+                       # fetched, no re-download) so an update never swaps module files mid-operation. UNSET = off.
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
 boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
                        # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
@@ -109,11 +114,11 @@ check/auto-open). Si le fetch du manifeste échoue pour cause de RÉSEAU (`fetch
 fetcher), il attend et réessaie jusqu'au succès OU l'épuisement de `boot_retry_minutes` de temps AWAKE. Un design
 qui **ne tient rien et ne draine pas** :
 - **Zéro wakelock :** entre les essais c'est `sleep`, qui se fige en deep-sleep → l'appareil dort normalement
-  (~zéro batterie) ; le retry se met en pause et reprend une fois que l'appareil est déjà réveillé.
+  (~zéro batterie), le retry se met en pause et reprend une fois que l'appareil est déjà réveillé.
 - **Zéro lock tenu :** `acquire_lock_try`+release ENTRE les essais (ne tient pas le lock pendant l'attente) →
-  `run`/check manuel ne bloquent jamais ; si un run manuel met en scène un TARGET entre-temps, le boot s'efface.
+  `run`/check manuel ne bloquent jamais, si un run manuel met en scène un TARGET entre-temps, le boot s'efface.
 - **Ne réveille pas la radio pour rien :** un sondage `net_allowed` (via `net_type`/`ip route get`, une recherche
-  de route du noyau qui respecte le policy-routing d'Android ; pas de paquet) contrôle chaque essai - il ne
+  de route du noyau qui respecte le policy-routing d'Android, pas de paquet) contrôle chaque essai - il ne
   dépense un fetch qu'une fois le réseau apparu.
 - Ne réessaie JAMAIS un échec déterministe (manifeste/sig/downgrade). `--connect-timeout 15` sur le fetch (ne se
   bloque pas sur un portail captif). `service.sh` le met en arrière-plan (le boot ne bloque jamais).
@@ -123,15 +128,15 @@ qui **ne tient rien et ne draine pas** :
   vieil engine est un footgun. En l'activant, vendorise l'engine actuel.
 
 **`net_policy` (any|wifi|mobile) :** contrôle le **TÉLÉCHARGEMENT** par type de réseau. `net_type()` classe la
-sortie de `ip route get` (iface cellulaire `rmnet/ccmni/v4-*/clat` = mobile ; tout le reste = wifi ; recherche du
+sortie de `ip route get` (iface cellulaire `rmnet/ccmni/v4-*/clat` = mobile, tout le reste = wifi, recherche du
 noyau, pas de paquet). `net_allowed()` compare contre `net_policy` et contrôle `do_fetch` (blobs) + le sondage du
 retry de boot patient. Le **check du manifeste reste libre** (minuscule → l'UI signale une mise à jour sur
-n'importe quel réseau) ; seul le téléchargement attend le réseau autorisé. Un téléchargement sur un réseau non
-autorisé = l'état **`DEFERRED`** dans le journal (PAS ERROR ; un toast INFO bleu doux "en attente du réseau X" ;
+n'importe quel réseau), seul le téléchargement attend le réseau autorisé. Un téléchargement sur un réseau non
+autorisé = l'état **`DEFERRED`** dans le journal (PAS ERROR, un toast INFO bleu doux "en attente du réseau X" ;
 plan/target persistent, il reprend au prochain check/boot sur le bon réseau). `net_policy` **remplace**
 `allow_metered` (qui n'a jamais été consommé). Engine `97baf887`+ (`file://` n'est jamais contrôlé).
 
-## 6. Signature (le PRODUCER signe sur le PC via openssl ; l'ENGINE vérifie sur l'appareil via ed25519-mini)
+## 6. Signature (le PRODUCER signe sur le PC via openssl, l'ENGINE vérifie sur l'appareil via ed25519-mini)
 
 - Canonicalisation : le manifeste SANS `sig`, clés triées, JSON compact (sans espaces superflus), UTF-8.
   Ce qui est signé/vérifié = le `sha256` hex de cette forme canonique (donne un déterminisme inter-outils).
@@ -139,16 +144,16 @@ plan/target persistent, il reprend au prochain check/boot sur le bon réseau). `
 - `engine/vdlu-verify <manifest.json> <keyring_dir>` → rc 0 si la `sig` correspond à la pubkey `<key_id>.pub` du
   keyring (SLIM : pubkey **RAW 32 octets**). En interne, pas d'openssl : toybox `sha256sum`/`base64 -d` + le
   binaire `ed25519-mini` embarqué (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=valide/1=invalide/2=usage).
-  rc!=0 = rejet. **`profile=hardened` ⇒ verify obligatoire ; échec = abandon.**
+  rc!=0 = rejet. **`profile=hardened` ⇒ verify obligatoire, échec = abandon.**
   `profile=trusted` ⇒ verify est best-effort (source déjà de confiance via SSH), mais le hash de chaque blob est TOUJOURS vérifié.
-- **Allowlist de clé de module-update (fail-closed, avant la sélection de la pubkey) :** le `key_id` du manifeste doit être une clé MODULE-UPDATE acceptée avant que `<key_id>.pub` soit sélectionnée - le `key_id` de la config (§5) est cette allowlist. Un keyring peut AUSSI porter une clé de moindre confiance (p. ex. une clé de fingerprint-feed, automatisée, compte différent) ; sans l'allowlist, un manifeste signé par cette clé se vérifierait et appliquerait une mise à jour root flashless complète en cas de fuite. `verify_manifest` l'impose dans les DEUX profiles et passe l'ensemble résolu à `vdlu-verify` via l'env `VDLU_KEYID_ALLOW` (pour que le vérificateur standalone soit d'accord). Non défini est sûr par défaut (keyring à une clé : cette clé seulement ; keyring multiclé : rejeté tant que `key_id` n'est pas épinglé). La racine de confiance du fingerprint-feed est un chemin SÉPARÉ, avec sa propre clé épinglée, et n'est pas affectée.
+- **Allowlist de clé de module-update (fail-closed, avant la sélection de la pubkey) :** le `key_id` du manifeste doit être une clé MODULE-UPDATE acceptée avant que `<key_id>.pub` soit sélectionnée - le `key_id` de la config (§5) est cette allowlist. Un keyring peut AUSSI porter une clé de moindre confiance (p. ex. une clé de fingerprint-feed, automatisée, compte différent), sans l'allowlist, un manifeste signé par cette clé se vérifierait et appliquerait une mise à jour root flashless complète en cas de fuite. `verify_manifest` l'impose dans les DEUX profiles et passe l'ensemble résolu à `vdlu-verify` via l'env `VDLU_KEYID_ALLOW` (pour que le vérificateur standalone soit d'accord). Non défini est sûr par défaut (keyring à une clé : cette clé seulement, keyring multiclé : rejeté tant que `key_id` n'est pas épinglé). La racine de confiance du fingerprint-feed est un chemin SÉPARÉ, avec sa propre clé épinglée, et n'est pas affectée.
 - `producer/vdlu-keygen <id> <out>` → génère `<id>.pem` (priv) + `<id>.pub` (PEM, pour le tooling sur le PC) +
   `<id>.pub.raw` (**RAW 32B** = le `<id>.pub` du keyring slim sur l'appareil). openssl `genpkey -algorithm ed25519`.
 
 ## 7. Blob - vérification (ENGINE)
 
 Télécharge `<source>/blobs/<sha>` (ou `.gz` si `enc=gz`), écrit `.part`, si `gz` décompresse (`gunzip`),
-vérifie `sha256sum` == le `sha256` du manifeste ; correspond → `mv` atomique vers `$VDLU_DIR/blobs/<sha>`. 3
+vérifie `sha256sum` == le `sha256` du manifeste, correspond → `mv` atomique vers `$VDLU_DIR/blobs/<sha>`. 3
 échecs sur le même blob = abandonne la phase (rien d'appliqué). Un blob déjà dans `$VDLU_DIR/blobs/<sha>` avec un
 hash ok = saute le téléchargement.
 
@@ -163,12 +168,12 @@ hash ok = saute le téléchargement.
 ## 9. WEBUI ↔ ENGINE (composant WEBUI)
 
 - Déclenche : `ksu.exec("sh $MODULE_DIR/vdlu/update.sh run")` (en arrière-plan).
-- Progression : un poll léger `ksu.exec("cat $VDLU_DIR/journal.json")` toutes les ~1s ; rend `{phase,state,total,done,current,bytes}`.
+- Progression : un poll léger `ksu.exec("cat $VDLU_DIR/journal.json")` toutes les ~1s, rend `{phase,state,total,done,current,bytes}`.
 - Vivacité : journal absent pendant 8 ticks ⇒ "pas de réponse". Journal FIGÉ (mêmes valeurs) pendant 20 ticks ⇒ vérifie `lock.d` : vivant = continue (fetch lent d'1 blob), mort = erreur + Resume. Sans cela, un run mort en plein fetch figerait le toast sur "mise à jour".
 - Cancel : `ksu.exec("touch $VDLU_DIR/cancel")`.
 - Config : lit/écrit `$VDLU_DIR/config` (key=value) dans un onglet "Updates".
-- Toast : barre + `phase done/total · current` ; à la fin avec `reboot_pending` ⇒ un bandeau persistant "redémarrer pour activer le .so".
-- Auto-open (`auto_on_webui_open=1`) : fait d'abord un `check()` SILENCIEUX (sans toast de progression) ; ne déclenche le `run`+toast persistant que si `update && fetch>0`. À jour/en avance/rien de neuf = un résultat inline dans le panneau, zéro toast résiduel. Non intrusif comme le bouton manuel (le toast n'apparaît que quand il y a un vrai téléchargement). Le bootstrap de curl est unique.
+- Toast : barre + `phase done/total · current`, à la fin avec `reboot_pending` ⇒ un bandeau persistant "redémarrer pour activer le .so".
+- Auto-open (`auto_on_webui_open=1`) : fait d'abord un `check()` SILENCIEUX (sans toast de progression), ne déclenche le `run`+toast persistant que si `update && fetch>0`. À jour/en avance/rien de neuf = un résultat inline dans le panneau, zéro toast résiduel. Non intrusif comme le bouton manuel (le toast n'apparaît que quand il y a un vrai téléchargement). Le bootstrap de curl est unique.
 
 ## 10. Intégration dans la démo (composant INTEGRATION) - SNIPPETS, ne pas éditer les fichiers vivants
 
@@ -190,18 +195,18 @@ verify/<abi>/ed25519-mini, baseline.json}`. **PAS** de `bin/` (openssl/curl/zstd
 segment de `source` par `vdlu-tools`, p. ex. `https://<user>.github.io/<repo>/vdlu-tools`). Contient :
 - `tools-manifest.json` - un manifeste `vdlu-pack` SIGNÉ sur l'arbre `<abi>/curl`, épinglant le `sha256` de
   chaque curl (même clé `release-2026`).
-- `<abi>/curl` - le curl **statique** RAW (autonome, ~1MB ; curl 8.11.1 + mbedTLS). 🪤 mbedTLS ne porte PAS de
+- `<abi>/curl` - le curl **statique** RAW (autonome, ~1MB, curl 8.11.1 + mbedTLS). 🪤 mbedTLS ne porte PAS de
   CA bundle : `fetch_url` passe `--capath` (auto-détection du trust store d'Android : `/system/etc/security/cacerts`
-  → APEX conscrypt ; `ca_path` surcharge). Pas de capath = erreur 60. L'intégrité est l'ed25519 ; le cert-check est défense en profondeur.
+  → APEX conscrypt, `ca_path` surcharge). Pas de capath = erreur 60. L'intégrité est l'ed25519, le cert-check est défense en profondeur.
 
 **install-tool** (ENGINE) : `update.sh install-tool <abi>` lit `$VDLU_DIR/.work/{tools-manifest.json, tool.<abi>}`
 (la WEBUI le télécharge via `fetch()` et l'écrit là), **vérifie la signature du tools-manifest (ed25519-mini,
 OBLIGATOIRE dans tout profil)** + le hash du curl == manifeste, et seulement alors l'installe à `$VDLU_DIR/tools/<abi>/curl` (0755).
 Le curl tourne en root → sig+hash avant exec ferme le RCE. Persiste en Tier-2 : jamais re-téléchargé (sauf à la désinstallation).
 
-**fetch-bootstrap** (WEBUI, `ensureToolchain()`) : tourne avant check/run/resume. `file://` = no-op ; curl DÉJÀ
+**fetch-bootstrap** (WEBUI, `ensureToolchain()`) : tourne avant check/run/resume. `file://` = no-op, curl DÉJÀ
 disponible (Tier-2, OU `module/bin/<abi>/curl` d'un module **auto-empaqueté**, OU système) = no-op
-(VDLU réutilise le curl existant) ; seul `https` **sans aucun curl** télécharge curl + tools-manifest via la webview, les
+(VDLU réutilise le curl existant), seul `https` **sans aucun curl** télécharge curl + tools-manifest via la webview, les
 écrit dans `.work` (base64 en morceaux via `ksu.exec`), appelle `install-tool`. Confiance = la vérification sur l'appareil, pas le téléchargement.
 
 > 🪤 **Slim (fetch-bootstrap) ≠ obligatoire.** Un module dont le `bin/` existe pour SES PROPRES fonctions (p. ex.
@@ -210,11 +215,11 @@ disponible (Tier-2, OU `module/bin/<abi>/curl` d'un module **auto-empaqueté**, 
 > propre toolchain gagnent les ~2MB.
 
 **baseline.json** (fix from:0) : la release copie le `manifest.json` SIGNÉ de la version livrée vers
-`vdlu/baseline.json` ; à une installation fraîche l'engine sème `current.json` à partir de lui (`init_paths`,
+`vdlu/baseline.json`, à une installation fraîche l'engine sème `current.json` à partir de lui (`init_paths`,
 seulement si absent) → l'appareil naît "à jour", sans auto-mise-à-jour de lui-même et sans re-fetch.
 
 <!-- doc-footer -->
 
 ---
 
-> _Cette documentation a été générée avec Claude (Anthropic) et est maintenue par VD171. Les corrections et améliorations sont les bienvenues ; voir [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Cette documentation a été générée avec Claude (Anthropic) et est maintenue par VD171. Les corrections et améliorations sont les bienvenues, voir [CONTRIBUTING.md](CONTRIBUTING.md)._

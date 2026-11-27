@@ -12,9 +12,9 @@ Kontribusi diterima dengan senang hati.
 - Uji end to end sebelum sebuah PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, lalu engine
   (`check` / `run` / `boot`). Juga `sh -n engine/*.sh` dan `node --check webui/vdlu.js`.
 - Keamanan tidak dapat ditawar: setiap field manifest adalah input yang hostile dan `validate_plan()` tetap
-  fail-closed; kunci penandatanganan privat tidak pernah menyentuh CI atau sebuah perangkat.
-- sh POSIX di perangkat (tanpa bashism di luar `local`, tanpa `jq`); jaga komentar tetap ringkas.
-- Satu perubahan logis per PR; sebutkan apa yang berubah dan mengapa.
+  fail-closed, kunci penandatanganan privat tidak pernah menyentuh CI atau sebuah perangkat.
+- sh POSIX di perangkat (tanpa bashism di luar `local`, tanpa `jq`), jaga komentar tetap ringkas.
+- Satu perubahan logis per PR, sebutkan apa yang berubah dan mengapa.
 
 ## Kontak
 
@@ -26,4 +26,4 @@ Kontribusi diterima dengan senang hati.
 
 ---
 
-> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan; lihat [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan, lihat [CONTRIBUTING.md](CONTRIBUTING.md)._

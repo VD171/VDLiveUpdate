@@ -22,9 +22,28 @@
   ======================================================================
 -->
 
-# VDLiveUpdate
+# VD Live Update
 
-> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · हिन्दी · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+
+<p align="center">
+  <img src="images/logo-wordmark.png" alt="VD Live Update" width="320">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1a7f37" alt="License"></a>
+  <a href="https://github.com/VD171/VDLiveUpdate/stargazers"><img src="https://img.shields.io/github/stars/VD171/VDLiveUpdate?color=d29922" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="docs/QUICKSTART.md">Quickstart</a> ·
+  <a href="docs/ENGINE.md">Engine</a> ·
+  <a href="docs/PRODUCER.md">Producer</a> ·
+  <a href="docs/WEBUI.md">WebUI</a> ·
+  <a href="docs/INTERFACES.md">Interfaces</a> ·
+  <a href="docs/AI-AGENTS.md">AI agents</a> ·
+  <a href="docs/TRUST-MODEL.md">Trust model</a>
+</p>
 
 **VDLU** एक फ़्लैशलेस, वृद्धिशील सेल्फ़-अपडेट इंजन है जो **KernelSU / APatch / Magisk** मॉड्यूल के लिए है। एक इंस्टॉल्ड मॉड्यूल **केवल बदली हुई फ़ाइलों** (कंटेंट-एड्रेस्ड ब्लॉब्स + एक हस्ताक्षरित मैनिफ़ेस्ट) को लाकर खुद को अपडेट करता है, लाइव फ़ाइलों को **बिना रीबूट** लागू करता है, और उन चंद फ़ाइलों को स्टेज तथा फ़्लैग करता है जिन्हें रीबूट की ज़रूरत होती है (एक `.so`, एक `/system` ओवरले, एक `sepolicy.rule`)। कोई रूट प्रबंधक नहीं, पूरे `.zip` को दोबारा डाउनलोड करना नहीं, और उन स्टेज की गई फ़ाइलों के अलावा कोई रीबूट नहीं।
 
@@ -36,7 +55,7 @@
 
 ## यह कैसे काम करता है
 
-- **Producer (PC / रिलीज़):** `vdlu-pack` एक मॉड्यूल ट्री को एक कंटेंट-एड्रेस्ड फ़ीड में बदलता है (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`); `vdlu-keygen` / `vdlu-sign` (ed25519); `vdlu-gc` अनाथ ब्लॉब्स को अंतिम N मैनिफ़ेस्ट के संदर्भ से छाँटता है (fail-safe, डिफ़ॉल्ट रूप से dry-run)।
+- **Producer (PC / रिलीज़):** `vdlu-pack` एक मॉड्यूल ट्री को एक कंटेंट-एड्रेस्ड फ़ीड में बदलता है (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`), `vdlu-keygen` / `vdlu-sign` (ed25519), `vdlu-gc` अनाथ ब्लॉब्स को अंतिम N मैनिफ़ेस्ट के संदर्भ से छाँटता है (fail-safe, डिफ़ॉल्ट रूप से dry-run)।
 - **Engine (डिवाइस):** POSIX sh, कोई `jq` नहीं। `update.sh` (`check | run | resume | boot | status | cancel`) एक **पुनः-आरंभ-योग्य (resumable) लेन-देन** (journal) के रूप में DIFF -> FETCH -> APPLY -> COMMIT चलाता है, रोलबैक और एक `mkdir` लॉक के साथ। हस्ताक्षर को अंतर्निहित `ed25519-mini` द्वारा सत्यापित किया जाता है (डिवाइस पर कोई `openssl` नहीं)।
 - **WebUI:** एक ड्रॉप-इन Updates पैनल (प्रगति टोस्ट, cancel, reboot बैनर), वनीला JS।
 
@@ -47,14 +66,14 @@
 
 ## इसे अपने मॉड्यूल में अपनाएँ
 
-`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` को `<module>/vdlu/` में vendor करें, अपनी **raw 32-byte public key** को `vdlu/keyring/<id>.pub` के रूप में embark करें, एक `config` जोड़ें (profile + source), ट्रिगर वायर करें (बूट पर ऑटो-अपडेट के लिए `post-fs-data.sh` pre-zygote; एक WebUI-open ट्रिगर), और अपने रिलीज़ में `vdlu-pack` + `vdlu-sign` जोड़ें। एक तैयार टेम्पलेट के लिए [`docs/QUICKSTART.md`](docs/QUICKSTART.md) देखें।
+`engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` को `<module>/vdlu/` में vendor करें, अपनी **raw 32-byte public key** को `vdlu/keyring/<id>.pub` के रूप में embark करें, एक `config` जोड़ें (profile + source), ट्रिगर वायर करें (बूट पर ऑटो-अपडेट के लिए `post-fs-data.sh` pre-zygote, एक WebUI-open ट्रिगर), और अपने रिलीज़ में `vdlu-pack` + `vdlu-sign` जोड़ें। एक तैयार टेम्पलेट के लिए [`docs/QUICKSTART.md`](docs/QUICKSTART.md) देखें।
 
 ## सुरक्षा
 
 - **हर मैनिफ़ेस्ट फ़ील्ड शत्रुतापूर्ण इनपुट है।** `validate_plan()` किसी भी फ़ेच या apply से **पहले** पूरे मैनिफ़ेस्ट को fail-closed अस्वीकार कर देता है यदि कोई पथ निरपेक्ष हो या उसमें `..` हो, कोई `sha256` जो 64 hex अक्षर न हो, या कोई अमान्य mode / class / encoding हो।
-- **निजी हस्ताक्षर कुंजी कभी CI या किसी डिवाइस को नहीं छूती**; केवल raw public key अंतर्निहित की जाती है, और सत्यापन `ed25519-mini` का उपयोग करता है, `openssl` का नहीं।
+- **निजी हस्ताक्षर कुंजी कभी CI या किसी डिवाइस को नहीं छूती**, केवल raw public key अंतर्निहित की जाती है, और सत्यापन `ed25519-mini` का उपयोग करता है, `openssl` का नहीं।
 - `hardened` उलटाव (inversion) के ज़रिए fail-closed है: शाब्दिक `trusted` के अलावा कुछ भी `hardened` माना जाता है, इसलिए एक भ्रष्ट profile मान कभी भी चुपचाप किसी अहस्ताक्षरित मैनिफ़ेस्ट को स्वीकार नहीं कर सकता।
-- रीबूट-श्रेणी की फ़ाइलें (`.so`, `/system` ओवरले, `sepolicy.rule`) को **स्टेज किया जाता है, कभी भी किसी लाइव inode पर नहीं लिखा जाता**; बाक़ी सब कुछ लाइव लागू होता है। एक असफल apply बिना बैकअप के ओवरराइट करने के बजाय गर्भपात (abort) कर देता है।
+- रीबूट-श्रेणी की फ़ाइलें (`.so`, `/system` ओवरले, `sepolicy.rule`) को **स्टेज किया जाता है, कभी भी किसी लाइव inode पर नहीं लिखा जाता**, बाक़ी सब कुछ लाइव लागू होता है। एक असफल apply बिना बैकअप के ओवरराइट करने के बजाय गर्भपात (abort) कर देता है।
 
 ## बिल्ड / टेस्ट
 
@@ -69,9 +88,13 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 `sh -n engine/*.sh`, `node --check webui/vdlu.js`, और `webui/demo.html` को किसी ब्राउज़र में खोलें (यह डिवाइस ब्रिज को mock करता है)।
 
+## AI एजेंट
+
+इंजन पूरी तरह शेल से चलाया जाता है (`sh engine/update.sh <check|run|resume|boot|status|cancel>` मशीन-पठनीय स्थिति प्रिंट करता है), इसलिए एक AI एजेंट बिना किसी इंटरफ़ेस के अपडेट की जाँच, अनुप्रयोग और पुनरारंभ कर सकता है। घटकों के बीच का सीम अनुबंध [`docs/INTERFACES.md`](docs/INTERFACES.md) में है, और AI से आने वाले पैच उसी समीक्षा मानक पर परखे जाते हैं जिस पर बाकी सब।
+
 ## दस्तावेज़ीकरण
 
-- [`INTERFACES.md`](docs/INTERFACES.md): घटकों के बीच सीवन-अनुबंध (seam contract) (अभिसरण का नियम; इसे अपरिवर्तनीय मानें)।
+- [`INTERFACES.md`](docs/INTERFACES.md): घटकों के बीच सीवन-अनुबंध (seam contract) (अभिसरण का नियम, इसे अपरिवर्तनीय मानें)।
 - [`ENGINE.md`](docs/ENGINE.md): डिवाइस-साइड engine (`update.sh`): पुनः आरंभ करने योग्य DIFF -> FETCH -> APPLY -> COMMIT ट्रांज़ैक्शन।
 - [`PRODUCER.md`](docs/PRODUCER.md): PC/release साइड: content-addressed feed को बनाना और साइन करना (`vdlu-pack`, `vdlu-sign`)।
 - [`WEBUI.md`](docs/WEBUI.md): ड्रॉप-इन Updates पैनल विजेट (प्रोग्रेस टोस्ट, रद्द करें, रीबूट बैनर)।
@@ -102,16 +125,20 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## लाइसेंस
 
-VDLiveUpdate का अपना कोड **Apache-2.0** है; देखें [LICENSE](LICENSE)। यह एक छोटे `ed25519-mini`
-सत्यापनकर्ता और फ़ेच बूटस्ट्रैप के लिए एक स्थिर `curl` को vendor करता है, प्रत्येक अपने-अपने लाइसेंस के तहत; देखें
+VDLiveUpdate का अपना कोड **Apache-2.0** है, देखें [LICENSE](LICENSE)। यह एक छोटे `ed25519-mini`
+सत्यापनकर्ता और फ़ेच बूटस्ट्रैप के लिए एक स्थिर `curl` को vendor करता है, प्रत्येक अपने-अपने लाइसेंस के तहत, देखें
 [NOTICE.md](NOTICE.md) और बंडल की गई बाइनरियों के साथ मौजूद `PROVENANCE.json` फ़ाइलें।
 
 ## ट्रेडमार्क
 
 VDLiveUpdate एक स्वतंत्र, अनौपचारिक परियोजना है, जो किसी तीसरे पक्ष से संबद्ध या समर्थित नहीं है।
-"Android" Google LLC का ट्रेडमार्क है; "KernelSU", "Magisk" और "APatch" अपने-अपने लेखकों के चिह्न हैं।
+"Android" Google LLC का ट्रेडमार्क है, "KernelSU", "Magisk" और "APatch" अपने-अपने लेखकों के चिह्न हैं।
 VDLU पूरी तरह आपके डिवाइस पर और आपके अपने रिलीज़ होस्ट पर चलता है।
 
 ## Tags
 
 `VDLU` `flashless-update` `incremental-update` `KernelSU` `Magisk` `APatch` `module-update` `ed25519` `content-addressed` `OTA` `self-update` `Android` `VDLiveUpdate`
+
+---
+
+📣 **अपडेट के लिए चैनल से जुड़ें:** @Priv8_VD https://t.me/Priv8_VD

@@ -34,7 +34,7 @@
 ```
 
 Змінний стан engine (`config`, `current.json`, journal, lock) живе в Tier-2, `/data/adb/<modid>/vdlu/`, поза
-module dir; `config.default` засіває його на першому запуску.
+module dir, `config.default` засіває його на першому запуску.
 
 ## 1. Вендоризуйте engine
 
@@ -47,7 +47,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Ship-те лише ABI, які ви підтримуєте; `customize.sh` може обрізати `verify/` до ABI пристрою під час установки.
+Ship-те лише ABI, які ви підтримуєте, `customize.sh` може обрізати `verify/` до ABI пристрою під час установки.
 
 ## 2. Згенеруйте ключ підпису (одноразово)
 
@@ -82,9 +82,10 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
-Використовуйте `profile=trusted` лише для приватного `file://`/SSH-джерела (verify best-effort; sha256 кожного
+Використовуйте `profile=trusted` лише для приватного `file://`/SSH-джерела (verify best-effort, sha256 кожного
 блоба все одно перевіряється). Будь-яке значення, окрім буквального `trusted`, трактується як `hardened`
 (fail-closed).
 
@@ -116,7 +117,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` вендоризуються з `webui/`; переклад можна додати через
+(`vdlu.js` / `vdlu.css` вендоризуються з `webui/`, переклад можна додати через
 `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Підпишіть стрічку у вашому release-workflow
@@ -147,11 +148,11 @@ cp ./seed/manifest.json <module>/vdlu/baseline.json
 
 ---
 
-Це і є все впровадження. `sh -n <module>/vdlu/update.sh` мусить пройти; протестуйте producer і engine
+Це і є все впровадження. `sh -n <module>/vdlu/update.sh` мусить пройти, протестуйте producer і engine
 end-to-end, як показано в [`PRODUCER.md`](PRODUCER.md) і кореневому README, перш ніж ship-ити.
 
 <!-- doc-footer -->
 
 ---
 
-> _Ця документація створена за допомогою Claude (Anthropic) і підтримується VD171. Виправлення та покращення вітаються; див. [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Ця документація створена за допомогою Claude (Anthropic) і підтримується VD171. Виправлення та покращення вітаються, див. [CONTRIBUTING.md](CONTRIBUTING.md)._

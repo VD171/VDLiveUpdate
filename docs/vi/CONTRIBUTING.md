@@ -12,9 +12,9 @@ Hoan nghênh các đóng góp.
 - Kiểm thử đầu-cuối trước một PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, rồi engine
   (`check` / `run` / `boot`). Cũng `sh -n engine/*.sh` và `node --check webui/vdlu.js`.
 - Bảo mật là không thể thương lượng: mỗi trường manifest là đầu vào thù địch và `validate_plan()` luôn
-  fail-closed; khóa ký riêng không bao giờ chạm vào CI hay một thiết bị.
-- POSIX sh trên thiết bị (không bashism ngoài `local`, không `jq`); giữ chú thích ngắn gọn.
-- Một thay đổi logic cho mỗi PR; nói cái gì đã đổi và tại sao.
+  fail-closed, khóa ký riêng không bao giờ chạm vào CI hay một thiết bị.
+- POSIX sh trên thiết bị (không bashism ngoài `local`, không `jq`), giữ chú thích ngắn gọn.
+- Một thay đổi logic cho mỗi PR, nói cái gì đã đổi và tại sao.
 
 ## Liên hệ
 
@@ -26,4 +26,4 @@ Hoan nghênh các đóng góp.
 
 ---
 
-> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến; xem [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến, xem [CONTRIBUTING.md](CONTRIBUTING.md)._

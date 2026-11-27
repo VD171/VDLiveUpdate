@@ -36,7 +36,7 @@ herschreven, zodat publiceren incrementeel is en de onveranderde / teruggedraaid
 
 ### `enc`-beslissing (vdlu-pack)
 
-`sha256` is **altijd** van de originele (ongecomprimeerde) inhoud; `enc` benoemt alleen hoe de blob wordt opgeslagen.
+`sha256` is **altijd** van de originele (ongecomprimeerde) inhoud, `enc` benoemt alleen hoe de blob wordt opgeslagen.
 
 - `gz` wanneer `size >= 4096` **en** gzip (`-9 -n`, deterministisch) ten minste 10% bespaart (`comp <= raw*0.90`).
 - `raw` anders (kleine tekst die HTTP-gzip al dekt, of al-oncomprimeerbare data).
@@ -47,7 +47,7 @@ decomprimeert met toybox `gunzip` (altijd aanwezig), zodat er geen zstd wordt me
 
 ### `class`-beslissing (vdlu-pack) - reboot-taxonomie
 
-Afgeleid uit het pad (INTERFACES §3, doc §4). Alleen standaardwaarden; een padregel downgradt nooit `reboot`->`live`.
+Afgeleid uit het pad (INTERFACES §3, doc §4). Alleen standaardwaarden, een padregel downgradt nooit `reboot`->`live`.
 
 | class | gematcht door | toegepast |
 |---|---|---|
@@ -66,7 +66,7 @@ reproduceerbare manifesten.
 zodat het toestel "current" wordt geboren (geen from:0, geen her-fetch). De engine behandelt het als een **lokale vertrouwde seed**
 (het arriveerde in de geflashte zip, die de installatie-vertrouwensgrens is) en **verifieert zijn handtekening NIET** -
 alleen het manifest dat FETCHED is van de feed gaat door `vdlu-verify`. Dus de baseline heeft **geen sleutel** nodig: het is
-gewoon `vdlu-pack`-output over de geleverde boom (ongetekend; `sig`/`key_id` blijven leeg). Een CI kan daarom
+gewoon `vdlu-pack`-output over de geleverde boom (ongetekend, `sig`/`key_id` blijven leeg). Een CI kan daarom
 **sleutelloos** worden gegenereerd, waardoor de signeersleutel 100% buiten CI blijft - alleen de gepubliceerde FEED wordt getekend (operator,
 lokaal). `vdlu-pack` sluit `baseline.json` uit van zijn eigen manifest (anti-zelfreferentie). Niet-fataal indien
 afwezig: het toestel begint gewoon vanaf from:0 bij de eerste update, nooit kapot.
@@ -99,19 +99,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` is onderdeel van de canonieke vorm (alleen `sig` wordt gestript); `vdlu-sign` zet `key_id` **vóór** het
+`key_id` is onderdeel van de canonieke vorm (alleen `sig` wordt gestript), `vdlu-sign` zet `key_id` **vóór** het
 hashen. Of de waarde-placeholder leeg is (`"sig":""`, signeertijd) of gevuld (verifytijd) levert identieke
 canonieke bytes op, dus signeren en verifiëren komen per constructie overeen.
 
 Python reproduceert het als `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` daarna sha256 - gebruikt
-alleen om te cross-checken; de gezaghebbende producenten zijn de twee sh-tools.
+alleen om te cross-checken, de gezaghebbende producenten zijn de twee sh-tools.
 
 ## Handtekening (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   voor signeren/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (de ed25519
   SPKI DER is een 12-byte prefix + de 32-byte sleutel, dus `tail -c 32` IS de sleutel). Het zendt BEIDE uit.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` over de canonieke sha256-hex; handtekening opgeslagen als base64.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` over de canonieke sha256-hex, handtekening opgeslagen als base64.
 - `vdlu-verify` (**toestel, slank**): `ed25519-mini <pubkey32> <msg> <sig64>` - leest de keyring als de **RAW 32B**
   pubkey, GEEN openssl op het toestel. `key_id` is pad-gesaneerd (geen `/`, `.`, `..`, `"`). 🚨 De keyring levert de
   **`.pub.raw` (32B)**, nooit de `.pub` PEM (113B): de PEM is alleen PC-zijdig en `ed25519-mini` kan hem niet lezen.
@@ -137,4 +137,4 @@ overschrijven met de PC-zijdige `.pub` PEM.
 
 ---
 
-> _Deze documentatie is gegenereerd met Claude (Anthropic) en wordt onderhouden door VD171. Correcties en verbeteringen zijn welkom; zie [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Deze documentatie is gegenereerd met Claude (Anthropic) en wordt onderhouden door VD171. Correcties en verbeteringen zijn welkom, zie [CONTRIBUTING.md](CONTRIBUTING.md)._

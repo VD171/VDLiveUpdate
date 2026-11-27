@@ -24,7 +24,7 @@ Manifest to kompletny opis jednego wydania: każdy plik w docelowym drzewie, co 
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Kanał niesie **tylko własną treść modułu**. Ustalony zestaw ścieżek jest
 
 | Wykluczone | Dlaczego |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (korzeń zaufania: surowe klucze publiczne + plik binarny weryfikatora) | **To jest podstawowy powód bezpieczeństwa.** Kotwica zaufania jest **tylko-z-flasha**. Gdyby keyring lub weryfikator były dostarczalne przez kanał, manifest mógłby nadpisać samą rzecz, która go waliduje. Trzymanie ich poza łączem oznacza, że manifest nigdy nie może przepisać kotwicy zaufania na urządzeniu. |
+| `vdlu/keyring/`, `vdlu/verify/` (korzeń zaufania: surowe klucze publiczne + plik binarny weryfikatora) | **To jest podstawowy powód bezpieczeństwa.** Kotwica zaufania jest **tylko-z-flasha**. Gdyby keyring lub weryfikator były dostarczalne przez kanał, manifest mógłby nadpisać samą rzecz, która go waliduje. Trzymanie ich poza łączem oznacza, że manifest nigdy nie może przepisać kotwicy zaufania na urządzeniu. Jako druga, niezależna straż (`ENGINE_VERSION` 5), engine także **ignoruje** każdą ścieżkę `vdlu/` w pobranym planie, więc nawet feed, który je niesie, nie może dotknąć kotwicy. |
 | `vdlu/baseline.json` | To kopia podpisanego manifestu (zalążek instalacji); spakowanie go byłoby pętlą samoodwołania. |
 | `.vd/` infrastruktura flasha | Rusztowanie bramy flasha, które dostarczane jest w zipie, nigdy stosowane na żywo. |
 | `update.json`, `update-mmrl.json` | Ich rozmiar/sha są wypełniane przez CI *po* zbudowaniu zipów, więc dostarczona kopia różni się od każdej kopii z kanału. Podanie ich powodowałoby fantomowe pobranie pojedynczego pliku przy pierwszej samoaktualizacji każdej instalacji, a i tak są szczątkowe na urządzeniu (menedżer czyta zdalny surowy update JSON). |

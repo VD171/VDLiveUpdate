@@ -10,6 +10,25 @@ Esta página es la historia completa de confianza. Ver [[Feed Format]] para el e
 
 ---
 
+## Versiones soportadas
+
+Las correcciones de seguridad llegan al último `ENGINE_VERSION`; un manifiesto firmado declara el
+engine mínimo que necesita vía `engine_min`, y el engine en el dispositivo rechaza un manifiesto
+que pida más de lo que implementa. Se espera que los engines vendorizados más antiguos hagan
+**re-vendor** para recoger una corrección, no que se les parchee en el lugar.
+
+| ENGINE_VERSION | estado |
+|---|---|
+| 7 (actual) | soportado - nunca revertir un módulo por delante del feed (el `versionCode` instalado en vivo fija el piso de la versión "from"), auto-reparación en el arranque de un plan de downgrade obsoleto |
+| 6 | superado - auto-reparación en el arranque de un journal obsoleto con `target <= 0` (el baseline 0 de un stub eliminado ya no dispara ninguna UI ni acción de arranque) |
+| 5 | superado - exclusión del ancla de confianza del lado del engine (el directorio `vdlu/` se ignora aunque un feed lo lleve), topes de 128 MiB por archivo / 2 MiB de manifiesto |
+| 4 | superado - allowlist de `key_id`, rechazo de paths con dot-segment/trailing-slash, topes de tamaño, lock en check-time |
+| <= 3 | sin soporte - re-vendorizar el engine actual |
+
+Cualquier cambio en la verificación del engine o la lógica de apply sube `ENGINE_VERSION`.
+
+---
+
 ## La idea central: a prueba de fallos, antes de que pase nada
 
 `validate_plan()` corre dentro de la fase `check`/diff, **antes** de cualquier fetch y **antes** de cualquier apply. Recorre cada entrada en el árbol de archivos planeado y cada entrada en `delete[]`, y si una sola entrada está malformada **rechaza el manifiesto entero** y la transacción nunca empieza. No hay aceptación parcial, ni "omitir el malo y aplicar el resto". Un campo malo envenena el lote, a propósito.
@@ -124,6 +143,14 @@ La corrección fija el `key_id` de actualización de módulo aceptado a una **al
 Como la comprobación se ejecuta antes de la selección de la pubkey, un manifiesto que nombra una clave que está presente pero no en la allowlist se rechaza sin que el verificador llegue a cargar esa clave. El conjunto resuelto se refleja en `vdlu-verify` a través de `VDLU_KEYID_ALLOW`, de modo que el comprobador delgado en el dispositivo aplica la misma fijación y los dos no pueden discrepar. Esto se cumple en **ambos** perfiles: `hardened` y `trusted` consultan ambos la allowlist, porque la allowlist decide *qué clave* es una raíz válida de actualización de módulo, no *si* se requiere una firma.
 
 El feed de fingerprint conserva su propia raíz de confianza fijada por separado, `FEED_KEY_ID`. Es una raíz distinta con un trabajo distinto, nunca alcanzable a través de la ruta de actualización de módulo anterior, de modo que fijar la allowlist de actualización de módulo no la toca y una clave de feed filtrada sigue sin poder firmar una actualización de módulo. Este cambio subió `ENGINE_VERSION` a 4.
+
+---
+
+## La exclusión del ancla de confianza del lado del motor
+
+La allowlist de arriba decide *qué* clave puede firmar una actualización de módulo. Un cambio posterior (`ENGINE_VERSION` 5) cierra el riesgo adyacente desde el otro lado: qué tiene permitido tocar siquiera un feed válidamente firmado. Un feed publicado lleva el árbol entero del módulo, y ese árbol incluye el propio directorio `vdlu/` del módulo - el motor, el shim `vdlu-verify`, los binarios de `verify/`, el keyring y la config. Esos son el ancla de confianza. Si una actualización pudiera reescribirlos, una sola clave de firma filtrada podría enviar un verificador nuevo o un keyring nuevo y persistir root indefinidamente.
+
+Así que el motor **ignora** cada ruta `vdlu/` en un plan obtenido. Nunca los obtiene, aplica, ni borra, aun cuando el manifiesto los liste, y tampoco rechaza el manifiesto: el resto del módulo igual se actualiza con normalidad, y solo las rutas `vdlu/` se descartan en silencio. El ancla de confianza puede cambiar **solo** con un re-flash firmado completo del zip del módulo, nunca por la red. Esto complementa la exclusión del lado del producer en `vdlu-pack` (que mantiene esas rutas fuera del feed en primer lugar) con una segunda guarda, independiente, en el dispositivo. El mismo cambio también bajó los topes de endurecimiento a **128 MiB por archivo** y **2 MiB por manifiesto**. Reportado por Solomag (VD-Modules#1).
 
 ---
 

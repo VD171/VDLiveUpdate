@@ -8,7 +8,7 @@
 satu sama lain** - tanda tangan CLI, nama file, dan kunci JSON di bawah ini bersifat **immutable** (sebuah perubahan berarti
 menyelaraskannya di sini terlebih dahulu).
 
-Prinsip yang diwarisi dari repo: **sh POSIX murni** di perangkat (tanpa bashism; berjalan dengan toybox/busybox +
+Prinsip yang diwarisi dari repo: **sh POSIX murni** di perangkat (tanpa bashism, berjalan dengan toybox/busybox +
 `sha256sum`/`gzip`/`base64` milik toybox + `curl` yang diambil + `ed25519-mini` yang tertanam - ramping, tanpa
 bundle biner), **nol komentar cuma-cuma**, **selalu release**, **ketat saat gagal** (transaksi yang dapat dilanjutkan, tidak ada
 yang palsu "selesai", tidak ada yang hilang), **tidak ada yang dilonggarkan**.
@@ -30,7 +30,7 @@ $VDLU_DIR = /data/adb/<module>/vdlu
   target.json          # PINNED manifest of the in-flight transaction (presence = active transaction; becomes current.json on DONE)
   plan.tsv  plan.del   # engine's internal plan (progress); the WebUI IGNORES it (reads only journal/config/current)
 ```
-`cancelled:true` di journal = engine berhenti karena pembatalan (state non-terminal yang dapat dilanjutkan; `error`
+`cancelled:true` di journal = engine berhenti karena pembatalan (state non-terminal yang dapat dilanjutkan, `error`
 tetap null).
 
 Engine di-vendor dalam modul: `$MODULE_DIR/vdlu/update.sh` (+ `vdlu-verify`). `$MODULE_DIR =
@@ -56,17 +56,18 @@ Sumber blob/manifest: `source` dari config. `<source>` + `/manifest.json`, `/blo
 
 ```json
 { "schema":1, "module":"<id>", "version":<int>, "version_name":"<str>", "built":"<ISO8601>",
-  "engine_min":3, "key_id":"<str>", "channel":"stable",
+  "engine_min":5, "key_id":"<str>", "channel":"stable",
   "files":[ {"path":"webroot/index.html","sha256":"<hex64>","size":<int>,"mode":"0644","enc":"raw|gz","class":"live|soft|reboot"} ],
   "delete":["<path>"], "sig":"<base64>" }
 ```
 
 - `files[]` = pohon target LENGKAP. `class`: `live` (webroot/bin/lib/confs/script-on-demand/module.prop) ·
   `soft` (service.sh/post-fs-data.sh/boot-completed.sh) · `reboot` (`zygisk/**/*.so`, `system/**`, `*.rule`).
-  Default berdasarkan path; tidak pernah men-downgrade `reboot`->`live`.
-- `enc`: `gz` (gzip `-9 -n`, deterministik; gunzip toybox di perangkat) hanya ketika kompresi bagus DAN
-  ukurannya signifikan; `sha256` SELALU dari konten asli.
+  Default berdasarkan path, tidak pernah men-downgrade `reboot`->`live`.
+- `enc`: `gz` (gzip `-9 -n`, deterministik, gunzip toybox di perangkat) hanya ketika kompresi bagus DAN
+  ukurannya signifikan, `sha256` SELALU dari konten asli.
 - `sig`: tanda tangan manifest kanonik TANPA field `sig` (§4 dari verify).
+- **Pengecualian jangkar-kepercayaan (sisi-engine, VDLU#2):** engine MEMBUANG dari plan setiap path `files[]`/`delete[]` di bawah `vdlu/` (`update.sh`/`vdlu-verify`/`verify/*`/`keyring/*`/config miliknya sendiri) - tidak pernah diambil, diterapkan, atau dihapus - bahkan jika sebuah feed bertanda tangan membawanya. Jangkar kepercayaan di perangkat hanya berubah melalui re-flash bertanda tangan penuh, bukan lewat kabel, `vdlu-pack` juga mengecualikan `vdlu/` di sisi-producer, sehingga ini adalah penjaga kedua, sisi-engine, terhadap kunci penandatanganan yang bocor.
 
 ## 4. journal.json (ENGINE menulis, WEBUI membaca - kontrak progres)
 
@@ -83,7 +84,7 @@ Mesin state (urutan tetap): `PLANNED->FETCHING->FETCHED->APPLYING->APPLIED_LIVE-
 dari fase `fetch`: `ERROR` (kegagalan keras) atau `DEFERRED` (net_policy memblokir unduhan - benign/dapat dilanjutkan,
 bukan error).
 
-## 5. config (key=value, satu per baris; dapat diedit di WEBUI)
+## 5. config (key=value, satu per baris, dapat diedit di WEBUI)
 
 ```
 auto_on_webui_open=0
@@ -98,7 +99,11 @@ key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), 
                        # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
                        # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+ca_cert=               # empty = auto-build a CA bundle from the trust store; set a path to a bundle to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+apply_busy_file=       # OPT-IN: absolute path the host module touches during its own operations (e.g. a
+                       # backup). While it EXISTS, APPLY is deferred to the next trigger (blobs already
+                       # fetched, no re-download) so an update never swaps module files mid-operation. UNSET = off.
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
 boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
                        # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
@@ -108,11 +113,11 @@ boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot;
 gagal karena JARINGAN (`fetch_offline` mengklasifikasikan berdasarkan exit dari fetcher), ia menunggu dan mencoba lagi sampai
 berhasil ATAU `boot_retry_minutes` waktu AWAKE habis. Sebuah desain yang **tidak menahan apa pun dan tidak menguras**:
 - **Nol wakelock:** di antara percobaan ia adalah `sleep`, yang membeku di deep-sleep -> perangkat tidur normal
-  (~nol baterai); retry berjeda dan dilanjutkan setelah perangkat sudah terjaga.
+  (~nol baterai), retry berjeda dan dilanjutkan setelah perangkat sudah terjaga.
 - **Nol lock ditahan:** `acquire_lock_try`+release DI ANTARA percobaan (tidak menahan lock selama menunggu) ->
-  `run`/check manual tidak pernah memblokir; jika sebuah run manual men-stage sebuah TARGET sementara itu, boot menunda.
+  `run`/check manual tidak pernah memblokir, jika sebuah run manual men-stage sebuah TARGET sementara itu, boot menunda.
 - **Tidak membangunkan radio percuma:** sebuah probe `net_allowed` (via `net_type`/`ip route get`, lookup route kernel
-  yang menghormati policy-routing Android; tanpa paket) mengatur setiap percobaan - ia hanya menghabiskan sebuah fetch setelah
+  yang menghormati policy-routing Android, tanpa paket) mengatur setiap percobaan - ia hanya menghabiskan sebuah fetch setelah
   jaringan muncul.
 - TIDAK PERNAH mencoba lagi kegagalan deterministik (manifest/sig/downgrade). `--connect-timeout 15` pada fetch (tidak
   menggantung pada captive portal). `service.sh` menjalankannya di background (boot tidak pernah menggantung).
@@ -122,15 +127,15 @@ berhasil ATAU `boot_retry_minutes` waktu AWAKE habis. Sebuah desain yang **tidak
   adalah bumerang. Saat mengaktifkannya, vendor engine saat ini.
 
 **`net_policy` (any|wifi|mobile):** mengatur **UNDUHAN** berdasarkan tipe jaringan. `net_type()` mengklasifikasikan egress
-dari `ip route get` (iface seluler `rmnet/ccmni/v4-*/clat` = mobile; segala sesuatu yang lain = wifi; lookup kernel, tanpa
+dari `ip route get` (iface seluler `rmnet/ccmni/v4-*/clat` = mobile, segala sesuatu yang lain = wifi, lookup kernel, tanpa
 paket). `net_allowed()` membandingkannya dengan `net_policy` dan mengatur `do_fetch` (blob) + probe boot-retry
-sabar. **Check manifest tetap bebas** (kecil -> UI melaporkan pembaruan pada jaringan apa pun); hanya unduhan yang
+sabar. **Check manifest tetap bebas** (kecil -> UI melaporkan pembaruan pada jaringan apa pun), hanya unduhan yang
 menunggu jaringan yang diizinkan. Sebuah unduhan pada jaringan yang tidak diizinkan = state **`DEFERRED`** di journal
-(BUKAN ERROR; sebuah toast INFO biru yang lembut "menunggu jaringan X"; plan/target tetap ada, dilanjutkan pada
+(BUKAN ERROR, sebuah toast INFO biru yang lembut "menunggu jaringan X", plan/target tetap ada, dilanjutkan pada
 check/boot berikutnya di jaringan yang benar). `net_policy` **menggantikan** `allow_metered` (yang tidak pernah dikonsumsi).
 Engine `97baf887`+ (`file://` tidak pernah diatur).
 
-## 6. Tanda tangan (PRODUCER menandatangani di PC via openssl; ENGINE memverifikasi di perangkat via ed25519-mini)
+## 6. Tanda tangan (PRODUCER menandatangani di PC via openssl, ENGINE memverifikasi di perangkat via ed25519-mini)
 
 - Kanonikalisasi: manifest TANPA `sig`, kunci terurut, JSON ringkas (tanpa spasi berlebih), UTF-8.
   Yang ditandatangani/diverifikasi = heksadesimal `sha256` dari bentuk kanonik tersebut (memberi determinisme lintas-tool).
@@ -138,16 +143,16 @@ Engine `97baf887`+ (`file://` tidak pernah diatur).
 - `engine/vdlu-verify <manifest.json> <keyring_dir>` -> rc 0 jika `sig` cocok dengan pubkey `<key_id>.pub` di
   keyring (RAMPING: pubkey **RAW 32 byte**). Secara internal, tanpa openssl: `sha256sum`/`base64 -d` toybox + biner
   `ed25519-mini` yang tertanam (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=valid/1=invalid/2=penggunaan).
-  rc!=0 = tolak. **`profile=hardened` ⇒ verify wajib; kegagalan = abort.**
+  rc!=0 = tolak. **`profile=hardened` ⇒ verify wajib, kegagalan = abort.**
   `profile=trusted` ⇒ verify bersifat best-effort (sumber sudah dipercaya via SSH), tetapi hash setiap blob SELALU diperiksa.
-- **allowlist kunci module-update (fail-closed, sebelum pemilihan pubkey):** `key_id` manifest harus merupakan kunci MODULE-UPDATE yang diterima sebelum `<key_id>.pub` dipilih - `key_id` config (§5) adalah allowlist itu. Sebuah keyring JUGA dapat membawa kunci kepercayaan lebih rendah (mis. kunci fingerprint-feed, otomatis, akun berbeda); tanpa allowlist, sebuah manifest yang ditandatangani kunci itu akan terverifikasi dan menerapkan pembaruan flashless root penuh jika bocor. `verify_manifest` menegakkannya di KEDUA profiles dan meneruskan himpunan terselesaikan ke `vdlu-verify` lewat env `VDLU_KEYID_ALLOW` (agar verifier standalone sepakat). Tidak disetel adalah aman-secara-default (keyring kunci tunggal: hanya kunci itu; keyring multi-kunci: ditolak sampai `key_id` dipin). Akar kepercayaan fingerprint-feed adalah jalur TERPISAH dengan kunci pin-nya sendiri dan tidak terpengaruh.
+- **allowlist kunci module-update (fail-closed, sebelum pemilihan pubkey):** `key_id` manifest harus merupakan kunci MODULE-UPDATE yang diterima sebelum `<key_id>.pub` dipilih - `key_id` config (§5) adalah allowlist itu. Sebuah keyring JUGA dapat membawa kunci kepercayaan lebih rendah (mis. kunci fingerprint-feed, otomatis, akun berbeda), tanpa allowlist, sebuah manifest yang ditandatangani kunci itu akan terverifikasi dan menerapkan pembaruan flashless root penuh jika bocor. `verify_manifest` menegakkannya di KEDUA profiles dan meneruskan himpunan terselesaikan ke `vdlu-verify` lewat env `VDLU_KEYID_ALLOW` (agar verifier standalone sepakat). Tidak disetel adalah aman-secara-default (keyring kunci tunggal: hanya kunci itu, keyring multi-kunci: ditolak sampai `key_id` dipin). Akar kepercayaan fingerprint-feed adalah jalur TERPISAH dengan kunci pin-nya sendiri dan tidak terpengaruh.
 - `producer/vdlu-keygen <id> <out>` -> menghasilkan `<id>.pem` (priv) + `<id>.pub` (PEM, untuk tooling di PC) +
   `<id>.pub.raw` (**RAW 32B** = `<id>.pub` dari keyring ramping di perangkat). openssl `genpkey -algorithm ed25519`.
 
 ## 7. Blob - verifikasi (ENGINE)
 
 Mengunduh `<source>/blobs/<sha>` (atau `.gz` jika `enc=gz`), menulis `.part`, jika `gz` mendekompresi (`gunzip`),
-memeriksa `sha256sum` == `sha256` dari manifest; cocok -> `mv` atomik ke `$VDLU_DIR/blobs/<sha>`. 3 kegagalan pada
+memeriksa `sha256sum` == `sha256` dari manifest, cocok -> `mv` atomik ke `$VDLU_DIR/blobs/<sha>`. 3 kegagalan pada
 blob yang sama = membatalkan fase (tidak ada yang diterapkan). Sebuah blob yang sudah ada di `$VDLU_DIR/blobs/<sha>` dengan hash ok =
 melewati unduhan.
 
@@ -162,12 +167,12 @@ melewati unduhan.
 ## 9. WEBUI ↔ ENGINE (komponen WEBUI)
 
 - Memicu: `ksu.exec("sh $MODULE_DIR/vdlu/update.sh run")` (background).
-- Progres: poll ringan `ksu.exec("cat $VDLU_DIR/journal.json")` setiap ~1s; merender `{phase,state,total,done,current,bytes}`.
+- Progres: poll ringan `ksu.exec("cat $VDLU_DIR/journal.json")` setiap ~1s, merender `{phase,state,total,done,current,bytes}`.
 - Liveness: journal tidak ada selama 8 tick ⇒ "tidak ada respons". Journal BEKU (nilai sama) selama 20 tick ⇒ memeriksa `lock.d`: hidup = berlanjut (fetch lambat 1 blob), mati = error + Resume. Tanpa ini, sebuah run yang mati di tengah fetch akan membekukan toast pada "updating".
 - Cancel: `ksu.exec("touch $VDLU_DIR/cancel")`.
 - Config: membaca/menulis `$VDLU_DIR/config` (key=value) di tab "Updates".
-- Toast: bar + `phase done/total · current`; saat selesai dengan `reboot_pending` ⇒ sebuah banner persisten "reboot untuk mengaktifkan .so".
-- Auto-open (`auto_on_webui_open=1`): melakukan `check()` SENYAP terlebih dahulu (tanpa toast progres); hanya memicu `run`+toast persisten jika `update && fetch>0`. Terkini/ahead/tidak-ada-yang-baru = hasil inline di panel, nol toast sisa. Tidak mengganggu seperti tombol manual (toast hanya muncul ketika ada unduhan nyata). Bootstrap curl bersifat sekali-saja.
+- Toast: bar + `phase done/total · current`, saat selesai dengan `reboot_pending` ⇒ sebuah banner persisten "reboot untuk mengaktifkan .so".
+- Auto-open (`auto_on_webui_open=1`): melakukan `check()` SENYAP terlebih dahulu (tanpa toast progres), hanya memicu `run`+toast persisten jika `update && fetch>0`. Terkini/ahead/tidak-ada-yang-baru = hasil inline di panel, nol toast sisa. Tidak mengganggu seperti tombol manual (toast hanya muncul ketika ada unduhan nyata). Bootstrap curl bersifat sekali-saja.
 
 ## 10. Integrasi ke dalam demo (komponen INTEGRATION) - SNIPPET, jangan edit file live
 
@@ -189,18 +194,18 @@ verify/<abi>/ed25519-mini, baseline.json}`. **TANPA** `bin/` (openssl/curl/zstd)
 dari `source` dengan `vdlu-tools`, mis. `https://<user>.github.io/<repo>/vdlu-tools`). Berisi:
 - `tools-manifest.json` - sebuah manifest `vdlu-pack` DITANDATANGANI atas pohon `<abi>/curl`, memaku `sha256` dari
   setiap curl (kunci `release-2026` yang sama).
-- `<abi>/curl` - curl **statis** MENTAH (mandiri, ~1MB; curl 8.11.1 + mbedTLS). 🪤 mbedTLS TIDAK
+- `<abi>/curl` - curl **statis** MENTAH (mandiri, ~1MB, curl 8.11.1 + mbedTLS). 🪤 mbedTLS TIDAK
   membawa CA bundle: `fetch_url` meneruskan `--capath` (auto-deteksi trust store Android: `/system/etc/security/cacerts`
-  -> conscrypt APEX; `ca_path` menimpa). Tanpa capath = error 60. Integritasnya adalah ed25519; cert-check adalah pertahanan berlapis.
+  -> conscrypt APEX, `ca_path` menimpa). Tanpa capath = error 60. Integritasnya adalah ed25519, cert-check adalah pertahanan berlapis.
 
 **install-tool** (ENGINE): `update.sh install-tool <abi>` membaca `$VDLU_DIR/.work/{tools-manifest.json, tool.<abi>}`
 (WEBUI mengunduhnya via `fetch()` dan menulisnya di sana), **memverifikasi tanda tangan tools-manifest (ed25519-mini,
 WAJIB di profil mana pun)** + hash curl == manifest, dan baru kemudian memasangnya ke `$VDLU_DIR/tools/<abi>/curl` (0755).
 curl berjalan sebagai root -> sig+hash sebelum exec menutup RCE. Bertahan di Tier-2: tidak pernah diunduh ulang (kecuali saat uninstall).
 
-**fetch-bootstrap** (WEBUI, `ensureToolchain()`): berjalan sebelum check/run/resume. `file://` = no-op; curl SUDAH
+**fetch-bootstrap** (WEBUI, `ensureToolchain()`): berjalan sebelum check/run/resume. `file://` = no-op, curl SUDAH
 tersedia (Tier-2, ATAU `module/bin/<abi>/curl` dari modul **self-bundled**, ATAU sistem) = no-op
-(VDLU menggunakan kembali curl yang ada); hanya `https` **tanpa curl sama sekali** yang mengunduh curl + tools-manifest via webview, menulisnya
+(VDLU menggunakan kembali curl yang ada), hanya `https` **tanpa curl sama sekali** yang mengunduh curl + tools-manifest via webview, menulisnya
 ke `.work` (base64 ter-chunk via `ksu.exec`), memanggil `install-tool`. Kepercayaan = pemeriksaan on-device, bukan unduhan.
 
 > 🪤 **Ramping (fetch-bootstrap) ≠ wajib.** Sebuah modul yang `bin/`-nya ada untuk fitur MILIKNYA SENDIRI (mis. membundel
@@ -209,11 +214,11 @@ ke `.work` (base64 ter-chunk via `ksu.exec`), memanggil `install-tool`. Kepercay
 > yang mendapat ~2MB.
 
 **baseline.json** (perbaikan from:0): release menyalin `manifest.json` DITANDATANGANI dari versi yang dikirim ke
-`vdlu/baseline.json`; pada instalasi segar engine menyemai `current.json` darinya (`init_paths`, hanya jika tidak ada) -> 
+`vdlu/baseline.json`, pada instalasi segar engine menyemai `current.json` darinya (`init_paths`, hanya jika tidak ada) -> 
 perangkat lahir "terkini", tanpa auto-update dirinya sendiri dan tanpa re-fetch.
 
 <!-- doc-footer -->
 
 ---
 
-> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan; lihat [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan, lihat [CONTRIBUTING.md](CONTRIBUTING.md)._

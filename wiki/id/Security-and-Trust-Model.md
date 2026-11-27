@@ -10,6 +10,25 @@ Halaman ini adalah cerita trust lengkap. Lihat [[Feed Format]] untuk skema manif
 
 ---
 
+## Versi yang didukung
+
+Perbaikan keamanan mendarat di `ENGINE_VERSION` terbaru; sebuah manifest yang ditandatangani
+mendeklarasikan engine minimum yang dibutuhkannya via `engine_min`, dan engine di perangkat menolak
+sebuah manifest yang meminta lebih dari yang diimplementasikannya. Engine ter-vendor yang lebih lama
+diharapkan untuk **re-vendor** guna mengambil sebuah perbaikan, bukan di-back-patch di tempat.
+
+| ENGINE_VERSION | status |
+|---|---|
+| 7 (saat ini) | didukung - jangan pernah merevert modul yang lebih maju dari feed (`versionCode` terpasang live menjadi lantai versi "from"), self-heal saat boot untuk plan downgrade usang |
+| 6 | digantikan - self-heal saat boot untuk journal usang dengan `target <= 0` (baseline 0 dari stub yang dihapus tidak lagi memicu UI atau aksi boot apa pun) |
+| 5 | digantikan - pengecualian jangkar-kepercayaan sisi-engine (dir `vdlu/` diabaikan bahkan jika sebuah feed membawanya), batas 128 MiB per-file / 2 MiB manifest |
+| 4 | digantikan - allowlist `key_id`, penolakan path dot-segment/trailing-slash, batas ukuran, lock saat check |
+| <= 3 | tidak didukung - re-vendor engine saat ini |
+
+Setiap perubahan pada logika verifikasi atau apply engine menaikkan `ENGINE_VERSION`.
+
+---
+
 ## Ide inti: fail-closed, sebelum apa pun terjadi
 
 `validate_plan()` berjalan di dalam fase `check`/diff, **sebelum** fetch apa pun dan **sebelum** apply apa pun. Ia menelusuri setiap entri dalam tree file yang direncanakan dan setiap entri dalam `delete[]`, dan jika satu entri tunggal mana pun cacat ia **menolak seluruh manifest** dan transaksi tidak pernah dimulai. Tidak ada penerimaan parsial, tidak ada "lewati yang buruk dan terapkan sisanya". Satu field buruk meracuni batch, dengan sengaja.
@@ -124,6 +143,14 @@ Perbaikannya mengunci `key_id` update-modul yang diterima ke sebuah **allowlist*
 Karena pemeriksaan berjalan sebelum pemilihan pubkey, sebuah manifest yang menyebut key yang ada tetapi tidak di-allowlist ditolak tanpa verifier pernah memuat key itu. Himpunan yang di-resolve dicerminkan ke `vdlu-verify` melalui `VDLU_KEYID_ALLOW`, sehingga checker ramping di perangkat menegakkan pin yang sama dan keduanya tidak bisa berbeda. Ini berlaku di **kedua** profil: `hardened` dan `trusted` sama-sama berkonsultasi dengan allowlist, karena allowlist memutuskan *key mana* yang merupakan root update-modul yang valid, bukan *apakah* sebuah signature diperlukan.
 
 Feed fingerprint mempertahankan trust root ter-pin-nya sendiri yang terpisah, `FEED_KEY_ID`. Ia adalah root berbeda dengan tugas berbeda, tidak pernah terjangkau melalui jalur update-modul di atas, sehingga mengunci allowlist update-modul tidak menyentuhnya dan key feed yang bocor tetap tidak bisa menandatangani update modul. Perubahan ini menaikkan `ENGINE_VERSION` ke 4.
+
+---
+
+## Pengecualian jangkar-kepercayaan sisi-engine
+
+Allowlist di atas memutuskan *key mana* yang boleh menandatangani sebuah update modul. Sebuah perubahan kemudian (`ENGINE_VERSION` 5) menutup risiko di sebelahnya dari sisi lain: apa yang bahkan boleh disentuh oleh sebuah feed yang ditandatangani valid. Sebuah feed yang dipublikasikan membawa seluruh tree modul, dan tree itu mencakup direktori `vdlu/` milik modul itu sendiri - engine, shim `vdlu-verify`, biner `verify/`, keyring dan config. Itulah trust anchor. Jika sebuah update dapat menulis ulangnya, sebuah signing key tunggal yang bocor dapat mengirim verifier baru atau keyring baru dan mempertahankan root tanpa batas.
+
+Jadi engine **mengabaikan** setiap path `vdlu/` dalam sebuah plan yang diambil. Ia tidak pernah mengambil, menerapkan, atau menghapusnya, bahkan ketika manifest mendaftarkannya, dan ia juga tidak menolak manifest: sisa modul tetap diperbarui secara normal, dan hanya path `vdlu/` yang secara diam-diam dibuang. Trust anchor dapat berubah **hanya** melalui re-flash bertanda tangan penuh atas zip modul, tidak pernah lewat kabel. Ini melengkapi eksklusi sisi-producer di `vdlu-pack` (yang menjauhkan path-path itu dari feed sejak awal) dengan penjaga kedua yang independen di perangkat. Perubahan yang sama juga menurunkan plafon hardening menjadi **128 MiB per file** dan **2 MiB per manifest**. Dilaporkan oleh Solomag (VD-Modules#1).
 
 ---
 

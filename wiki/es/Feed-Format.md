@@ -24,7 +24,7 @@ El manifiesto es la descripción completa de una release: cada archivo en el ár
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ El feed lleva **solo el contenido propio del módulo**. Un conjunto fijo de ruta
 
 | Excluido | Por qué |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (la raíz de confianza: claves públicas en crudo + el binario verificador) | **Esta es la razón de seguridad central.** El anclaje de confianza es **solo-flash**. Si el keyring o el verificador fueran entregables por el feed, un manifiesto podría sobrescribir la propia cosa que lo valida. Mantenerlos fuera de la línea significa que un manifiesto nunca puede reescribir el anclaje de confianza en el dispositivo. |
+| `vdlu/keyring/`, `vdlu/verify/` (la raíz de confianza: claves públicas en crudo + el binario verificador) | **Esta es la razón de seguridad central.** El anclaje de confianza es **solo-flash**. Si el keyring o el verificador fueran entregables por el feed, un manifiesto podría sobrescribir la propia cosa que lo valida. Mantenerlos fuera de la línea significa que un manifiesto nunca puede reescribir el anclaje de confianza en el dispositivo. Como una segunda guarda independiente (`ENGINE_VERSION` 5), el engine también **ignora** cada path `vdlu/` en un plan obtenido, así que incluso un feed que los lleve no puede tocar el anclaje. |
 | `vdlu/baseline.json` | Es una copia del manifiesto firmado (la semilla de instalación); empaquetarla sería un bucle de autorreferencia. |
 | `.vd/` infraestructura de flasheo | Andamiaje de compuerta de flasheo que se envía en el zip, nunca se aplica en vivo. |
 | `update.json`, `update-mmrl.json` | Su size/sha los rellena CI *después* de que los zips se construyen, de modo que la copia enviada difiere de cualquier copia del feed. Alimentarlos causaría un fetch fantasma de un solo archivo en la primera autoactualización de cada instalación, y de todos modos son vestigiales en el dispositivo (el gestor lee el update JSON remoto en crudo). |

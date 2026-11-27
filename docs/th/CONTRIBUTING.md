@@ -12,9 +12,9 @@ VDLU เป็นเอนจิน self-update แบบ incremental, flashless
 - ทดสอบ end to end ก่อน PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, แล้วจึงเอนจิน
   (`check` / `run` / `boot`) รวมถึง `sh -n engine/*.sh` และ `node --check webui/vdlu.js`
 - ความปลอดภัยต่อรองไม่ได้: ทุกฟิลด์ของ manifest คือ input ที่เป็นปฏิปักษ์และ `validate_plan()` ยังคงเป็น
-  fail-closed; คีย์สำหรับเซ็นแบบ private ไม่เคยแตะ CI หรืออุปกรณ์
-- POSIX sh บนอุปกรณ์ (ไม่มี bashism นอกจาก `local`, ไม่มี `jq`); เขียนคอมเมนต์ให้กระชับ
-- หนึ่งการเปลี่ยนแปลงเชิงตรรกะต่อ PR; บอกว่าเปลี่ยนอะไรและทำไม
+  fail-closed, คีย์สำหรับเซ็นแบบ private ไม่เคยแตะ CI หรืออุปกรณ์
+- POSIX sh บนอุปกรณ์ (ไม่มี bashism นอกจาก `local`, ไม่มี `jq`), เขียนคอมเมนต์ให้กระชับ
+- หนึ่งการเปลี่ยนแปลงเชิงตรรกะต่อ PR, บอกว่าเปลี่ยนอะไรและทำไม
 
 ## ติดต่อ
 

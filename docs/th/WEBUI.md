@@ -58,7 +58,7 @@ Widget ประกอบคำสั่งเอนจินโดยนำ env
   (rc≠0) - ลายเซ็นของ `ex()` ใน `webroot/index.html` ของ Demo เป๊ะ ๆ Fallback ภายในเรียก
   `ksu.exec(cmd, '{}', cb)` ด้วยสัญญาเดียวกัน
 - **`toast(msg)`** = การแจ้งเตือนชั่วคราวสั้น ๆ (fallback ฉีด mini-toast ของตัวเอง)
-- **`confirm(title,msg,ok,danger,fn)`** = modal (วันนี้ใช้โดย host เท่านั้น; widget ไม่ต้องการการ
+- **`confirm(title,msg,ok,danger,fn)`** = modal (วันนี้ใช้โดย host เท่านั้น, widget ไม่ต้องการการ
   ยืนยันในขั้นตอนใด ๆ)
 
 การส่งของ host เองเข้ามาทำให้ widget พูดผ่าน queue แบบ serialize เดียวกันและ visual เดียวกันกับส่วนที่เหลือของ
@@ -83,7 +83,7 @@ Toast (corner overlay, non-blocking) และ banner (ด้านบน, ถ�
 
 ### การไหลของสถานะที่ toast สะท้อน (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` ได้ทุกเมื่อ
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` ได้ทุกเมื่อ
 Toast แสดง **บาร์ + `phase done/total · current · bytes`** Terminal:
 - **`DONE`** → green toast "v&lt;target&gt; applied"
 - **`PENDING_REBOOT`** (หรือ `reboot_pending=true`) → green toast + **banner ถาวร** "⚠️ Reboot to
@@ -94,7 +94,7 @@ Toast แสดง **บาร์ + `phase done/total · current · bytes`** Ter
 ## การรัน demo
 
 เปิด `demo.html` ในเบราว์เซอร์ (`xdg-open webui/demo.html`) `ksu.exec` ที่ mock ไว้จำลอง `update.sh` และ
-`journal.json` ที่วิวัฒน์ไป; ปุ่มสลับระหว่าง scenario **LIVE→DONE**, **reboot_pending**, **error mid-way**
+`journal.json` ที่วิวัฒน์ไป, ปุ่มสลับระหว่าง scenario **LIVE→DONE**, **reboot_pending**, **error mid-way**
 และ **cancellable** มันคือ `vdlu.js`/`vdlu.css` เดียวกันกับบนอุปกรณ์
 
 ## i18n (ภาษา)
@@ -108,7 +108,7 @@ String ของ widget ดีฟอลต์เป็น **English** (เป็
 ```
 
 - การ merge แบบ **partial** ก็ใช้ได้: คีย์ที่ขาดหายจะ fallback เป็น English default
-- คีย์ Phase/state คือ `ph_<phase>` / `st_<STATE>`; ที่เหลือเป็น flat (`cancel`, `updateNow`, ...)
+- คีย์ Phase/state คือ `ph_<phase>` / `st_<STATE>`, ที่เหลือเป็น flat (`cancel`, `updateNow`, ...)
 - key map ครบถ้วน = object `DEFAULT_I18N` ใน `vdlu.js` (expose เป็น `VDLU.i18n` ด้วย)
 - การแปลที่พร้อมใช้งานถูกให้ไว้เป็นตัวอย่าง: `i18n/pt-BR.js` ภาษาใหม่ = ไฟล์
   `i18n/<lang>.js` ในรูปแบบเดียวกัน, หรือ host สร้าง map จากระบบ i18n ของตัวเอง
@@ -117,12 +117,12 @@ String ของ widget ดีฟอลต์เป็น **English** (เป็
 
 `vdlu.js`/`vdlu.css` เหล่านี้คือ **สำเนา canonical** ทุกโมดูลที่ฝัง widget
 **re-vendor** สำเนานี้แบบ byte-for-byte เข้าไปใน `webroot/` ของมัน - มัน **ไม่เคย** แก้ไข
-สำเนาของตัวเองในที่เดิม ฟีเจอร์ widget ใหม่เกิดขึ้นที่นี่และไหลลงไปโดยการ re-vendor; ทางกลับทำให้เกิด
+สำเนาของตัวเองในที่เดิม ฟีเจอร์ widget ใหม่เกิดขึ้นที่นี่และไหลลงไปโดยการ re-vendor, ทางกลับทำให้เกิด
 drift เงียบ ๆ (มันเกิดขึ้นจริงมาแล้ว: สำเนาที่ vendor ไว้ตกยุคและขาด `net_policy`, toast
 `DEFERRED` และฟิลด์ `boot_retry`)
 
 Guardian: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) หาทุกสำเนาในต้นไม้ของ source และ flag
-ตัวที่แตกต่างจากตัว canonical (เฉพาะ `vdlu.js`/`vdlu.css`; keyring เป็น "verify, not copy")
+ตัวที่แตกต่างจากตัว canonical (เฉพาะ `vdlu.js`/`vdlu.css`, keyring เป็น "verify, not copy")
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -130,7 +130,7 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 keyring (`keyring/<id>.pub` RAW 32B) และเอนจิน (`vdlu/update.sh`) มีจังหวะการ re-vendor ของ
-> ตัวเอง; guardian นี้ครอบคลุม **เฉพาะ WebUI widget**
+> ตัวเอง, guardian นี้ครอบคลุม **เฉพาะ WebUI widget**
 
 <!-- doc-footer -->
 

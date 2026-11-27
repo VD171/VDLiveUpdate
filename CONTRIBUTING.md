@@ -12,9 +12,9 @@ Contributions are welcome.
 - Test end to end before a PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, then the engine
   (`check` / `run` / `boot`). Also `sh -n engine/*.sh` and `node --check webui/vdlu.js`.
 - Security is non-negotiable: every manifest field is hostile input and `validate_plan()` stays
-  fail-closed; the private signing key never touches CI or a device.
-- POSIX sh on the device (no bashisms beyond `local`, no `jq`); keep comments terse.
-- One logical change per PR; say what changed and why.
+  fail-closed, the private signing key never touches CI or a device.
+- POSIX sh on the device (no bashisms beyond `local`, no `jq`), keep comments terse.
+- One logical change per PR, say what changed and why.
 
 ## Contacts
 
@@ -26,4 +26,4 @@ Contributions are welcome.
 
 ---
 
-> _This documentation was generated with Claude (Anthropic) and is maintained by VD171. Corrections and improvements are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _This documentation was generated with Claude (Anthropic) and is maintained by VD171. Corrections and improvements are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md)._

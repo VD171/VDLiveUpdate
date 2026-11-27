@@ -1,96 +1,46 @@
-> **Languages:** [English](../SECURITY.md) · [العربية](../ar/SECURITY.md) · [Čeština](../cs/SECURITY.md) · [Deutsch](../de/SECURITY.md) · [Español](../es/SECURITY.md) · [فارسی](../fa/SECURITY.md) · [Français](../fr/SECURITY.md) · [हिन्दी](../hi/SECURITY.md) · [Bahasa Indonesia](../id/SECURITY.md) · [Italiano](../it/SECURITY.md) · [日本語](../ja/SECURITY.md) · [한국어](../ko/SECURITY.md) · [Nederlands](../nl/SECURITY.md) · [Polski](../pl/SECURITY.md) · [Português](../pt/SECURITY.md) · [Русский](../ru/SECURITY.md) · [Svenska](../sv/SECURITY.md) · [ไทย](../th/SECURITY.md) · [Türkçe](../tr/SECURITY.md) · [Українська](../uk/SECURITY.md) · [Tiếng Việt](../vi/SECURITY.md) · 中文
+> **Languages:** [English](../../SECURITY.md) · [العربية](../ar/SECURITY.md) · [Čeština](../cs/SECURITY.md) · [Deutsch](../de/SECURITY.md) · [Español](../es/SECURITY.md) · [فارسی](../fa/SECURITY.md) · [Français](../fr/SECURITY.md) · [हिन्दी](../hi/SECURITY.md) · [Bahasa Indonesia](../id/SECURITY.md) · [Italiano](../it/SECURITY.md) · [日本語](../ja/SECURITY.md) · [한국어](../ko/SECURITY.md) · [Nederlands](../nl/SECURITY.md) · [Polski](../pl/SECURITY.md) · [Português](../pt/SECURITY.md) · [Русский](../ru/SECURITY.md) · [Svenska](../sv/SECURITY.md) · [ไทย](../th/SECURITY.md) · [Türkçe](../tr/SECURITY.md) · [Українська](../uk/SECURITY.md) · [Tiếng Việt](../vi/SECURITY.md) · 中文
 
 ---
 
-# 安全策略与信任模型
+# 安全策略
 
-VDLiveUpdate（VDLU）对一个运行中的模块应用**免刷写 root 更新**：它写入 `/data/adb/modules/<mod>`
-并在 boot 时交换一个 Zygisk `.so`。被抓取清单的每个字段（`path`、`sha256`、`delete[]`、`mode`、...）
-都是**敌意输入** - 一个被投毒的 feed 或一个 MITM 将其送达。本页是信任模型与负责任披露策略。完整的
-seam 契约见 [`INTERFACES.md`](INTERFACES.md)，engine/producer 内部见 [`ENGINE.md`](ENGINE.md) 与
-[`PRODUCER.md`](PRODUCER.md)；wiki 页面 **Security-and-Trust-Model** 为 repo 之外的读者承载同一模型。
-
-## 受支持的版本
-
-安全修复落入最新的 `ENGINE_VERSION`；一个已签名的清单通过 `engine_min` 声明它所需的最低 engine，
-而设备上的 engine 会拒绝一个要求超出其实现的清单。较旧的已 vendor engine 预期应**重新 vendor**
-以获取修复，而非就地 back-patch。
-
-| ENGINE_VERSION | 状态 |
-|---|---|
-| 4（当前） | 受支持 - `key_id` allowlist、dot-segment/trailing-slash path 拒绝、size cap、check-time lock |
-| 3 | 已被取代 - `hardened` 默认、通过反转的 fail-closed `profile`、module/MODID 绑定、downgrade 阻止 |
-| <= 2 | 不受支持 - 重新 vendor 当前 engine |
-
-对 engine 验证或 apply 逻辑的任何更改都会提升 `ENGINE_VERSION`。
+VDLiveUpdate (VDLU) 对运行中的模块应用 flashless 的 root 更新：它写入模块自身的目录，并在
+启动时替换 Zygisk 的 `.so`，在模块的 root 上下文中运行。我们认真对待安全。
 
 ## 报告漏洞
 
-私下报告。对于安全 bug，**不要**开一个公开的 issue、PR 或论坛帖。请使用项目联系方式
-（见 [`CONTRIBUTING.md`](../CONTRIBUTING.md)）：
+- **Site:** https://vd171.ru
+- **Site:** https://vd.priv8.ru
+- **Issues:** https://github.com/VD171/VDLiveUpdate/issues
+- **GitHub:** [@VD171](https://github.com/VD171)
+- **XDA-Developers:** [@VD171](https://xdaforums.com/m/vd171.4699873/)
+- **Telegram:** [@VD_Priv8](https://t.me/VD_Priv8)
+- **Channel:** [@Priv8_VD](https://t.me/Priv8_VD)
+- **Discord:** [@VD.Priv8](https://discord.com/users/1296831918989639721)
+- **E-mail:** vd.priv8@pm.me
 
-- Telegram：**@VD_Priv8**（https://t.me/VD_Priv8）
-- 频道：**@Priv8_VD**（https://t.me/Priv8_VD）
-- 邮箱：**vd.priv8@pm.me**
+请附上清晰的描述，如有可能，附上能复现该问题的 manifest 或 feed。我们会尽快回复，并在你愿意
+时给予致谢。
 
-请附上 engine 版本、使用中的 `profile`，以及一个能复现问题的清单或 feed。修复以一个带有 `CHANGELOG.md`
-条目的新 `ENGINE_VERSION` 发布；在报告线程上协调披露时机。
+## 范围说明
 
-## 信任模型
-
-- **分离式 ed25519 签名。** producer 在 PC 上对规范清单签名（openssl）；设备用内嵌的 `ed25519-mini`
-  验证 - **设备上无 openssl**。被签名的消息是去掉其 `sig` 字段后的清单的 sha256 hex（键已排序、紧凑、
-  UTF-8），因此 sign 和 verify 在两个运行时上派生相同的字节，设备上无需 JSON 库。
-- **Keyring = RAW 32 字节公钥**，仅限 flash。设备 keyring 以原始 32 字节密钥（绝不是 PEM）发布
-  `<key_id>.pub`；`vdlu-pack` 将 keyring 和 `verify/` 二进制从 feed 中**排除**，因此一个清单绝不能通过
-  网络重写设备上的信任锚。
-- **module-update `key_id` allowlist（fail-closed，在 pubkey 选取之前）。** 一个 keyring 可能合法地携带
-  多于一个密钥（例如在 release 密钥旁边有一个较低信任的 fingerprint-feed 密钥）。在 `<key_id>.pub`
-  被选取之前，`verify_manifest` 在**两个** profiles 中拒绝任何 `key_id` 不在已配置 allowlist 中的清单，
-  并通过 `VDLU_KEYID_ALLOW` 将解析出的集合镜像到 `vdlu-verify`。这封堵了一个旁路：泄露的较低信任密钥
-  否则可能签署一个完整的 flashless root 更新。`key_id` 未设置时默认安全：**单密钥** keyring 自动固定到
-  那一个密钥；**多密钥** keyring 在 `key_id` 被固定之前被拒绝（用逗号分隔以便轮换）。
-- **fingerprint-feed 信任根是一个独立的、固定的 path**，有它自己的密钥；它绝不可通过上述 module-update
-  路径到达。
-- **Baseline 是一个本地受信种子。** `baseline.json` 随刷入的 zip 到达 - 即安装信任边界 - 所以它未签名、
-  无密钥，并且**不**经过 `vdlu-verify`；只有从 feed **抓取**的清单才被验证。这让签名密钥留在 CI 之外。
-
-## fail-closed 保证
-
-- **`validate_plan` 在任何 fetch 或 apply 之前运行。** 在 `do_diff` 中，fail-closed 地，若任何 `path` 是
-  绝对路径、含有一个 `..` 或 `.` segment、以 `/` 结尾、或持有一个控制字符；若任何 `sha256` 不是
-  `^[0-9a-f]{64}$`；或若任何 `mode`/`class`/`enc` 无效，它都会拒绝**整个**清单。没有敌意字段到达一个
-  shell，且 `cmd_check` 不带任何 `system()` 插值。
-- **Path 包含。** 每一次写入和删除都通过 `contained()` 被限制在 `MODULE_DIR` 内 - apply、delete，以及
-  reboot 的 `stage_file` 都通过同一个 guard。树中的符号链接被 producer 跳过（绝不泄露其外部的内容）。
-- **两个 profiles，通过反转 fail-closed。** `trusted`（私有、SSH-staged 来源）是对 best-effort verify 的
-  **唯一** opt-in；**任何**其他值 - 包括一个 typo、一个 trailing 空格/CR，或一个不同的大小写 - 都被当作
-  `hardened` 处理，在其中一个有效签名是**强制的**，一次失败即 abort。每个 blob 的 `sha256` 在两个
-  profiles 中都被检查。
-- **任何 tool exec 之前先签名 + 哈希。** 被抓取的静态 `curl` 以 root 运行，所以 `install-tool` 在它被
-  安装并执行**之前**验证 tools-manifest 签名（ed25519-mini，在**任何** profile 中强制）和 curl 的哈希 -
-  exec 之前的 sig+hash 封堵了 RCE。
-- **可恢复、pin-安全的事务。** 在途清单被固定在 `target.json`；一次崩溃、网络丢失或 reboot 会从 journal
-  恢复，而不重新决定计划。downgrade 被阻止（单调 `version`），已签名的 `module` 字段必须等于 `MODID`，
-  且 `delete[]` 仅在 `finalize_done` 时运行（一个 `PENDING_REBOOT` 不删除任何东西）。没有一样东西会在未
-  经完整 re-hash 的情况下“完成”；没有一样东西会在没有先备份 `rollback/<v>/` 的情况下被覆盖。
-
-## 加固（纵深防御）
-
-- **Size cap。** 清单、tools-manifest，以及无 curl 的 `wget`/`head -c` 下载路径在被读取之前都受界限约束
-  （anti-OOM / anti-flood）。一个 blob 在 3 次尝试后在其阶段失败。
-- **Check-time lock。** `check` 在重建其 work dir 之前取得 mkdir-lock，因此一个并发运行无法与它竞争。
-- **Staging 包含。** `stage_file` 具有与 live apply 原语相同的 `contained()` guard，因此一个已暂存的
-  reboot-hard path 也无法逃出 `MODULE_DIR`。
-- **TLS 是纵深防御，而非信任根。** 静态 curl 使用 mbedTLS 配合 Android 信任存储（`--capath`、`ca_path`
-  覆盖）；完整性保证是 ed25519 签名，证书检查是第二层。
-
-## 另见
-
-- [`INTERFACES.md`](INTERFACES.md) - 不可变的 seam 契约（§5 config、§6 signature、§11 toolchain）。
-- [`ENGINE.md`](ENGINE.md) - 设备侧 engine 及其状态机。
-- [`PRODUCER.md`](PRODUCER.md) - 打包、签名、规范化，以及密钥轮换。
-- Wiki：**Security-and-Trust-Model**。
+- 更新是 content-addressed 的 blob 加上一个由 ed25519 签名的 `manifest.json`。设备使用内嵌
+  的 `ed25519-mini` 验证签名（设备上没有 openssl），并且每个 blob 在使用前都会与其 `sha256`
+  进行核对。
+- hardened 配置（公开默认值）要求有效签名并阻止 downgrade。"起始"版本以已安装模块的
+  `versionCode`（从 `module.prop` 读取）为下限，因此模块永远不会被回退到 feed 之后。
+- 信任根（`keyring/` 中的原始 ed25519 公钥和 `verify/` 中的二进制文件）仅限 flash，绝不通过
+  网络轮换。生产者将其排除在 feed 之外，engine 会忽略已下载计划中的每个 `vdlu/` 路径，因此
+  泄露的签名密钥无法替换验证器或密钥并持久保持 root。
+- 为另一个模块有效签名的 manifest 无法写入不同模块的目录。签名的 `module` 字段必须等于设备
+  上的 `MODID`（跨模块绑定检查），并且每次写入和删除都被限制在模块目录内。
+- engine 在模块自身的 root 上下文中运行，且绝不削弱它。它不添加任何权限，也不将任何 manifest
+  字段插入 shell，`path`、`sha256`、`mode` 和 `delete[]` 的每个值在使用前都会作为敌对输入进
+  行校验。
+- 其姿态是 fail-closed。损坏或未知的 `profile` 值绝不会滑向接受未签名的内容（任何不完全等于
+  `trusted` 的值都被视为 `hardened`），并且在覆盖任何文件之前都会写入备份，因此失败的 apply
+  绝不会破坏已安装的版本。
+- 完整的信任模型、fail-closed 保证和 hardening 详情，请参阅 [TRUST-MODEL.md](TRUST-MODEL.md)。
 
 <!-- doc-footer -->
 

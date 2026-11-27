@@ -36,7 +36,7 @@ réécrit, donc la publication est incrémentale et le contenu inchangé / rever
 
 ### Décision de `enc` (vdlu-pack)
 
-`sha256` est **toujours** du contenu original (non compressé) ; `enc` ne fait que nommer comment le blob est stocké.
+`sha256` est **toujours** du contenu original (non compressé), `enc` ne fait que nommer comment le blob est stocké.
 
 - `gz` quand `size >= 4096` **et** que gzip (`-9 -n`, déterministe) économise au moins 10% (`comp <= raw*0.90`).
 - `raw` sinon (petit texte que le gzip de HTTP couvre déjà, ou données déjà incompressibles).
@@ -47,7 +47,7 @@ décompresse avec toybox `gunzip` (toujours présent), donc aucun zstd n'est emp
 
 ### Décision de `class` (vdlu-pack) - taxonomie de reboot
 
-Dérivée du path (INTERFACES §3, doc §4). Défauts seulement ; une règle de path ne dégrade jamais `reboot`->`live`.
+Dérivée du path (INTERFACES §3, doc §4). Défauts seulement, une règle de path ne dégrade jamais `reboot`->`live`.
 
 | class | détectée par | appliquée |
 |---|---|---|
@@ -101,19 +101,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` fait partie de la forme canonique (seul `sig` est retiré) ; `vdlu-sign` fixe `key_id` **avant** de
+`key_id` fait partie de la forme canonique (seul `sig` est retiré), `vdlu-sign` fixe `key_id` **avant** de
 hasher. Le placeholder de valeur vide (`"sig":""`, à la signature) ou rempli (à la vérification) donne les
 octets canoniques identiques, donc signature et verify s'accordent par construction.
 
 Python le reproduit comme `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` puis sha256 - utilisé
-seulement pour le cross-check ; les producteurs faisant autorité sont les deux outils sh.
+seulement pour le cross-check, les producteurs faisant autorité sont les deux outils sh.
 
 ## Signature (ed25519)
 
 - `vdlu-keygen` (PC) : `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   pour la signature/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (le DER
   SPKI ed25519 est un préfixe de 12 octets + la clé de 32 octets, donc `tail -c 32` EST la clé). Il émet les DEUX.
-- `vdlu-sign` (PC) : `openssl pkeyutl -sign -rawin` sur le sha256 hex canonique ; signature stockée en base64.
+- `vdlu-sign` (PC) : `openssl pkeyutl -sign -rawin` sur le sha256 hex canonique, signature stockée en base64.
 - `vdlu-verify` (**appareil, slim**) : `ed25519-mini <pubkey32> <msg> <sig64>` - lit le keyring comme la pubkey
   **RAW 32B**, PAS d'openssl sur l'appareil. `key_id` est path-sanitized (pas de `/`, `.`, `..`, `"`). 🚨 Le keyring
   livre le **`.pub.raw` (32B)**, jamais le `.pub` PEM (113B) : le PEM est PC-side seulement et `ed25519-mini` ne peut
@@ -140,4 +140,4 @@ doit le **vérifier-pas-copier** et ne jamais l'écraser avec le `.pub` PEM du P
 
 ---
 
-> _Cette documentation a été générée avec Claude (Anthropic) et est maintenue par VD171. Les corrections et améliorations sont les bienvenues ; voir [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Cette documentation a été générée avec Claude (Anthropic) et est maintenue par VD171. Les corrections et améliorations sont les bienvenues, voir [CONTRIBUTING.md](CONTRIBUTING.md)._

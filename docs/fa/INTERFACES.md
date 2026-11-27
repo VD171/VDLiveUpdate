@@ -54,7 +54,7 @@ $VDLU_DIR = /data/adb/<module>/vdlu
 
 ```json
 { "schema":1, "module":"<id>", "version":<int>, "version_name":"<str>", "built":"<ISO8601>",
-  "engine_min":3, "key_id":"<str>", "channel":"stable",
+  "engine_min":5, "key_id":"<str>", "channel":"stable",
   "files":[ {"path":"webroot/index.html","sha256":"<hex64>","size":<int>,"mode":"0644","enc":"raw|gz","class":"live|soft|reboot"} ],
   "delete":["<path>"], "sig":"<base64>" }
 ```
@@ -65,6 +65,7 @@ $VDLU_DIR = /data/adb/<module>/vdlu
 - `enc`: `gz` (gzip با `-9 -n`، قطعی؛ toybox gunzip روی دستگاه) تنها زمانی که خوب فشرده شود و اندازه قابل‌توجه باشد؛
   `sha256` همیشه از محتوای اصلی است.
 - `sig`: امضای مانیفستِ canonical بدون فیلد `sig` (§4 از verify).
+- **کنارگذاریِ لنگرِ اعتماد (سمتِ موتور، VDLU#2):** موتور هر pathِ `files[]`/`delete[]` زیرِ `vdlu/` (خودِ `update.sh`/`vdlu-verify`/`verify/*`/`keyring/*`/config) را از plan **دور می‌اندازد** - هرگز واکشی، اعمال، یا حذف نمی‌شود - حتی اگر یک feedِ امضاشده آن‌ها را حمل کند. لنگرِ اعتمادِ روی دستگاه تنها با یک فلشِ مجددِ کاملِ امضاشده تغییر می‌کند، نه از طریقِ شبکه؛ `vdlu-pack` نیز `vdlu/` را در سمتِ producer کنار می‌گذارد، پس این یک نگهبانِ دومِ سمتِ موتور در برابرِ یک کلیدِ امضای نشت‌یافته است.
 
 ## ۴. journal.json (ENGINE می‌نویسد، WEBUI می‌خواند - قرارداد پیشرفت)
 
@@ -95,7 +96,11 @@ key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), 
                        # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
                        # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+ca_cert=               # empty = auto-build a CA bundle from the trust store; set a path to a bundle to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+apply_busy_file=       # OPT-IN: absolute path the host module touches during its own operations (e.g. a
+                       # backup). While it EXISTS, APPLY is deferred to the next trigger (blobs already
+                       # fetched, no re-download) so an update never swaps module files mid-operation. UNSET = off.
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
 boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
                        # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free

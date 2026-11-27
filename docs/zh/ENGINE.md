@@ -51,7 +51,9 @@ check/boot 时恢复（WebUI 显示一个蓝色 info toast“等待 X 网络”�
   `--connect-timeout` + `--speed-time`，从不挂起），解压 `gz`（toybox `gunzip`），检查 `sha256sum` ==
   清单，原子 `mv` 到 `blobs/<sha>`。已缓存+ok 的 blob 被跳过。它可以从一个未改变的本地文件
   播种 blob（dedup/offline）。**同一 blob 上 3 次失败 = 该阶段中止，不应用任何东西。** 它
-  仅在计划的所有 blob 都存在+已校验时才变为 `FETCHED`。
+  仅在计划的所有 blob 都存在+已校验时才变为 `FETCHED`。在 toolchain 设置时它会记录已解析的 TLS 信任
+  （CA path + 可读性、bundle 大小与证书数量），因此 boot 时的 curl `rc 77` 在 `boot.log` 中可自我解释 -
+  它能区分一个空存储与一个不可读的存储（boot 时的 SELinux 上下文情形）。
 - **APPLY**（仅从 `FETCHED`）：`live`/`soft` → 备份到 `rollback/<v>/` → `.vdlu-tmp` → `chmod` → verify →
   原子 `rename`。`reboot` → 物化到 `staged/<path>.vdlu-new`（不触碰 live inode）。
   `delete[]` → 备份 → 移除。幂等（已在目标哈希的文件被跳过）。
@@ -66,6 +68,9 @@ check/boot 时恢复（WebUI 显示一个蓝色 info toast“等待 X 网络”�
 - **profile=hardened** ⇒ 使用前在清单上强制 `vdlu-verify`；失败 = abort；降级被阻止
   （单调版本）。**trusted** ⇒ verify 尽力而为，但每个 blob 的哈希始终被检查。
 - **module-update 密钥 allowlist（两个 profiles）：** `verify_manifest` 在 pubkey 选取之前，fail-closed 地拒绝任何 `key_id` 不在已配置 `key_id` allowlist（见 INTERFACES §5/§6）中的清单，因此仅仅待在 keyring 中的较低信任密钥（例如一个 fingerprint-feed 密钥）绝不能签署 flashless root 更新。未设置时默认安全：单密钥 keyring = 仅那一个密钥；多密钥 keyring = 在 `key_id` 被固定前拒绝。
+- **信任锚排除（VDLU#2）：** engine 会忽略一个被抓取计划中的每一个 `vdlu/` path（`update.sh`、`vdlu-verify`、`verify/*`、`keyring/*`、config） - 从不抓取、应用或删除 - 即使一个已签名的 feed 携带它们。一个 feed 绝不能交换设备上的 verifier 或签名密钥；信任锚只通过一次完整的已签名 re-flash 才改变，因此一个泄露的签名密钥无法通过网络持久化 root。
+- **忙时延迟（opt-in `apply_busy_file`）：** 当 `apply_busy_file` 被设置（一个宿主模块在其自身操作期间触碰的绝对 path，例如一个正在运行的 backup），只要该 path 存在，APPLY 就被延迟 - 一个更新绝不会在操作中途交换模块文件。blob 已被抓取，因此下一次触发时应用而无需重新下载。
+- **大小上限：** 每文件 128 MiB（`MAX_FILE_BYTES`）和每清单 2 MiB（`MAX_MANIFEST_BYTES`），在 `update.sh` 和 `vdlu-verify` 中都于读取之前强制执行（anti decompression-bomb / anti-OOM）。
 - 优雅降级：缺少二进制 / 网络中断 / 磁盘已满 → stderr 上一个清晰的错误 + journal 中的
   `state:ERROR`，而不损坏模块。
 
@@ -81,7 +86,7 @@ JSON 都健壮。`sh` 用 `grep`/`cut` 消费它；逐文件计划在第 2 个 `
 
 | 文件 | 角色 |
 |---|---|
-| `config` | key=value（`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…；见 INTERFACES §5） |
+| `config` | key=value（`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/…；见 INTERFACES §5） |
 | `current.json` | 当前 ACTIVE 版本的清单（diff 基准）；缺失 = 从未更新过 |
 | `target.json` | 在途事务的固定清单（存在 = 活动事务）；`DONE` 时变为 `current.json` |
 | `plan.tsv` / `plan.del` | 计划 + 逐文件进度（st）/ 要删除的路径 |

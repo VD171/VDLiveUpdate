@@ -36,7 +36,7 @@ neu geschrieben, sodass die Veröffentlichung inkrementell ist und der unveränd
 
 ### `enc`-Entscheidung (vdlu-pack)
 
-`sha256` ist **immer** vom originalen (unkomprimierten) Inhalt; `enc` benennt nur, wie der Blob gespeichert wird.
+`sha256` ist **immer** vom originalen (unkomprimierten) Inhalt, `enc` benennt nur, wie der Blob gespeichert wird.
 
 - `gz`, wenn `size >= 4096` **und** gzip (`-9 -n`, deterministisch) mindestens 10% spart (`comp <= raw*0.90`).
 - `raw` ansonsten (kleiner Text, den HTTP-gzip bereits abdeckt, oder bereits inkompressible Daten).
@@ -47,7 +47,7 @@ dekomprimiert mit toybox `gunzip` (immer vorhanden), sodass kein zstd gebundelt 
 
 ### `class`-Entscheidung (vdlu-pack) - Reboot-Taxonomie
 
-Abgeleitet aus dem Pfad (INTERFACES §3, doc §4). Nur Standardwerte; eine Pfadregel stuft `reboot`->`live` nie herab.
+Abgeleitet aus dem Pfad (INTERFACES §3, doc §4). Nur Standardwerte, eine Pfadregel stuft `reboot`->`live` nie herab.
 
 | class | gematcht durch | angewandt |
 |---|---|---|
@@ -66,7 +66,7 @@ reproduzierbare Manifeste.
 sodass das Gerät "current" geboren wird (kein from:0, kein Re-Fetch). Die Engine behandelt es als **lokalen vertrauenswürdigen Seed**
 (es kam im geflashten Zip an, das die Installations-Vertrauensgrenze ist) und **verifiziert seine Signatur NICHT** -
 nur das vom Feed GEHOLTE Manifest durchläuft `vdlu-verify`. Die Baseline braucht also **keinen Schlüssel**: sie ist
-einfach `vdlu-pack`-Ausgabe über den ausgelieferten Baum (unsigniert; `sig`/`key_id` bleiben leer). Eine CI kann sie daher
+einfach `vdlu-pack`-Ausgabe über den ausgelieferten Baum (unsigniert, `sig`/`key_id` bleiben leer). Eine CI kann sie daher
 **schlüssellos** erzeugen und hält den Signierschlüssel 100% aus der CI heraus - nur der veröffentlichte FEED wird signiert (Betreiber,
 lokal). `vdlu-pack` schließt `baseline.json` aus seinem eigenen Manifest aus (Anti-Selbstreferenz). Nicht fatal, wenn
 abwesend: das Gerät startet einfach from:0 beim ersten Update, nie kaputt.
@@ -99,19 +99,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` ist Teil der kanonischen Form (nur `sig` wird entfernt); `vdlu-sign` setzt `key_id` **vor**
+`key_id` ist Teil der kanonischen Form (nur `sig` wird entfernt), `vdlu-sign` setzt `key_id` **vor**
 dem Hashen. Der Wert-Platzhalter, ob leer (`"sig":""`, Signierzeit) oder gefüllt (Verifizierzeit), ergibt die
 identischen kanonischen Bytes, sodass Signieren und Verifizieren per Konstruktion übereinstimmen.
 
 Python reproduziert es als `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` dann sha256 - verwendet
-nur zur Gegenprüfung; die maßgeblichen Produzenten sind die beiden sh-Tools.
+nur zur Gegenprüfung, die maßgeblichen Produzenten sind die beiden sh-Tools.
 
 ## Signatur (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   zum Signieren/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (das ed25519
   SPKI DER ist ein 12-Byte-Präfix + der 32-Byte-Schlüssel, sodass `tail -c 32` DER Schlüssel IST). Es emittiert BEIDE.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` über den kanonischen sha256-Hex; Signatur base64 gespeichert.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` über den kanonischen sha256-Hex, Signatur base64 gespeichert.
 - `vdlu-verify` (**Gerät, schlank**): `ed25519-mini <pubkey32> <msg> <sig64>` - liest das Keyring als den **RAW 32B**
   Pubkey, KEIN openssl auf dem Gerät. `key_id` ist pfad-bereinigt (kein `/`, `.`, `..`, `"`). 🚨 Das Keyring liefert den
   **`.pub.raw` (32B)** aus, niemals den `.pub` PEM (113B): der PEM ist nur PC-seitig und `ed25519-mini` kann ihn nicht lesen.
@@ -137,4 +137,4 @@ mit dem PC-seitigen `.pub` PEM überschreiben.
 
 ---
 
-> _Diese Dokumentation wurde mit Claude (Anthropic) erstellt und wird von VD171 gepflegt. Korrekturen und Verbesserungen sind willkommen; siehe [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Diese Dokumentation wurde mit Claude (Anthropic) erstellt und wird von VD171 gepflegt. Korrekturen und Verbesserungen sind willkommen, siehe [CONTRIBUTING.md](CONTRIBUTING.md)._

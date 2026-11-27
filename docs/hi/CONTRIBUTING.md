@@ -13,8 +13,8 @@ VDLU एक flashless, incremental self-update engine है जो KernelSU/APa
   (`check` / `run` / `boot`)। साथ ही `sh -n engine/*.sh` और `node --check webui/vdlu.js`।
 - सुरक्षा गैर-परक्राम्य है: हर manifest फ़ील्ड शत्रुतापूर्ण इनपुट है और `validate_plan()` fail-closed रहता है;
   निजी हस्ताक्षर कुंजी कभी CI या किसी डिवाइस को स्पर्श नहीं करती।
-- डिवाइस पर POSIX sh (`local` से परे कोई bashism नहीं, कोई `jq` नहीं); टिप्पणियाँ संक्षिप्त रखें।
-- प्रति PR एक तार्किक बदलाव; बताएँ कि क्या बदला और क्यों।
+- डिवाइस पर POSIX sh (`local` से परे कोई bashism नहीं, कोई `jq` नहीं), टिप्पणियाँ संक्षिप्त रखें।
+- प्रति PR एक तार्किक बदलाव, बताएँ कि क्या बदला और क्यों।
 
 ## संपर्क
 
@@ -26,4 +26,4 @@ VDLU एक flashless, incremental self-update engine है जो KernelSU/APa
 
 ---
 
-> _यह दस्तावेज़ Claude (Anthropic) से तैयार किया गया है और इसे VD171 द्वारा अनुरक्षित किया जाता है। सुधार और संशोधन का स्वागत है; देखें [CONTRIBUTING.md](CONTRIBUTING.md)।_
+> _यह दस्तावेज़ Claude (Anthropic) से तैयार किया गया है और इसे VD171 द्वारा अनुरक्षित किया जाता है। सुधार और संशोधन का स्वागत है, देखें [CONTRIBUTING.md](CONTRIBUTING.md)।_

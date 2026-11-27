@@ -9,7 +9,7 @@ cykeln `DIFF -> FETCH -> APPLY -> COMMIT` som en återupptagbar transaktion. Rä
 lagen).
 
 Ren POSIX sh (mksh/busybox/toybox). **SLIM:** den beror endast på toybox (`sha256sum`/`gzip`/`base64`/`date`) +
-den inbäddade `ed25519-mini` (ed25519 verify; **ingen openssl på enheten**) + en statisk `curl` som **hämtas** vid
+den inbäddade `ed25519-mini` (ed25519 verify, **ingen openssl på enheten**) + en statisk `curl` som **hämtas** vid
 den första https-uppdateringen (WebUI gör `fetch()`, bevarar den i Tier-2, och `install-tool` verifierar dess
 signatur+hash INNAN den används). `file://` behöver ingen curl. Noll beroende av `jq`.
 
@@ -20,8 +20,8 @@ VDLU_DIR=/data/adb/<mod>/vdlu MODULE_DIR=/data/adb/modules/<mod> MODID=<mod> \
   sh $MODULE_DIR/vdlu/update.sh <cmd>
 ```
 
-`rc 0` = ok; `rc != 0` = fel (orsak på stderr). `vdlu-verify` levereras av en annan komponent
-(signatur i `INTERFACES.md §6`); motorn anropar den bara.
+`rc 0` = ok, `rc != 0` = fel (orsak på stderr). `vdlu-verify` levereras av en annan komponent
+(signatur i `INTERFACES.md §6`), motorn anropar den bara.
 
 | cmd | gör |
 |---|---|
@@ -40,32 +40,46 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 `DONE` endast när en om-hashning av ALLT stämmer. Om någon REBOOT-hard scenlades ⇒ `PENDING_REBOOT` (aldrig ett
 falskt `DONE`). `ERROR` vid varje fel, utan att korrumpera modulen (de tillämpade LIVE-filerna återställs
-från `rollback/<v>/`; inget "halvtillämpat som ljuger om det"). Godartad utgång från `fetch`-fasen: **`DEFERRED`** -
-nedladdningen sköts upp av `net_policy` (nätverk inte tillåtet); plan/target består och den återupptas vid nästa
+från `rollback/<v>/`, inget "halvtillämpat som ljuger om det"). Godartad utgång från `fetch`-fasen: **`DEFERRED`** -
+nedladdningen sköts upp av `net_policy` (nätverk inte tillåtet), plan/target består och den återupptas vid nästa
 check/boot (WebUI visar en blå infotoast "väntar på X-nätverk", inte ett fel).
 
 ## Rigor-garantier
 
-- **FETCH:** grindas av `net_policy` (any/wifi/mobile; endast http/https, `file://` aldrig) - ett ej tillåtet nätverk ⇒
+- **FETCH:** grindas av `net_policy` (any/wifi/mobile, endast http/https, `file://` aldrig) - ett ej tillåtet nätverk ⇒
   `DEFERRED` (återupptagbart), utan att spendera data. Laddar bara ner det som saknas till `<sha>.part` (curl med
   `--connect-timeout` + `--speed-time`, hänger aldrig), dekomprimerar `gz` (toybox `gunzip`), kontrollerar `sha256sum` ==
   manifest, atomisk `mv` till `blobs/<sha>`. En cachad+ok blob hoppas över. Den kan seeda bloben från en oförändrad
   lokal fil (dedup/offline). **3 misslyckanden på samma blob = fasen avbryter utan att tillämpa något.** Den
-  blir `FETCHED` först när ALLA planens blobbar finns+verifierade.
+  blir `FETCHED` först när ALLA planens blobbar finns+verifierade. Vid toolchain-uppsättning
+  loggar den den upplösta TLS-tilliten (CA-sökväg + läsbarhet, buntstorlek och certantal) så att
+  ett curl-`rc 77` vid boot är självförklarande i `boot.log` - den skiljer ett tomt lager från ett
+  oläsbart (boot-fallet med SELinux-kontext).
 - **APPLY** (endast från `FETCHED`): `live`/`soft` → backup till `rollback/<v>/` → `.vdlu-tmp` → `chmod` → verifiera →
   atomisk `rename`. `reboot` → materialiseras i `staged/<path>.vdlu-new` (rör INTE den levande inoden).
   `delete[]` → backup → ta bort. Idempotent (en fil som redan är på målets hash hoppas över).
-- **COMMIT:** om-hashning av varje `live`/`soft`; först då skriver den `current.json`. Med scenlagda filer ⇒
+- **COMMIT:** om-hashning av varje `live`/`soft`, först då skriver den `current.json`. Med scenlagda filer ⇒
   `PENDING_REBOOT`. `boot` gör `mv -f staged/....vdlu-new $MODULE_DIR/<path>` (pre-zygote) + om-verifierar +
   `DONE`.
-- **cancel:** kontrolleras mellan filer (säker punkt); tar bort den pågående `.vdlu-tmp`/`.part`, raderar `cancel`,
+- **cancel:** kontrolleras mellan filer (säker punkt), tar bort den pågående `.vdlu-tmp`/`.part`, raderar `cancel`,
   lämnar journalen återupptagbar (`cancelled:true`, `error:null`).
-- **mkdir-lås `$VDLU_DIR/lock.d`** serialiserar (flock är ogörligt på toybox; stale-recovery efter PID). Den
+- **mkdir-lås `$VDLU_DIR/lock.d`** serialiserar (flock är ogörligt på toybox, stale-recovery efter PID). Den
   TÅLMODIGA boot-retryn håller varken låset medan den väntar (`acquire_lock_try`+release mellan försök) eller ett
   wakelock - batterisäker. En krasch/nätverk/omstart mitt i → `resume`/`boot` fortsätter.
-- **profile=hardened** ⇒ `vdlu-verify` obligatoriskt på manifestet INNAN användning; fel = avbryt; nedgradering blockerad
+- **profile=hardened** ⇒ `vdlu-verify` obligatoriskt på manifestet INNAN användning, fel = avbryt, nedgradering blockerad
   (monoton version). **trusted** ⇒ verify är best-effort, men varje blobs hash kontrolleras ALLTID.
-- **Allowlist för module-update-nyckel (båda profiles):** `verify_manifest` avvisar, fail-closed, varje manifest vars `key_id` inte finns i den konfigurerade `key_id`-allowlisten (se INTERFACES §5/§6) INNAN pubnyckeln väljs, så att en nyckel med lägre tillit som bara ligger i keyringen (t.ex. en fingerprint-feed-nyckel) aldrig kan signera en flashless root-uppdatering. Standardsäkert när osatt: keyring med en nyckel = bara den enda nyckeln; keyring med flera nycklar = avvisad tills `key_id` är fastnålad.
+- **Allowlist för module-update-nyckel (båda profiles):** `verify_manifest` avvisar, fail-closed, varje manifest vars `key_id` inte finns i den konfigurerade `key_id`-allowlisten (se INTERFACES §5/§6) INNAN pubnyckeln väljs, så att en nyckel med lägre tillit som bara ligger i keyringen (t.ex. en fingerprint-feed-nyckel) aldrig kan signera en flashless root-uppdatering. Standardsäkert när osatt: keyring med en nyckel = bara den enda nyckeln, keyring med flera nycklar = avvisad tills `key_id` är fastnålad.
+- **Exkludering av tillitsankaret (VDLU#2):** engine IGNORERAR varje `vdlu/`-sökväg i en hämtad plan
+  (`update.sh`, `vdlu-verify`, `verify/*`, `keyring/*`, config) - aldrig hämtad, tillämpad eller
+  raderad - även om ett signerat flöde bär dem. Ett flöde kan aldrig byta ut verifieraren eller
+  signeringsnyckeln på enheten, tillitsankaret ändras bara genom en fullständig signerad om-flash, så
+  en enda läckt signeringsnyckel kan inte bevara root över nätet.
+- **Busy-defer (opt-in `apply_busy_file`):** med `apply_busy_file` satt (en absolut sökväg som
+  värdmodulen rör vid under sina egna operationer, t.ex. en pågående backup) skjuts APPLY upp så länge
+  den sökvägen finns - en uppdatering byter aldrig modulfiler mitt i en operation. Blobbarna är redan
+  hämtade, så nästa trigger tillämpar utan någon om-nedladdning.
+- **Storlekstak:** 128 MiB per fil (`MAX_FILE_BYTES`) och 2 MiB per manifest (`MAX_MANIFEST_BYTES`),
+  upprätthållna före läsning i både `update.sh` och `vdlu-verify` (anti dekompressionsbomb / anti-OOM).
 - Degraderar graciöst: saknad binär / nätverk nere / disk full → ett tydligt fel på stderr + `state:ERROR` i
   journalen, utan att korrumpera modulen.
 
@@ -74,14 +88,14 @@ check/boot (WebUI visar en blå infotoast "väntar på X-nätverk", inte ett fel
 En gron-stil-utplattare i `awk` (ren POSIX: `substr`/`index`/`gsub`/`split`/`printf` + lokala variabler som skickas som
 parametrar) tokeniserar manifestet tecken för tecken och avger en `path<TAB>value`-rad per skalärt löv
 (`files/0/sha256<TAB>ab..`, `version<TAB>6`, `delete/0<TAB>etc/x`). Robust mot kompakt ELLER prydligt utskriven
-JSON. `sh` konsumerar den med `grep`/`cut`; planen per fil återmonteras i en 2:a `awk` till TSV
+JSON. `sh` konsumerar den med `grep`/`cut`, planen per fil återmonteras i en 2:a `awk` till TSV
 (`class st mode enc sha size path`), som blir `$VDLU_DIR/plan.tsv`.
 
 ## Tillståndsfiler (i `$VDLU_DIR`, Tier-2)
 
 | fil | roll |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; se INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/…; se INTERFACES §5) |
 | `current.json` | manifest för den AKTIVA versionen (diff-bas); frånvarande = aldrig uppdaterad |
 | `target.json` | fäst manifest för den pågående transaktionen (närvaro = aktiv transaktion); blir `current.json` vid `DONE` |
 | `plan.tsv` / `plan.del` | plan + förlopp per fil (st) / sökvägar att ta bort |
@@ -97,4 +111,4 @@ JSON. `sh` konsumerar den med `grep`/`cut`; planen per fil återmonteras i en 2:
 
 ---
 
-> _Denna dokumentation genererades med Claude (Anthropic) och underhålls av VD171. Rättelser och förbättringar välkomnas; se [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Denna dokumentation genererades med Claude (Anthropic) och underhålls av VD171. Rättelser och förbättringar välkomnas, se [CONTRIBUTING.md](CONTRIBUTING.md)._

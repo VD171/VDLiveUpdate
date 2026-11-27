@@ -50,7 +50,9 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   `--connect-timeout` + `--speed-time`، هرگز گیر نمی‌کند)، `gz` را از حالت فشرده خارج می‌کند (toybox `gunzip`)، بررسی می‌کند
   `sha256sum` == مانیفست، `mv` اتمی به `blobs/<sha>`. یک بلابِ کش‌شده+درست رد می‌شود. می‌تواند بلاب را از یک فایل محلیِ بدون
   تغییر بذر کند (dedup/آفلاین). **۳ شکست روی یک بلاب = فاز بدون اعمالِ چیزی abort می‌شود.** تنها زمانی `FETCHED` می‌شود که
-  همه‌ی بلاب‌های plan حاضر+تاییدشده باشند.
+  همه‌ی بلاب‌های plan حاضر+تاییدشده باشند. هنگامِ راه‌اندازیِ زنجیره‌ابزار، اعتمادِ TLSِ حل‌شده را لاگ می‌کند (مسیرِ CA +
+  خوانا بودن، اندازه‌ی bundle و شمارِ گواهی‌ها) تا یک `rc 77`ِ curl در زمانِ boot در `boot.log` خودگویا باشد - یک storeِ
+  خالی را از یک storeِ ناخوانا تشخیص می‌دهد (حالتِ کانتکستِ SELinuxِ boot).
 - **APPLY** (تنها از `FETCHED`): `live`/`soft` → پشتیبان به `rollback/<v>/` → `.vdlu-tmp` → `chmod` → verify →
   `rename` اتمی. `reboot` → در `staged/<path>.vdlu-new` تحقق می‌یابد (به inode زنده دست نمی‌زند).
   `delete[]` → پشتیبان → حذف. ایدمپوتنت (فایلی که پیشاپیش در هشِ هدف است رد می‌شود).
@@ -64,6 +66,9 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 - **profile=hardened** ⇒ `vdlu-verify` روی مانیفست پیش از استفاده الزامی؛ شکست = abort؛ downgrade مسدود (نسخه‌ی یکنوا).
   **trusted** ⇒ verify تا حد امکان است، اما هشِ هر بلاب همیشه بررسی می‌شود.
 - **فهرست مجازِ کلیدِ module-update (هر دو profiles):** `verify_manifest` هر مانیفستی را که `key_id`ِ آن در فهرستِ مجازِ `key_id`ِ پیکربندی‌شده (نگاه کنید به INTERFACES §5/§6) نباشد، پیش از انتخابِ pubkey به‌صورتِ fail-closed رد می‌کند، پس کلیدی با اعتمادِ پایین‌تر که فقط در keyring نشسته است (مثلاً یک کلیدِ fingerprint-feed) هرگز نمی‌تواند یک به‌روزرسانیِ flashless root را امضا کند. در حالتِ تنظیم‌نشده به‌طورِ پیش‌فرض امن: keyringِ تک‌کلیدی = فقط همان یک کلید؛ keyringِ چندکلیدی = تا پین‌شدنِ `key_id` رد می‌شود.
+- **کنارگذاریِ لنگرِ اعتماد (VDLU#2):** موتور هر pathِ `vdlu/` را در یک planِ واکشی‌شده (`update.sh`، `vdlu-verify`، `verify/*`، `keyring/*`، config) **نادیده می‌گیرد** - هرگز واکشی، اعمال، یا حذف نمی‌شود - حتی اگر یک feedِ امضاشده آن‌ها را حمل کند. یک feed هرگز نمی‌تواند تأییدکننده یا کلیدِ امضای روی دستگاه را عوض کند؛ لنگرِ اعتماد تنها با یک فلشِ مجددِ کاملِ امضاشده تغییر می‌کند، پس یک کلیدِ امضای نشت‌یافته‌ی تنها نمی‌تواند root را از طریقِ شبکه ماندگار کند.
+- **Busy-defer (`apply_busy_file`، opt-in):** با تنظیمِ `apply_busy_file` (یک مسیرِ مطلق که ماژولِ میزبان در حینِ عملیاتِ خودش لمس می‌کند، مثلاً یک backupِ در جریان)، APPLY تا زمانی که آن مسیر وجود دارد به‌تعویق می‌افتد - یک به‌روزرسانی هرگز فایل‌های ماژول را وسطِ عملیات عوض نمی‌کند. بلاب‌ها پیشاپیش واکشی شده‌اند، پس triggerِ بعدی بدونِ دانلودِ دوباره اعمال می‌کند.
+- **سقف‌های اندازه:** 128 MiB برای هر فایل (`MAX_FILE_BYTES`) و 2 MiB برای هر مانیفست (`MAX_MANIFEST_BYTES`)، که پیش از خواندن در هر دو `update.sh` و `vdlu-verify` اعمال می‌شوند (ضدِ decompression-bomb / ضدِ OOM).
 - با وقار افت می‌کند: باینریِ گم‌شده / شبکه‌ی قطع / دیسکِ پر → یک خطای روشن روی stderr + `state:ERROR` در journal، بدون
   خراب‌کردن ماژول.
 
@@ -79,7 +84,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 | file | role |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…؛ نگاه کن به INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/…؛ نگاه کن به INTERFACES §5) |
 | `current.json` | مانیفست نسخه‌ی ACTIVE (پایه‌ی diff)؛ غایب = هرگز به‌روز نشده |
 | `target.json` | مانیفست پین‌شده‌ی تراکنشِ در جریان (حضور = تراکنش فعال)؛ در `DONE` به `current.json` بدل می‌شود |
 | `plan.tsv` / `plan.del` | plan + پیشرفت فایل‌به‌فایل (st) / path‌هایی برای حذف |

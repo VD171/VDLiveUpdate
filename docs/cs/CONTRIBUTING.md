@@ -12,9 +12,9 @@ Příspěvky jsou vítány.
 - Testujte od začátku do konce před PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, pak engine
   (`check` / `run` / `boot`). Také `sh -n engine/*.sh` a `node --check webui/vdlu.js`.
 - Bezpečnost je nediskutovatelná: každé pole manifestu je nepřátelský vstup a `validate_plan()` zůstává
-  fail-closed; privátní podpisový klíč se nikdy nedotkne CI ani zařízení.
-- POSIX sh na zařízení (žádné bashismy nad `local`, žádný `jq`); komentáře držte stručně.
-- Jedna logická změna na PR; řekni, co se změnilo a proč.
+  fail-closed, privátní podpisový klíč se nikdy nedotkne CI ani zařízení.
+- POSIX sh na zařízení (žádné bashismy nad `local`, žádný `jq`), komentáře držte stručně.
+- Jedna logická změna na PR, řekni, co se změnilo a proč.
 
 ## Kontakty
 
@@ -26,4 +26,4 @@ Příspěvky jsou vítány.
 
 ---
 
-> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány; viz [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány, viz [CONTRIBUTING.md](CONTRIBUTING.md)._

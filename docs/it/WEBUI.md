@@ -58,7 +58,7 @@ Se omessi, il widget usa i propri:
   (rc≠0) - esattamente la firma dell'`ex()` del `webroot/index.html` del Demo. Il fallback interno chiama
   `ksu.exec(cmd, '{}', cb)` con lo stesso contratto.
 - **`toast(msg)`** = una breve notifica transiente (il fallback inietta il proprio mini-toast).
-- **`confirm(title,msg,ok,danger,fn)`** = una modale (oggi usata solo dall'host; il widget non richiede alcuna
+- **`confirm(title,msg,ok,danger,fn)`** = una modale (oggi usata solo dall'host, il widget non richiede alcuna
   conferma in nessun flusso).
 
 Passare quelli dell'host fa parlare il widget attraverso la STESSA coda serializzata e gli stessi visual del resto della
@@ -83,7 +83,7 @@ Il toast (overlay d'angolo, non bloccante) e il banner (in alto, persistente) ve
 
 ### Il flusso di stato che il toast riflette (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` in qualsiasi momento. Il
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` in qualsiasi momento. Il
 toast mostra **una barra + `phase done/total · current · bytes`**. Terminali:
 - **`DONE`** → toast verde "v&lt;target&gt; applicata".
 - **`PENDING_REBOOT`** (o `reboot_pending=true`) → toast verde + **banner persistente** "⚠️ Riavvia per
@@ -94,7 +94,7 @@ toast mostra **una barra + `phase done/total · current · bytes`**. Terminali:
 ## Eseguire il demo
 
 Apri `demo.html` in un browser (`xdg-open webui/demo.html`). Il `ksu.exec` mockato simula `update.sh` e
-`journal.json` che evolvono; i pulsanti commutano tra gli scenari **LIVE→DONE**, **reboot_pending**, **error a metà**
+`journal.json` che evolvono, i pulsanti commutano tra gli scenari **LIVE→DONE**, **reboot_pending**, **error a metà**
 e **cancellabile**. È lo stesso `vdlu.js`/`vdlu.css` che sul dispositivo.
 
 ## i18n (lingua)
@@ -108,7 +108,7 @@ qualsiasi chiave passando una mappa in `init`:
 ```
 
 - Un merge **parziale** va bene: una chiave mancante ricade sul default inglese.
-- Le chiavi di phase/state sono `ph_<phase>` / `st_<STATE>`; il resto è piatto (`cancel`, `updateNow`, …).
+- Le chiavi di phase/state sono `ph_<phase>` / `st_<STATE>`, il resto è piatto (`cancel`, `updateNow`, …).
 - La mappa completa delle chiavi = l'oggetto `DEFAULT_I18N` in `vdlu.js` (esposto anche come `VDLU.i18n`).
 - Una traduzione pronta è fornita come esempio lavorato: `i18n/pt-BR.js`. Nuove lingue = un file
   `i18n/<lang>.js` nello stesso stampo, oppure l'host costruisce la mappa dal proprio sistema i18n.
@@ -117,12 +117,12 @@ qualsiasi chiave passando una mappa in `init`:
 
 Questi `vdlu.js`/`vdlu.css` sono la **copia canonica**. Ogni modulo che imbarca il widget
 **ri-vendorizza** questa copia byte-per-byte nel proprio `webroot/` - **non** modifica mai
-il proprio in place. Una nuova feature del widget nasce qui e scorre giù per re-vendor; il contrario produce un drift
+il proprio in place. Una nuova feature del widget nasce qui e scorre giù per re-vendor, il contrario produce un drift
 silenzioso (è successo in pratica: una copia vendorizzata era rimasta indietro e mancava di `net_policy`, del toast
 `DEFERRED` e dei campi `boot_retry`).
 
 Guardiano: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) trova ogni copia nell'albero sorgente e segnala
-quelle che divergono da quella canonica (solo `vdlu.js`/`vdlu.css`; il keyring è "verifica, non copia").
+quelle che divergono da quella canonica (solo `vdlu.js`/`vdlu.css`, il keyring è "verifica, non copia").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -136,4 +136,4 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 
 ---
 
-> _Questa documentazione è stata generata con Claude (Anthropic) ed è gestita da VD171. Correzioni e miglioramenti sono benvenuti; vedi [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Questa documentazione è stata generata con Claude (Anthropic) ed è gestita da VD171. Correzioni e miglioramenti sono benvenuti, vedi [CONTRIBUTING.md](CONTRIBUTING.md)._

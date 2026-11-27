@@ -58,7 +58,7 @@ Indien weggelaten gebruikt de widget zijn eigen:
   (rc≠0) - exact de signatuur van de `ex()` van de Demo-`webroot/index.html`. De interne fallback roept
   `ksu.exec(cmd, '{}', cb)` aan met hetzelfde contract.
 - **`toast(msg)`** = een korte voorbijgaande notificatie (de fallback injecteert zijn eigen mini-toast).
-- **`confirm(title,msg,ok,danger,fn)`** = een modaal (vandaag alleen door de host gebruikt; de widget vereist geen
+- **`confirm(title,msg,ok,danger,fn)`** = een modaal (vandaag alleen door de host gebruikt, de widget vereist geen
   bevestiging in enige flow).
 
 Je eigen host-functies doorgeven laat de widget praten via DEZELFDE geserialiseerde wachtrij en visuals als de rest van de
@@ -83,7 +83,7 @@ leeg `<div>`).
 
 ### De toestandsflow die de toast weergeeft (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` op elk moment. De
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` op elk moment. De
 toast toont **een balk + `phase done/total · current · bytes`**. Terminalen:
 - **`DONE`** → groene toast "v&lt;target&gt; applied".
 - **`PENDING_REBOOT`** (of `reboot_pending=true`) → groene toast + **persistente banner** "⚠️ Reboot to
@@ -94,7 +94,7 @@ toast toont **een balk + `phase done/total · current · bytes`**. Terminalen:
 ## De demo draaien
 
 Open `demo.html` in een browser (`xdg-open webui/demo.html`). De gemockte `ksu.exec` simuleert `update.sh` en
-`journal.json` die evolueren; de knoppen schakelen tussen de scenario's **LIVE→DONE**, **reboot_pending**, **error mid-way**
+`journal.json` die evolueren, de knoppen schakelen tussen de scenario's **LIVE→DONE**, **reboot_pending**, **error mid-way**
 en **cancellable**. Het is dezelfde `vdlu.js`/`vdlu.css` als op het toestel.
 
 ## i18n (taal)
@@ -108,7 +108,7 @@ elke sleutel door een map door te geven in `init`:
 ```
 
 - Een **gedeeltelijke** merge is prima: een ontbrekende sleutel valt terug op de Engelse standaard.
-- Fase-/toestandssleutels zijn `ph_<phase>` / `st_<STATE>`; de rest is vlak (`cancel`, `updateNow`, …).
+- Fase-/toestandssleutels zijn `ph_<phase>` / `st_<STATE>`, de rest is vlak (`cancel`, `updateNow`, …).
 - De volledige sleutelmap = het `DEFAULT_I18N`-object in `vdlu.js` (ook geëxposeerd als `VDLU.i18n`).
 - Een kant-en-klare vertaling wordt geleverd als uitgewerkt voorbeeld: `i18n/pt-BR.js`. Nieuwe talen = een
   `i18n/<lang>.js`-bestand in dezelfde mal, of de host bouwt de map uit zijn eigen i18n-systeem.
@@ -117,12 +117,12 @@ elke sleutel door een map door te geven in `init`:
 
 Deze `vdlu.js`/`vdlu.css` zijn de **canonieke kopie**. Elke module die de widget inbedt
 **her-vendort** deze kopie byte-voor-byte in zijn `webroot/` - hij bewerkt zijn eigen exemplaar **nooit**
-ter plekke. Een nieuwe widget-feature wordt hier geboren en stroomt neerwaarts via her-vendoring; het omgekeerde produceert stille
+ter plekke. Een nieuwe widget-feature wordt hier geboren en stroomt neerwaarts via her-vendoring, het omgekeerde produceert stille
 drift (het is in de praktijk gebeurd: een mee-geleverde kopie raakte achterop en miste `net_policy`, de `DEFERRED`-
 toast en de `boot_retry`-velden).
 
 Bewaker: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) vindt elke kopie in de bronboom en markeert
-degene die afwijken van de canonieke (alleen `vdlu.js`/`vdlu.css`; de keyring is "verifieer, niet kopiëren").
+degene die afwijken van de canonieke (alleen `vdlu.js`/`vdlu.css`, de keyring is "verifieer, niet kopiëren").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -130,10 +130,10 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 De keyring (`keyring/<id>.pub` RAW 32B) en de engine (`vdlu/update.sh`) hebben hun eigen her-vendor-
-> cadans; deze bewaker dekt **alleen de WebUI-widget**.
+> cadans, deze bewaker dekt **alleen de WebUI-widget**.
 
 <!-- doc-footer -->
 
 ---
 
-> _Deze documentatie is gegenereerd met Claude (Anthropic) en wordt onderhouden door VD171. Correcties en verbeteringen zijn welkom; zie [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Deze documentatie is gegenereerd met Claude (Anthropic) en wordt onderhouden door VD171. Correcties en verbeteringen zijn welkom, zie [CONTRIBUTING.md](CONTRIBUTING.md)._

@@ -58,7 +58,7 @@ If omitted, the widget uses its own:
   (rc≠0) - exactly the signature of the Demo `webroot/index.html`'s `ex()`. The internal fallback calls
   `ksu.exec(cmd, '{}', cb)` with the same contract.
 - **`toast(msg)`** = a short transient notification (the fallback injects its own mini-toast).
-- **`confirm(title,msg,ok,danger,fn)`** = a modal (today used only by the host; the widget requires no
+- **`confirm(title,msg,ok,danger,fn)`** = a modal (today used only by the host, the widget requires no
   confirmation in any flow).
 
 Passing the host's own makes the widget talk through the SAME serialized queue and visuals as the rest of the
@@ -83,7 +83,7 @@ empty `<div>`).
 
 ### The state flow the toast reflects (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` at any moment. The
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` at any moment. The
 toast shows **a bar + `phase done/total · current · bytes`**. Terminals:
 - **`DONE`** → green toast "v&lt;target&gt; applied".
 - **`PENDING_REBOOT`** (or `reboot_pending=true`) → green toast + **persistent banner** "⚠️ Reboot to
@@ -94,7 +94,7 @@ toast shows **a bar + `phase done/total · current · bytes`**. Terminals:
 ## Running the demo
 
 Open `demo.html` in a browser (`xdg-open webui/demo.html`). The mocked `ksu.exec` simulates `update.sh` and
-`journal.json` evolving; the buttons switch between the **LIVE→DONE**, **reboot_pending**, **error mid-way**
+`journal.json` evolving, the buttons switch between the **LIVE→DONE**, **reboot_pending**, **error mid-way**
 and **cancellable** scenarios. It is the same `vdlu.js`/`vdlu.css` as on the device.
 
 ## i18n (language)
@@ -108,7 +108,7 @@ any key by passing a map in `init`:
 ```
 
 - A **partial** merge is fine: a missing key falls back to the English default.
-- Phase/state keys are `ph_<phase>` / `st_<STATE>`; the rest is flat (`cancel`, `updateNow`, …).
+- Phase/state keys are `ph_<phase>` / `st_<STATE>`, the rest is flat (`cancel`, `updateNow`, …).
 - The full key map = the `DEFAULT_I18N` object in `vdlu.js` (also exposed as `VDLU.i18n`).
 - A ready translation is provided as a worked example: `i18n/pt-BR.js`. New languages = an
   `i18n/<lang>.js` file in the same mold, or the host builds the map from its own i18n system.
@@ -117,12 +117,12 @@ any key by passing a map in `init`:
 
 These `vdlu.js`/`vdlu.css` are the **canonical copy**. Every module that embeds the widget
 **re-vendors** this copy byte-for-byte into its `webroot/` - it **never** edits
-its own in place. A new widget feature is born here and flows down by re-vendor; the reverse produces silent
+its own in place. A new widget feature is born here and flows down by re-vendor, the reverse produces silent
 drift (it has happened in practice: a vendored copy fell behind and was missing `net_policy`, the `DEFERRED`
 toast and the `boot_retry` fields).
 
 Guardian: [`../tools/webui-parity.sh`](../tools/webui-parity.sh) finds every copy in the source tree and flags
-those that diverge from the canonical one (only `vdlu.js`/`vdlu.css`; the keyring is "verify, not copy").
+those that diverge from the canonical one (only `vdlu.js`/`vdlu.css`, the keyring is "verify, not copy").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -130,10 +130,10 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 The keyring (`keyring/<id>.pub` RAW 32B) and the engine (`vdlu/update.sh`) have their own re-vendor
-> cadence; this guardian covers **only the WebUI widget**.
+> cadence, this guardian covers **only the WebUI widget**.
 
 <!-- doc-footer -->
 
 ---
 
-> _This documentation was generated with Claude (Anthropic) and is maintained by VD171. Corrections and improvements are welcome; see [CONTRIBUTING.md](../CONTRIBUTING.md)._
+> _This documentation was generated with Claude (Anthropic) and is maintained by VD171. Corrections and improvements are welcome, see [CONTRIBUTING.md](../CONTRIBUTING.md)._

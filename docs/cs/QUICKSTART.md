@@ -34,7 +34,7 @@ Toto je přesný `vdlu/` strom, který modul nese po adopci:
 ```
 
 Měnitelný stav enginu (`config`, `current.json`, journal, lock) žije v
-Tier-2, `/data/adb/<modid>/vdlu/`, mimo adresář modulu; `config.default` ho naseeduje
+Tier-2, `/data/adb/<modid>/vdlu/`, mimo adresář modulu, `config.default` ho naseeduje
 při prvním runu.
 
 ## 1. Vendorovat engine
@@ -48,7 +48,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Dodávej jen ABI, které podporuješ; `customize.sh` umí při instalaci ořezat `verify/` na ABI
+Dodávej jen ABI, které podporuješ, `customize.sh` umí při instalaci ořezat `verify/` na ABI
 zařízení.
 
 ## 2. Vygenerovat podepisovací klíč (jednorázově)
@@ -85,6 +85,7 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
 `profile=trusted` použij jen pro soukromý `file://`/SSH zdroj (verify best-effort;
@@ -121,7 +122,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` se vendorují z `webui/`; překlad lze přidat přes
+(`vdlu.js` / `vdlu.css` se vendorují z `webui/`, překlad lze přidat přes
 `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Podepsat feed ve svém release workflow
@@ -152,7 +153,7 @@ Není fatální, pokud chybí (zařízení prostě začne od `0` při první akt
 
 ---
 
-To je celá adopce. `sh -n <module>/vdlu/update.sh` musí projít; otestuj
+To je celá adopce. `sh -n <module>/vdlu/update.sh` musí projít, otestuj
 producer a engine od konce ke konci, jak ukazuje [`PRODUCER.md`](PRODUCER.md) a
 kořenový README, než budeš dodávat.
 
@@ -160,4 +161,4 @@ kořenový README, než budeš dodávat.
 
 ---
 
-> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány; viz [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tato dokumentace byla vytvořena pomocí Claude (Anthropic) a spravuje ji VD171. Opravy a vylepšení jsou vítány, viz [CONTRIBUTING.md](CONTRIBUTING.md)._

@@ -58,7 +58,7 @@ Si se omiten, el widget usa los suyos:
   (rc≠0) - exactamente la firma del `ex()` del `webroot/index.html` de la Demo. El fallback interno llama a
   `ksu.exec(cmd, '{}', cb)` con el mismo contrato.
 - **`toast(msg)`** = una notificación transitoria corta (el fallback inyecta su propio mini-toast).
-- **`confirm(title,msg,ok,danger,fn)`** = un modal (hoy usado solo por el anfitrión; el widget no requiere
+- **`confirm(title,msg,ok,danger,fn)`** = un modal (hoy usado solo por el anfitrión, el widget no requiere
   confirmación en ningún flujo).
 
 Pasar los propios del anfitrión hace que el widget hable a través de la MISMA cola serializada y los mismos
@@ -83,7 +83,7 @@ anfitrión asigna (un `<div>` vacío).
 
 ### El flujo de estados que el toast refleja (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; `ERROR` en cualquier momento. El
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, `ERROR` en cualquier momento. El
 toast muestra **una barra + `phase done/total · current · bytes`**. Terminales:
 - **`DONE`** → toast verde "v&lt;target&gt; applied".
 - **`PENDING_REBOOT`** (o `reboot_pending=true`) → toast verde + **banner persistente** "⚠️ Reboot to
@@ -94,7 +94,7 @@ toast muestra **una barra + `phase done/total · current · bytes`**. Terminales
 ## Correr la demo
 
 Abre `demo.html` en un navegador (`xdg-open webui/demo.html`). El `ksu.exec` mockeado simula `update.sh` y el
-`journal.json` evolucionando; los botones alternan entre los escenarios **LIVE→DONE**, **reboot_pending**, **error
+`journal.json` evolucionando, los botones alternan entre los escenarios **LIVE→DONE**, **reboot_pending**, **error
 a mitad** y **cancelable**. Es el mismo `vdlu.js`/`vdlu.css` que en el dispositivo.
 
 ## i18n (idioma)
@@ -108,7 +108,7 @@ sobrescribe cualquier clave pasando un map en `init`:
 ```
 
 - Un merge **parcial** está bien: una clave faltante cae al default en inglés.
-- Las claves de phase/state son `ph_<phase>` / `st_<STATE>`; el resto es plano (`cancel`, `updateNow`, …).
+- Las claves de phase/state son `ph_<phase>` / `st_<STATE>`, el resto es plano (`cancel`, `updateNow`, …).
 - El map de claves completo = el objeto `DEFAULT_I18N` en `vdlu.js` (también expuesto como `VDLU.i18n`).
 - Una traducción lista se provee como ejemplo trabajado: `i18n/pt-BR.js`. Nuevos idiomas = un archivo
   `i18n/<lang>.js` en el mismo molde, o el anfitrión construye el map desde su propio sistema i18n.
@@ -117,12 +117,12 @@ sobrescribe cualquier clave pasando un map en `init`:
 
 Estos `vdlu.js`/`vdlu.css` son la **copia canónica**. Cada módulo que embebe el widget
 **re-vendoriza** esta copia byte a byte en su `webroot/` - **nunca** edita
-la suya in place. Una nueva función del widget nace aquí y fluye hacia abajo por re-vendor; lo inverso produce
+la suya in place. Una nueva función del widget nace aquí y fluye hacia abajo por re-vendor, lo inverso produce
 drift silencioso (ha pasado en la práctica: una copia vendorizada se quedó atrás y le faltaban `net_policy`, el
 toast `DEFERRED` y los campos `boot_retry`).
 
 Guardián: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) encuentra cada copia en el árbol fuente y acusa
-a las que divergen de la canónica (solo `vdlu.js`/`vdlu.css`; el keyring es "verificar, no copiar").
+a las que divergen de la canónica (solo `vdlu.js`/`vdlu.css`, el keyring es "verificar, no copiar").
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -130,10 +130,10 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 El keyring (`keyring/<id>.pub` RAW 32B) y el engine (`vdlu/update.sh`) tienen su propia cadencia de
-> re-vendor; este guardián cubre **solo el widget WebUI**.
+> re-vendor, este guardián cubre **solo el widget WebUI**.
 
 <!-- doc-footer -->
 
 ---
 
-> _Esta documentación se generó con Claude (Anthropic) y la mantiene VD171. Las correcciones y mejoras son bienvenidas; consulta [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Esta documentación se generó con Claude (Anthropic) y la mantiene VD171. Las correcciones y mejoras son bienvenidas, consulta [CONTRIBUTING.md](CONTRIBUTING.md)._

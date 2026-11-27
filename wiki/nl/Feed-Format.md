@@ -24,7 +24,7 @@ Het manifest is de complete beschrijving van één release: elk bestand in de do
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ De feed draagt **alleen de eigen inhoud van de module**. Een vaste set paden wor
 
 | Uitgesloten | Waarom |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (de trust-root: rauwe publieke sleutels + het verifier-binary) | **Dit is de kernbeveiligingsreden.** Het vertrouwensanker is **flash-only**. Als de keyring of verifier via de feed leverbaar waren, zou een manifest juist datgene kunnen overschrijven dat het valideert. Ze van de draad houden betekent dat een manifest het vertrouwensanker op het apparaat nooit kan herschrijven. |
+| `vdlu/keyring/`, `vdlu/verify/` (de trust-root: rauwe publieke sleutels + het verifier-binary) | **Dit is de kernbeveiligingsreden.** Het vertrouwensanker is **flash-only**. Als de keyring of verifier via de feed leverbaar waren, zou een manifest juist datgene kunnen overschrijven dat het valideert. Ze van de draad houden betekent dat een manifest het vertrouwensanker op het apparaat nooit kan herschrijven. Als een tweede, onafhankelijke bewaking (`ENGINE_VERSION` 5) **negeert** de engine ook elk `vdlu/`-pad in een opgehaald plan, zodat zelfs een feed die ze meedraagt het anker niet kan aanraken. |
 | `vdlu/baseline.json` | Het is een kopie van het gesigneerde manifest (de install-seed); het packen ervan zou een zelfverwijzingslus zijn. |
 | `.vd/` flash-infrastructuur | Flash-gate-steigers die in de zip meeleveren, nooit live toegepast. |
 | `update.json`, `update-mmrl.json` | Hun size/sha worden door CI ingevuld *nadat* de zips zijn gebouwd, zodat de meegeleverde kopie afwijkt van elke feed-kopie. Ze voeden zou een fantoom fetch van één bestand veroorzaken bij de eerste zelf-update van elke installatie, en ze zijn op het apparaat toch vestigiaal (de manager leest de externe rauwe update-JSON). |

@@ -10,6 +10,25 @@ Esta página é a história completa de confiança. Veja [[Feed Format]] para o 
 
 ---
 
+## Versões suportadas
+
+Correções de segurança entram no `ENGINE_VERSION` mais recente; um manifesto assinado
+declara o engine mínimo de que precisa via `engine_min`, e o engine on-device recusa um
+manifesto que peça mais do que ele implementa. Espera-se que engines vendorizados mais
+antigos sejam **re-vendorizados** para pegar uma correção, não corrigidos no lugar.
+
+| ENGINE_VERSION | status |
+|---|---|
+| 7 (atual) | suportado - nunca reverter um módulo à frente do feed (o `versionCode` instalado ao vivo serve de piso para a versão "from"), auto-reparo no boot de um plano de downgrade obsoleto |
+| 6 | substituído - auto-reparo no boot de um journal obsoleto com `target <= 0` (o baseline 0 deixado por um stub removido não aciona mais nenhuma UI ou ação de boot) |
+| 5 | substituído - exclusão da âncora de confiança no engine (o dir `vdlu/` é ignorado mesmo se um feed o carrega), tetos de 128 MiB por arquivo / 2 MiB de manifesto |
+| 4 | substituído - allowlist de `key_id`, rejeição de path com dot-segment/barra-final, limites de tamanho, trava em tempo de check |
+| <= 3 | não suportado - re-vendorize o engine atual |
+
+Qualquer mudança na verificação do engine ou na lógica de apply incrementa o `ENGINE_VERSION`.
+
+---
+
 ## A ideia central: fail-closed, antes de qualquer coisa acontecer
 
 `validate_plan()` roda dentro da fase `check`/diff, **antes** de qualquer fetch e **antes** de qualquer apply. Ele percorre cada entrada na árvore de arquivos planejada e cada entrada em `delete[]`, e se qualquer entrada isolada estiver malformada ele **rejeita o manifesto inteiro** e a transação nunca começa. Não há aceite parcial, não há "pula a ruim e aplica o resto". Um campo ruim envenena o lote, de propósito.
@@ -124,6 +143,14 @@ A correção fixa o `key_id` de atualização de módulo aceito a uma **lista de
 Como a checagem roda antes da seleção da pubkey, um manifesto que nomeia uma chave que está presente mas não na lista de permissão é rejeitado sem o verificador jamais carregar essa chave. O conjunto resolvido é espelhado para o `vdlu-verify` através do `VDLU_KEYID_ALLOW`, então o checador enxuto no dispositivo impõe a mesma fixação e os dois não podem divergir. Isso vale em **ambos** os perfis: tanto `hardened` quanto `trusted` consultam a lista de permissão, porque a lista de permissão decide *qual chave* é uma raiz de atualização de módulo válida, não *se* uma assinatura é exigida.
 
 O feed de fingerprint mantém sua própria raiz de confiança fixada separada, `FEED_KEY_ID`. É uma raiz distinta com um trabalho distinto, nunca alcançável pelo caminho de atualização de módulo acima, então fixar a lista de permissão de atualização de módulo não a toca e uma chave de feed vazada ainda não pode assinar uma atualização de módulo. Essa mudança elevou `ENGINE_VERSION` para 4.
+
+---
+
+## A exclusão da âncora de confiança no engine
+
+A lista de permissão acima decide *qual* chave pode assinar uma atualização de módulo. Uma mudança posterior (`ENGINE_VERSION` 5) fecha o risco adjacente pelo outro lado: o que um feed validamente assinado tem sequer permissão de tocar. Um feed publicado carrega a árvore inteira do módulo, e essa árvore inclui o próprio diretório `vdlu/` do módulo - o motor, o shim `vdlu-verify`, os binários `verify/`, o keyring e a config. Esses são a âncora de confiança. Se uma atualização pudesse reescrevê-los, uma única chave de assinatura vazada poderia enviar um novo verificador ou um novo keyring e persistir root indefinidamente.
+
+Então o motor **ignora** todo path `vdlu/` em um plano buscado. Ele nunca os busca, aplica ou deleta, mesmo quando o manifesto os lista, e também não rejeita o manifesto: o resto do módulo ainda atualiza normalmente, e apenas os paths `vdlu/` são silenciosamente descartados. A âncora de confiança pode mudar **apenas** por um re-flash assinado completo do zip do módulo, nunca pela rede. Isso complementa a exclusão no lado do producer em `vdlu-pack` (que mantém esses paths fora do feed em primeiro lugar) com uma segunda guarda, independente, no dispositivo. A mesma mudança também baixou os tetos de hardening para **128 MiB por arquivo** e **2 MiB por manifesto**. Reportado por Solomag (VD-Modules#1).
 
 ---
 

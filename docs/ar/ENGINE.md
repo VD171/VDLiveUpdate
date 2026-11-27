@@ -51,7 +51,10 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
   ‏`--connect-timeout` + `--speed-time`، لا يعلق أبدًا)، يفكّ ضغط `gz` (toybox `gunzip`)، يفحص `sha256sum` ==
   المانيفست، `mv` ذرّي إلى `blobs/<sha>`. يُتخطّى الـ blob المخبّأ+السليم. يمكنه بذر الـ blob من ملف محلي
   غير متغيّر (dedup/offline). **3 إخفاقات على الـ blob نفسه = يُجهض الطور دون تطبيق أي شيء.** لا يصبح
-  ‏`FETCHED` إلا بعد حضور+تحقّق **كل** blobs الخطّة.
+  ‏`FETCHED` إلا بعد حضور+تحقّق **كل** blobs الخطّة. وعند إعداد الـ toolchain يسجّل ثقة TLS
+  المحلولة (مسار CA + قابلية القراءة، وحجم الحزمة وعدد الشهادات) بحيث يكون curl `rc 77` وقت
+  الإقلاع مفسِّرًا لنفسه في `boot.log` - يميّز متجرًا فارغًا عن آخر غير قابل للقراءة (حالة سياق
+  SELinux عند الإقلاع).
 - **APPLY** (فقط من `FETCHED`): `live`/`soft` ← نسخ احتياطي إلى `rollback/<v>/` ← `.vdlu-tmp` ← `chmod` ← verify ←
   ‏`rename` ذرّي. `reboot` ← يُجسّد في `staged/<path>.vdlu-new` (لا يمسّ الـ inode الحيّ).
   `delete[]` ← نسخ احتياطي ← إزالة. idempotent (ملف على تجزئة الهدف أصلًا يُتخطّى).
@@ -66,6 +69,9 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 - **profile=hardened** ⇐ `vdlu-verify` إلزامي على المانيفست **قبل** الاستخدام؛ الفشل = إجهاض؛ downgrade محجوب
   (نسخة رتيبة التزايد). **trusted** ⇐ التحقّق بذل أفضل جهد، لكن تجزئة كل blob **تُفحَص دائمًا**.
 - **قائمة سماح لمفتاح module-update (كلا الـ profiles):** يرفض `verify_manifest`، بنمط fail-closed، أيّ مانيفست لا يكون `key_id` الخاص به ضمن قائمة سماح `key_id` المضبوطة (انظر INTERFACES §5/§6) قبل اختيار pubkey، فلا يستطيع مفتاح أدنى ثقة يقبع فقط في الـ keyring (مثل مفتاح fingerprint-feed) أن يوقّع أبدًا تحديث root من نوع flashless. آمن افتراضيًا عند عدم الضبط: keyring بمفتاح واحد = ذلك المفتاح الوحيد فقط؛ keyring متعدّد المفاتيح = مرفوض حتى يُثبَّت `key_id`.
+- **استبعاد مرساة الثقة (VDLU#2):** يتجاهل المحرّك كلّ مسار `vdlu/` في خطّة مجلوبة (`update.sh`، `vdlu-verify`، `verify/*`، `keyring/*`، config) - لا يُجلَب ولا يُطبَّق ولا يُحذَف أبدًا - حتى لو حملته تغذية موقّعة. لا تستطيع تغذية أبدًا تبديل المتحقِّق أو مفتاح التوقيع على الجهاز؛ ولا تتغيّر مرساة الثقة إلا بإعادة فلاش موقّعة كاملة، فلا يستطيع مفتاح توقيع واحد مسرَّب الإبقاء على الـ root عبر الشبكة.
+- **التأجيل عند الانشغال (opt-in `apply_busy_file`):** مع ضبط `apply_busy_file` (مسار مطلق تلمسه الوحدة المضيفة أثناء عملياتها الخاصة، مثل نسخ احتياطي جارٍ) يُؤجَّل الـ APPLY ما دام ذلك المسار موجودًا - فلا يبدّل تحديثٌ أبدًا ملفات الوحدة في منتصف عملية. الـ blobs مجلوبة سلفًا، فيطبّق المشغّل التالي دون إعادة تنزيل.
+- **أسقف الحجم:** 128 MiB لكلّ ملف (`MAX_FILE_BYTES`) و2 MiB لكلّ مانيفست (`MAX_MANIFEST_BYTES`)، مفروضة قبل القراءة في كلٍّ من `update.sh` و`vdlu-verify` (مضادّ قنبلة فكّ الضغط / مضادّ OOM).
 - يتدهور بسلاسة: ثنائي مفقود / شبكة ساقطة / قرص ممتلئ ← خطأ واضح على stderr + `state:ERROR` في
   الـ journal، دون إفساد الوحدة.
 
@@ -81,7 +87,7 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 | ملف | الدور |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…؛ انظر INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/…؛ انظر INTERFACES §5) |
 | `current.json` | مانيفست النسخة **النشطة** (diff base)؛ غائب = لم يُحدَّث قط |
 | `target.json` | مانيفست مثبَّت للمعاملة الجارية (الوجود = معاملة نشطة)؛ يصير `current.json` عند `DONE` |
 | `plan.tsv` / `plan.del` | الخطّة + تقدّم كلّ ملف (st) / مسارات للحذف |

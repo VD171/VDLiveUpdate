@@ -12,9 +12,9 @@ Contribuições são bem-vindas.
 - Teste ponta a ponta antes de um PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, depois o engine
   (`check` / `run` / `boot`). Também `sh -n engine/*.sh` e `node --check webui/vdlu.js`.
 - Segurança é inegociável: todo campo do manifesto é input hostil e `validate_plan()` permanece
-  fail-closed; a chave de assinatura privada nunca toca o CI nem um device.
-- sh POSIX no device (sem bashismos além de `local`, sem `jq`); mantenha os comentários concisos.
-- Uma mudança lógica por PR; diga o que mudou e por quê.
+  fail-closed, a chave de assinatura privada nunca toca o CI nem um device.
+- sh POSIX no device (sem bashismos além de `local`, sem `jq`), mantenha os comentários concisos.
+- Uma mudança lógica por PR, diga o que mudou e por quê.
 
 ## Contatos
 
@@ -26,4 +26,4 @@ Contribuições são bem-vindas.
 
 ---
 
-> _Esta documentação foi gerada com o Claude (Anthropic) e é mantida por VD171. Correções e melhorias são bem-vindas; veja [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Esta documentação foi gerada com o Claude (Anthropic) e é mantida por VD171. Correções e melhorias são bem-vindas, veja [CONTRIBUTING.md](CONTRIBUTING.md)._

@@ -1,5 +1,23 @@
-# SPDX-License-Identifier: Apache-2.0
-# SPDX-FileCopyrightText: 2026 VD171
+#!/usr/bin/env bash
+# ======================================================================
+#  VDLiveUpdate (VDLU)  ::  flashless, incremental module updates
+#  Curated standalone wiki generator for the VDLiveUpdate docs model.
+#
+#  Copyright (C) 2026  VD171
+#  SPDX-License-Identifier: Apache-2.0
+#
+#  Site           : https://vd171.ru
+#  Site           : https://vd.priv8.ru
+#  Source         : https://github.com/VD171/VDLiveUpdate
+#  GitHub         : @VD171 https://github.com/VD171
+#  XDA-Developers : @VD171 https://xdaforums.com/m/vd171.4699873/
+#  Telegram       : @VD_Priv8 https://t.me/VD_Priv8
+#  Channel        : @Priv8_VD https://t.me/Priv8_VD
+#  Discord        : @VD.Priv8 https://discord.com/users/1296831918989639721
+#  E-mail         : vd.priv8@pm.me
+# ======================================================================
+# vendor-parity: standalone - curated VDLiveUpdate wiki model, intentionally NOT the fleet
+# canonical (VD-ModuleKit tooling/gen_wiki.sh); different CLI and layout by design.
 #
 # gen_wiki.sh <wiki-src-dir> <wiki-clone-dir>
 #

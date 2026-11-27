@@ -36,7 +36,7 @@ reescrito, então a publicação é incremental e o conteúdo inalterado / rever
 
 ### Decisão de `enc` (vdlu-pack)
 
-`sha256` é **sempre** do conteúdo original (descomprimido); `enc` só nomeia como o blob é armazenado.
+`sha256` é **sempre** do conteúdo original (descomprimido), `enc` só nomeia como o blob é armazenado.
 
 - `gz` quando `size >= 4096` **e** o gzip (`-9 -n`, determinístico) economiza ao menos 10% (`comp <= raw*0.90`).
 - `raw` caso contrário (texto pequeno que o gzip do HTTP já cobre, ou dado já-incompressível).
@@ -47,7 +47,7 @@ descomprime com o `gunzip` do toybox (sempre presente), então nenhum zstd é em
 
 ### Decisão de `class` (vdlu-pack) - taxonomia de reboot
 
-Derivada do path (INTERFACES §3, doc §4). Só defaults; uma regra de path nunca rebaixa `reboot`->`live`.
+Derivada do path (INTERFACES §3, doc §4). Só defaults, uma regra de path nunca rebaixa `reboot`->`live`.
 
 | class | casada por | aplicada |
 |---|---|---|
@@ -66,7 +66,7 @@ manifestos reprodutíveis.
 para que o device nasça "atualizado" (sem from:0, sem re-fetch). O engine o trata como uma **semente local confiável**
 (chegou no zip flasheado, que é a fronteira de confiança da instalação) e **NÃO verifica sua assinatura** -
 só o manifesto BUSCADO do feed passa pelo `vdlu-verify`. Então a baseline não precisa de **chave**: é
-apenas a saída do `vdlu-pack` sobre a árvore entregue (não-assinada; `sig`/`key_id` ficam vazios). Um CI pode portanto
+apenas a saída do `vdlu-pack` sobre a árvore entregue (não-assinada, `sig`/`key_id` ficam vazios). Um CI pode portanto
 gerá-la **sem chave**, mantendo a chave de assinatura 100% fora do CI - só o FEED publicado é assinado (operador,
 localmente). O `vdlu-pack` exclui `baseline.json` do seu próprio manifesto (anti auto-referência). Não-fatal se
 ausente: o device só começa de from:0 na primeira atualização, nunca quebrado.
@@ -99,19 +99,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` faz parte da forma canônica (só `sig` é removido); o `vdlu-sign` define `key_id` **antes** de
+`key_id` faz parte da forma canônica (só `sig` é removido), o `vdlu-sign` define `key_id` **antes** de
 hashear. O placeholder do valor estando vazio (`"sig":""`, hora de assinar) ou preenchido (hora de verificar) produz os
 bytes canônicos idênticos, então sign e verify concordam por construção.
 
 Python o reproduz como `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` e então sha256 - usado
-só para conferência cruzada; os produtores autoritativos são as duas ferramentas sh.
+só para conferência cruzada, os produtores autoritativos são as duas ferramentas sh.
 
 ## Assinatura (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   para assinar/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (o DER
   SPKI ed25519 é um prefixo de 12 bytes + a chave de 32 bytes, então `tail -c 32` É a chave). Emite AMBOS.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` sobre o hex sha256 canônico; assinatura armazenada em base64.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` sobre o hex sha256 canônico, assinatura armazenada em base64.
 - `vdlu-verify` (**device, enxuto**): `ed25519-mini <pubkey32> <msg> <sig64>` - lê o keyring como a pubkey **RAW 32B**,
   SEM openssl no device. `key_id` é path-sanitizado (sem `/`, `.`, `..`, `"`). 🚨 O keyring entrega o
   **`.pub.raw` (32B)**, nunca o `.pub` PEM (113B): o PEM é só PC-side e o `ed25519-mini` não consegue lê-lo.
@@ -137,4 +137,4 @@ O `vdlu-pack` **exclui o keyring e os binários `verify/` do feed** (a raiz de c
 
 ---
 
-> _Esta documentação foi gerada com o Claude (Anthropic) e é mantida por VD171. Correções e melhorias são bem-vindas; veja [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Esta documentação foi gerada com o Claude (Anthropic) e é mantida por VD171. Correções e melhorias são bem-vindas, veja [CONTRIBUTING.md](CONTRIBUTING.md)._

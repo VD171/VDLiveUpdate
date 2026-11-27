@@ -9,7 +9,7 @@ Client cập nhật tăng tiến, flashless cho các module KSU/Magisk. Hiện t
 hội tụ).
 
 POSIX sh thuần (mksh/busybox/toybox). **SLIM:** nó chỉ phụ thuộc vào toybox (`sha256sum`/`gzip`/`base64`/`date`) +
-`ed25519-mini` nhúng (xác minh ed25519; **không có openssl trên thiết bị**) + một `curl` tĩnh được **tải về** ở
+`ed25519-mini` nhúng (xác minh ed25519, **không có openssl trên thiết bị**) + một `curl` tĩnh được **tải về** ở
 lần cập nhật https đầu tiên (WebUI làm `fetch()`, lưu nó trong Tier-2, và `install-tool` xác minh
 chữ ký+băm của nó TRƯỚC khi dùng). `file://` không cần curl. Không phụ thuộc vào `jq`.
 
@@ -20,8 +20,8 @@ VDLU_DIR=/data/adb/<mod>/vdlu MODULE_DIR=/data/adb/modules/<mod> MODID=<mod> \
   sh $MODULE_DIR/vdlu/update.sh <cmd>
 ```
 
-`rc 0` = ok; `rc != 0` = lỗi (lý do trên stderr). `vdlu-verify` được cung cấp bởi một thành phần khác
-(chữ ký trong `INTERFACES.md §6`); engine chỉ gọi nó.
+`rc 0` = ok, `rc != 0` = lỗi (lý do trên stderr). `vdlu-verify` được cung cấp bởi một thành phần khác
+(chữ ký trong `INTERFACES.md §6`), engine chỉ gọi nó.
 
 | cmd | làm gì |
 |---|---|
@@ -40,32 +40,38 @@ PLANNED -> FETCHING -> FETCHED -> APPLYING -> APPLIED_LIVE -> (PENDING_REBOOT | 
 
 `DONE` chỉ khi băm lại TẤT CẢ khớp. Nếu bất kỳ REBOOT-hard nào đã staging ⇒ `PENDING_REBOOT` (không bao giờ một
 `DONE` giả). `ERROR` khi có bất kỳ thất bại nào, mà không làm hỏng module (các tệp LIVE đã áp dụng được hoàn nguyên
-từ `rollback/<v>/`; không có gì "nửa-áp-dụng mà nói dối về điều đó"). Lối ra lành của pha `fetch`: **`DEFERRED`** -
-việc tải đã bị hoãn bởi `net_policy` (mạng không được phép); plan/target tồn tại và nó tiếp tục ở lần
+từ `rollback/<v>/`, không có gì "nửa-áp-dụng mà nói dối về điều đó"). Lối ra lành của pha `fetch`: **`DEFERRED`** -
+việc tải đã bị hoãn bởi `net_policy` (mạng không được phép), plan/target tồn tại và nó tiếp tục ở lần
 check/boot kế tiếp (WebUI hiện một toast info xanh "đang chờ mạng X", không phải lỗi).
 
 ## Bảo đảm nghiêm ngặt
 
-- **FETCH:** được kiểm soát bởi `net_policy` (any/wifi/mobile; chỉ http/https, `file://` không bao giờ) - một mạng không được phép ⇒
+- **FETCH:** được kiểm soát bởi `net_policy` (any/wifi/mobile, chỉ http/https, `file://` không bao giờ) - một mạng không được phép ⇒
   `DEFERRED` (có thể tiếp tục), mà không tốn dữ liệu. Chỉ tải những gì còn thiếu vào `<sha>.part` (curl với
   `--connect-timeout` + `--speed-time`, không bao giờ treo), giải nén `gz` (toybox `gunzip`), kiểm tra `sha256sum` ==
   manifest, `mv` nguyên tử tới `blobs/<sha>`. Một blob đã-cache+ok được bỏ qua. Nó có thể gieo blob từ một tệp
   cục bộ không đổi (dedup/offline). **3 lần thất bại trên cùng một blob = pha hủy bỏ mà không áp dụng gì.** Nó
-  chỉ trở thành `FETCHED` khi TẤT CẢ các blob của kế hoạch đều hiện diện+đã xác minh.
+  chỉ trở thành `FETCHED` khi TẤT CẢ các blob của kế hoạch đều hiện diện+đã xác minh. Lúc thiết lập toolchain
+  nó ghi log sự tin cậy TLS đã giải quyết (path CA + khả năng đọc, kích thước bundle và số lượng cert) nên một
+  curl `rc 77` lúc boot tự giải thích trong `boot.log` - nó phân biệt một kho rỗng với một kho không đọc được
+  (trường hợp ngữ cảnh SELinux lúc boot).
 - **APPLY** (chỉ từ `FETCHED`): `live`/`soft` → sao lưu tới `rollback/<v>/` → `.vdlu-tmp` → `chmod` → verify →
   `rename` nguyên tử. `reboot` → hiện thực hóa vào `staged/<path>.vdlu-new` (KHÔNG chạm vào inode live).
   `delete[]` → sao lưu → xóa. Idempotent (một tệp đã ở băm đích được bỏ qua).
-- **COMMIT:** băm lại mỗi `live`/`soft`; chỉ khi đó mới ghi `current.json`. Với các tệp đã staging ⇒
+- **COMMIT:** băm lại mỗi `live`/`soft`, chỉ khi đó mới ghi `current.json`. Với các tệp đã staging ⇒
   `PENDING_REBOOT`. `boot` làm `mv -f staged/....vdlu-new $MODULE_DIR/<path>` (pre-zygote) + xác minh lại +
   `DONE`.
-- **cancel:** kiểm tra giữa các tệp (điểm an toàn); xóa `.vdlu-tmp`/`.part` đang bay, xóa `cancel`,
+- **cancel:** kiểm tra giữa các tệp (điểm an toàn), xóa `.vdlu-tmp`/`.part` đang bay, xóa `cancel`,
   để lại journal có thể tiếp tục (`cancelled:true`, `error:null`).
-- **mkdir-lock `$VDLU_DIR/lock.d`** tuần tự hóa (flock không khả thi trên toybox; khôi phục khóa cũ theo PID).
+- **mkdir-lock `$VDLU_DIR/lock.d`** tuần tự hóa (flock không khả thi trên toybox, khôi phục khóa cũ theo PID).
   Boot-retry KIÊN NHẪN không giữ khóa trong khi chờ (`acquire_lock_try`+release giữa các lần thử) cũng không giữ
   wakelock - an toàn pin. Một crash/mạng/khởi động lại giữa chừng → `resume`/`boot` tiếp tục.
-- **profile=hardened** ⇒ `vdlu-verify` bắt buộc trên manifest TRƯỚC khi dùng; thất bại = abort; downgrade bị chặn
+- **profile=hardened** ⇒ `vdlu-verify` bắt buộc trên manifest TRƯỚC khi dùng, thất bại = abort, downgrade bị chặn
   (phiên bản đơn điệu). **trusted** ⇒ verify là best-effort, nhưng băm của mỗi blob LUÔN được kiểm tra.
-- **allowlist khóa module-update (cả hai profiles):** `verify_manifest` từ chối, fail-closed, bất kỳ manifest nào có `key_id` không nằm trong allowlist `key_id` đã cấu hình (xem INTERFACES §5/§6) TRƯỚC khi pubkey được chọn, nên một khóa tin cậy thấp hơn chỉ nằm trong keyring (ví dụ một khóa fingerprint-feed) không bao giờ có thể ký một bản cập nhật flashless root. An toàn mặc định khi chưa đặt: keyring một khóa = chỉ một khóa đó; keyring nhiều khóa = bị từ chối cho đến khi `key_id` được ghim.
+- **allowlist khóa module-update (cả hai profiles):** `verify_manifest` từ chối, fail-closed, bất kỳ manifest nào có `key_id` không nằm trong allowlist `key_id` đã cấu hình (xem INTERFACES §5/§6) TRƯỚC khi pubkey được chọn, nên một khóa tin cậy thấp hơn chỉ nằm trong keyring (ví dụ một khóa fingerprint-feed) không bao giờ có thể ký một bản cập nhật flashless root. An toàn mặc định khi chưa đặt: keyring một khóa = chỉ một khóa đó, keyring nhiều khóa = bị từ chối cho đến khi `key_id` được ghim.
+- **Loại trừ neo tin cậy (VDLU#2):** engine BỎ QUA mọi path `vdlu/` trong một kế hoạch được tải về (`update.sh`, `vdlu-verify`, `verify/*`, `keyring/*`, config) - không bao giờ được tải, apply hay xóa - ngay cả khi một feed đã ký mang chúng. Một feed không bao giờ có thể hoán đổi verifier hay khóa ký trên thiết bị, neo tin cậy chỉ thay đổi qua một lần re-flash có ký đầy đủ, nên một khóa ký bị rò rỉ duy nhất không thể duy trì root qua mạng.
+- **Hoãn khi bận (opt-in `apply_busy_file`):** với `apply_busy_file` được đặt (một path tuyệt đối mà module chủ chạm vào trong các thao tác của chính nó, ví dụ một backup đang chạy), APPLY bị hoãn trong khi path đó tồn tại - một bản cập nhật không bao giờ hoán đổi các tệp module giữa thao tác. Các blob đã được tải, nên lần kích hoạt kế tiếp apply mà không tải lại.
+- **Giới hạn kích thước:** 128 MiB mỗi tệp (`MAX_FILE_BYTES`) và 2 MiB mỗi manifest (`MAX_MANIFEST_BYTES`), được thực thi trước khi đọc trong cả `update.sh` lẫn `vdlu-verify` (chống bom giải nén / chống OOM).
 - Suy giảm uyển chuyển: thiếu binary / mạng sập / đĩa đầy → một lỗi rõ ràng trên stderr + `state:ERROR` trong
   journal, mà không làm hỏng module.
 
@@ -74,14 +80,14 @@ check/boot kế tiếp (WebUI hiện một toast info xanh "đang chờ mạng X
 Một flattener kiểu gron trong `awk` (POSIX thuần: `substr`/`index`/`gsub`/`split`/`printf` + các biến cục bộ truyền dưới dạng
 tham số) token hóa manifest từng ký tự một và phát ra một dòng `path<TAB>value` cho mỗi lá vô hướng
 (`files/0/sha256<TAB>ab..`, `version<TAB>6`, `delete/0<TAB>etc/x`). Bền vững với JSON nén HOẶC
-in đẹp. `sh` tiêu thụ nó với `grep`/`cut`; kế hoạch theo từng tệp được lắp ráp lại trong một `awk` thứ 2 thành TSV
+in đẹp. `sh` tiêu thụ nó với `grep`/`cut`, kế hoạch theo từng tệp được lắp ráp lại trong một `awk` thứ 2 thành TSV
 (`class st mode enc sha size path`), trở thành `$VDLU_DIR/plan.tsv`.
 
 ## Các tệp trạng thái (trong `$VDLU_DIR`, Tier-2)
 
 | tệp | vai trò |
 |---|---|
-| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`boot_retry_*`/…; xem INTERFACES §5) |
+| `config` | key=value (`source`/`profile`/`channel`/`net_policy`/`key_id`/`apply_busy_file`/`boot_retry_*`/…; xem INTERFACES §5) |
 | `current.json` | manifest của phiên bản ĐANG HOẠT ĐỘNG (cơ sở diff); vắng mặt = chưa bao giờ cập nhật |
 | `target.json` | manifest được ghim của giao dịch đang bay (hiện diện = giao dịch đang hoạt động); trở thành `current.json` khi `DONE` |
 | `plan.tsv` / `plan.del` | kế hoạch + tiến độ theo từng tệp (st) / các path cần xóa |
@@ -97,4 +103,4 @@ in đẹp. `sh` tiêu thụ nó với `grep`/`cut`; kế hoạch theo từng t�
 
 ---
 
-> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến; xem [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến, xem [CONTRIBUTING.md](CONTRIBUTING.md)._

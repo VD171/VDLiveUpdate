@@ -12,9 +12,9 @@ Bijdragen zijn welkom.
 - Test end-to-end vóór een PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, dan de engine
   (`check` / `run` / `boot`). Ook `sh -n engine/*.sh` en `node --check webui/vdlu.js`.
 - Beveiliging is niet onderhandelbaar: elk manifest-veld is vijandige invoer en `validate_plan()` blijft
-  fail-closed; de private signeersleutel raakt nooit CI of een toestel aan.
-- POSIX sh op het toestel (geen bashisms buiten `local`, geen `jq`); houd commentaren beknopt.
-- Eén logische wijziging per PR; zeg wat er veranderde en waarom.
+  fail-closed, de private signeersleutel raakt nooit CI of een toestel aan.
+- POSIX sh op het toestel (geen bashisms buiten `local`, geen `jq`), houd commentaren beknopt.
+- Eén logische wijziging per PR, zeg wat er veranderde en waarom.
 
 ## Contacten
 
@@ -26,4 +26,4 @@ Bijdragen zijn welkom.
 
 ---
 
-> _Deze documentatie is gegenereerd met Claude (Anthropic) en wordt onderhouden door VD171. Correcties en verbeteringen zijn welkom; zie [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Deze documentatie is gegenereerd met Claude (Anthropic) en wordt onderhouden door VD171. Correcties en verbeteringen zijn welkom, zie [CONTRIBUTING.md](CONTRIBUTING.md)._

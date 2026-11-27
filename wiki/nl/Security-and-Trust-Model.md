@@ -10,6 +10,26 @@ Deze pagina is het volledige vertrouwensverhaal. Zie [[Feed Format]] voor het ma
 
 ---
 
+## Ondersteunde versies
+
+Beveiligingsfixes landen in de nieuwste `ENGINE_VERSION`; een getekend manifest declareert
+de minimale engine die het nodig heeft via `engine_min`, en de engine op het toestel weigert
+een manifest dat meer vraagt dan het implementeert. Van oudere gevendorde engines wordt
+verwacht dat ze **opnieuw gevendord** worden om een fix op te pikken, niet dat ze ter plekke
+worden teruggepatcht.
+
+| ENGINE_VERSION | status |
+|---|---|
+| 7 (huidig) | ondersteund - een module die voorloopt op de feed nooit terugdraaien (de live geïnstalleerde `versionCode` vormt de ondergrens van de "from"-versie), boot-self-heal van een verouderd downgrade-plan |
+| 6 | vervangen - boot-self-heal van een verouderd journal met `target <= 0` (de baseline 0 van een verwijderde stub stuurt geen UI- of boot-actie meer aan) |
+| 5 | vervangen - engine-zijdige uitsluiting van het vertrouwensanker (de `vdlu/`-dir wordt genegeerd zelfs als een feed hem meedraagt), plafonds van 128 MiB per bestand / 2 MiB manifest |
+| 4 | vervangen - `key_id`-allowlist, afwijzing van pad met dot-segment/afsluitende-slash, groottelimieten, lock bij check-tijd |
+| <= 3 | niet ondersteund - vendor de huidige engine opnieuw |
+
+Elke wijziging aan de engine-verificatie of apply-logica verhoogt de `ENGINE_VERSION`.
+
+---
+
 ## Het kernidee: fail-closed, voordat er iets gebeurt
 
 `validate_plan()` draait binnen de `check`/diff-fase, **voor** elke fetch en **voor** elke apply. Het loopt door elke entry in de geplande bestandsboom en elke entry in `delete[]`, en als een enkele entry misvormd is, **verwerpt het het hele manifest** en de transactie begint nooit. Er is geen gedeeltelijke acceptatie, geen "sla de slechte over en pas de rest toe". Eén slecht veld vergiftigt de batch, met opzet.
@@ -124,6 +144,14 @@ De fix pint de geaccepteerde module-update-`key_id` vast op een fail-closed **al
 Omdat de controle vóór de pubkey-selectie loopt, wordt een manifest dat een sleutel noemt die aanwezig maar niet op de allowlist staat, afgewezen zonder dat de verifier die sleutel ooit laadt. De opgeloste set wordt via `VDLU_KEYID_ALLOW` naar `vdlu-verify` gespiegeld, zodat de slanke controleur op het apparaat dezelfde pin afdwingt en de twee niet kunnen verschillen. Dit geldt in **beide** profielen: zowel `hardened` als `trusted` raadplegen de allowlist, want de allowlist beslist *welke sleutel* een geldige module-update-wortel is, niet *of* een handtekening vereist is.
 
 De fingerprint-feed houdt zijn eigen aparte vastgepinde vertrouwenswortel, `FEED_KEY_ID`. Het is een aparte wortel met een aparte taak, nooit bereikbaar via het module-update-pad hierboven, dus het vastpinnen van de module-update-allowlist raakt die niet en een gelekte feed-sleutel kan nog steeds geen module-update signeren. Deze wijziging bracht `ENGINE_VERSION` naar 4.
+
+---
+
+## De engine-zijdige uitsluiting van het vertrouwensanker
+
+De allowlist hierboven beslist *welke* sleutel een module-update mag signeren. Een latere wijziging (`ENGINE_VERSION` 5) sluit het aangrenzende risico van de andere kant: wat een geldig gesigneerde feed überhaupt mag aanraken. Een gepubliceerde feed draagt de hele moduleboom, en die boom bevat de eigen `vdlu/`-directory van de module - de engine, de `vdlu-verify`-shim, de `verify/`-binaries, de keyring en de config. Dat zijn het vertrouwensanker. Als een update die kon herschrijven, zou een enkele gelekte signeersleutel een nieuwe verifier of een nieuwe keyring kunnen leveren en root onbepaald laten voortbestaan.
+
+Dus de engine **negeert** elk `vdlu/`-pad in een opgehaald plan. Het haalt ze nooit op, past ze nooit toe en verwijdert ze nooit, zelfs wanneer het manifest ze opsomt, en het weigert het manifest evenmin: de rest van de module wordt nog steeds normaal geüpdatet, en alleen de `vdlu/`-paden worden stil weggelaten. Het vertrouwensanker kan **alleen** veranderen door een volledige getekende re-flash van de module-zip, nooit over de draad. Dit vult de producer-zijdige uitsluiting in `vdlu-pack` (die die paden in de eerste plaats van de feed weghoudt) aan met een tweede, onafhankelijke bewaking op het apparaat. Dezelfde wijziging verlaagde ook de hardening-plafonds tot **128 MiB per bestand** en **2 MiB per manifest**. Gemeld door Solomag (VD-Modules#1).
 
 ---
 

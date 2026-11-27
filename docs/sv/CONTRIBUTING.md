@@ -12,9 +12,9 @@ Bidrag välkomnas.
 - Testa ände till ände före en PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, sedan motorn
   (`check` / `run` / `boot`). Även `sh -n engine/*.sh` och `node --check webui/vdlu.js`.
 - Säkerhet är icke förhandlingsbar: varje manifestfält är fientlig indata och `validate_plan()` förblir
-  fail-closed; den privata signeringsnyckeln rör aldrig CI eller en enhet.
-- POSIX sh på enheten (inga bashismer utöver `local`, ingen `jq`); håll kommentarer korta.
-- En logisk ändring per PR; säg vad som ändrades och varför.
+  fail-closed, den privata signeringsnyckeln rör aldrig CI eller en enhet.
+- POSIX sh på enheten (inga bashismer utöver `local`, ingen `jq`), håll kommentarer korta.
+- En logisk ändring per PR, säg vad som ändrades och varför.
 
 ## Kontakter
 
@@ -26,4 +26,4 @@ Bidrag välkomnas.
 
 ---
 
-> _Denna dokumentation genererades med Claude (Anthropic) och underhålls av VD171. Rättelser och förbättringar välkomnas; se [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Denna dokumentation genererades med Claude (Anthropic) och underhålls av VD171. Rättelser och förbättringar välkomnas, se [CONTRIBUTING.md](CONTRIBUTING.md)._

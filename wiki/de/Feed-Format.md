@@ -24,7 +24,7 @@ Das Manifest ist die vollständige Beschreibung eines Release: jede Datei im Zie
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Der Feed trägt **nur den eigenen Inhalt des Moduls**. Ein fester Satz von Pfade
 
 | Ausgeschlossen | Warum |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (die Vertrauenswurzel: rohe öffentliche Schlüssel + das Verifizierer-Binary) | **Dies ist der zentrale Sicherheitsgrund.** Der Vertrauensanker ist **flash-only**. Wären der Keyring oder Verifizierer feed-lieferbar, könnte ein Manifest genau das Ding überschreiben, das es validiert. Sie von der Leitung fernzuhalten bedeutet, dass ein Manifest nie den geräteseitigen Vertrauensanker neu schreiben kann. |
+| `vdlu/keyring/`, `vdlu/verify/` (die Vertrauenswurzel: rohe öffentliche Schlüssel + das Verifizierer-Binary) | **Dies ist der zentrale Sicherheitsgrund.** Der Vertrauensanker ist **flash-only**. Wären der Keyring oder Verifizierer feed-lieferbar, könnte ein Manifest genau das Ding überschreiben, das es validiert. Sie von der Leitung fernzuhalten bedeutet, dass ein Manifest nie den geräteseitigen Vertrauensanker neu schreiben kann. Als zweiter, unabhängiger Schutz (`ENGINE_VERSION` 5) **ignoriert** die Engine zudem jeden `vdlu/`-Pfad in einem geholten Plan, sodass selbst ein Feed, der sie trägt, den Anker nicht berühren kann. |
 | `vdlu/baseline.json` | Es ist eine Kopie des signierten Manifests (der Install-Seed); es zu packen wäre eine Selbstreferenzschleife. |
 | `.vd/` Flash-Infrastruktur | Flash-Gate-Gerüstbau, der im Zip ausgeliefert wird, nie live angewendet. |
 | `update.json`, `update-mmrl.json` | Ihre Größe/sha werden von CI *nachdem* die Zips gebaut sind eingefüllt, sodass die ausgelieferte Kopie von jeder Feed-Kopie abweicht. Sie zu feeden würde ein Phantom-Einzeldatei-Fetch bei jeder Erst-Selbstaktualisierung einer Installation verursachen, und sie sind geräteseitig ohnehin vestigial (der Manager liest das Remote-Roh-Update-JSON). |

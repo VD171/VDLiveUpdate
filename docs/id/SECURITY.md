@@ -1,119 +1,60 @@
-> **Languages:** [English](../SECURITY.md) · [العربية](../ar/SECURITY.md) · [Čeština](../cs/SECURITY.md) · [Deutsch](../de/SECURITY.md) · [Español](../es/SECURITY.md) · [فارسی](../fa/SECURITY.md) · [Français](../fr/SECURITY.md) · [हिन्दी](../hi/SECURITY.md) · Bahasa Indonesia · [Italiano](../it/SECURITY.md) · [日本語](../ja/SECURITY.md) · [한국어](../ko/SECURITY.md) · [Nederlands](../nl/SECURITY.md) · [Polski](../pl/SECURITY.md) · [Português](../pt/SECURITY.md) · [Русский](../ru/SECURITY.md) · [Svenska](../sv/SECURITY.md) · [ไทย](../th/SECURITY.md) · [Türkçe](../tr/SECURITY.md) · [Українська](../uk/SECURITY.md) · [Tiếng Việt](../vi/SECURITY.md) · [中文](../zh/SECURITY.md)
+> **Languages:** [English](../../SECURITY.md) · [العربية](../ar/SECURITY.md) · [Čeština](../cs/SECURITY.md) · [Deutsch](../de/SECURITY.md) · [Español](../es/SECURITY.md) · [فارسی](../fa/SECURITY.md) · [Français](../fr/SECURITY.md) · [हिन्दी](../hi/SECURITY.md) · Bahasa Indonesia · [Italiano](../it/SECURITY.md) · [日本語](../ja/SECURITY.md) · [한국어](../ko/SECURITY.md) · [Nederlands](../nl/SECURITY.md) · [Polski](../pl/SECURITY.md) · [Português](../pt/SECURITY.md) · [Русский](../ru/SECURITY.md) · [Svenska](../sv/SECURITY.md) · [ไทย](../th/SECURITY.md) · [Türkçe](../tr/SECURITY.md) · [Українська](../uk/SECURITY.md) · [Tiếng Việt](../vi/SECURITY.md) · [中文](../zh/SECURITY.md)
 
 ---
 
-# Kebijakan keamanan dan model kepercayaan
+# Kebijakan Keamanan
 
-VDLiveUpdate (VDLU) menerapkan **pembaruan root flashless** ke modul yang live: ia menulis
-ke `/data/adb/modules/<mod>` dan menukar sebuah `.so` Zygisk saat boot. Setiap field dari
-manifest yang diambil (`path`, `sha256`, `delete[]`, `mode`, ...) adalah **input hostil** - sebuah
-feed yang diracuni atau MITM mengirimkannya. Halaman ini adalah model kepercayaan dan kebijakan
-pengungkapan yang bertanggung jawab. Untuk kontrak jahitan lengkap lihat [`INTERFACES.md`](INTERFACES.md),
-dan internal engine/producer di [`ENGINE.md`](ENGINE.md) dan
-[`PRODUCER.md`](PRODUCER.md); halaman wiki **Security-and-Trust-Model** membawa model yang
-sama untuk pembaca di luar repo.
-
-## Versi yang didukung
-
-Perbaikan keamanan mendarat di `ENGINE_VERSION` terbaru; sebuah manifest yang ditandatangani
-mendeklarasikan engine minimum yang dibutuhkannya via `engine_min`, dan engine di perangkat menolak
-sebuah manifest yang meminta lebih dari yang diimplementasikannya. Engine ter-vendor yang lebih lama
-diharapkan untuk **re-vendor** guna mengambil sebuah perbaikan, bukan di-back-patch di tempat.
-
-| ENGINE_VERSION | status |
-|---|---|
-| 4 (saat ini) | didukung - allowlist `key_id`, penolakan path dot-segment/trailing-slash, batas ukuran, lock saat check |
-| 3 | digantikan - default `hardened`, `profile` fail-closed melalui inversi, bind module/MODID, blokir downgrade |
-| <= 2 | tidak didukung - re-vendor engine saat ini |
-
-Setiap perubahan pada logika verifikasi atau apply engine menaikkan `ENGINE_VERSION`.
+VDLiveUpdate (VDLU) menerapkan pembaruan flashless dengan root ke modul yang aktif: ia
+menulis ke direktori milik modul itu sendiri dan menukar sebuah `.so` Zygisk saat boot,
+berjalan dalam konteks root modul. Kami menanggapi keamanan dengan serius.
 
 ## Melaporkan kerentanan
 
-Laporkan secara privat. **Jangan** membuka issue, PR, atau posting forum publik untuk sebuah bug
-keamanan. Gunakan kontak proyek (lihat [`CONTRIBUTING.md`](../CONTRIBUTING.md)):
+- **Site:** https://vd171.ru
+- **Site:** https://vd.priv8.ru
+- **Issues:** https://github.com/VD171/VDLiveUpdate/issues
+- **GitHub:** [@VD171](https://github.com/VD171)
+- **XDA-Developers:** [@VD171](https://xdaforums.com/m/vd171.4699873/)
+- **Telegram:** [@VD_Priv8](https://t.me/VD_Priv8)
+- **Channel:** [@Priv8_VD](https://t.me/Priv8_VD)
+- **Discord:** [@VD.Priv8](https://discord.com/users/1296831918989639721)
+- **E-mail:** vd.priv8@pm.me
 
-- Telegram: **@VD_Priv8** (https://t.me/VD_Priv8)
-- Kanal: **@Priv8_VD** (https://t.me/Priv8_VD)
-- E-mail: **vd.priv8@pm.me**
+Sertakan deskripsi yang jelas dan, jika memungkinkan, sebuah manifest atau feed yang
+mereproduksi masalahnya. Kami akan merespons secepat mungkin dan memberi Anda kredit jika
+Anda mau.
 
-Sertakan versi engine, `profile` yang sedang digunakan, dan sebuah manifest atau feed yang
-mereproduksi masalah tersebut. Perbaikan dikirim sebagai `ENGINE_VERSION` baru dengan entri
-`CHANGELOG.md`; koordinasikan waktu pengungkapan pada thread laporan.
+## Catatan cakupan
 
-## Model kepercayaan
-
-- **Tanda tangan ed25519 terpisah (detached).** Producer menandatangani manifest kanonik di PC
-  (openssl); perangkat memverifikasi dengan `ed25519-mini` yang tertanam - **tanpa openssl di
-  perangkat**. Pesan yang ditandatangani adalah heksadesimal sha256 dari manifest tanpa field `sig`-nya
-  (kunci terurut, ringkas, UTF-8), sehingga sign dan verify menurunkan byte yang sama pada dua runtime
-  tanpa library JSON di perangkat.
-- **Keyring = pubkey RAW 32-byte**, hanya-flash. Keyring perangkat mengirim `<key_id>.pub`
-  sebagai kunci 32-byte mentah (tidak pernah PEM); `vdlu-pack` **mengecualikan** keyring dan
-  biner `verify/` dari feed, sehingga sebuah manifest tidak pernah dapat menulis ulang jangkar
-  kepercayaan di perangkat lewat kabel.
-- **Allowlist `key_id` module-update (fail-closed, sebelum pemilihan pubkey).** Sebuah keyring
-  secara sah dapat membawa lebih dari satu kunci (misalnya kunci fingerprint-feed berkepercayaan lebih
-  rendah di samping kunci release). Sebelum `<key_id>.pub` dipilih, `verify_manifest` menolak setiap
-  manifest yang `key_id`-nya tidak ada dalam allowlist yang dikonfigurasi, di **kedua** profile, dan
-  mencerminkan set yang diselesaikan ke dalam `vdlu-verify` via `VDLU_KEYID_ALLOW`. Ini menutup sebuah
-  bypass di mana kunci berkepercayaan lebih rendah yang bocor jika tidak demikian dapat menandatangani
-  pembaruan root flashless penuh. Aman-secara-default saat `key_id` tidak disetel: keyring **kunci
-  tunggal** otomatis mem-pin ke satu kunci itu; keyring **multi-kunci** ditolak sampai `key_id` dipin
-  (dipisah koma untuk rotasi).
-- **Akar kepercayaan fingerprint-feed adalah path terpisah yang dipatok** dengan kuncinya sendiri; ia
-  tidak pernah dapat dijangkau melalui jalur module-update di atas.
-- **Baseline adalah benih lokal yang dipercaya.** `baseline.json` tiba di dalam zip yang di-flash -
-  batas kepercayaan instalasi - sehingga ia tidak ditandatangani dan tanpa kunci serta **tidak**
-  dijalankan melalui `vdlu-verify`; hanya manifest yang **diambil** dari feed yang diverifikasi. Ini
-  menjaga kunci penandatanganan tetap di luar CI.
-
-## Jaminan fail-closed
-
-- **`validate_plan` berjalan sebelum fetch atau apply apa pun.** Di `do_diff`, fail-closed, ia
-  menolak **seluruh** manifest jika ada `path` yang absolut, berisi segmen `..` atau `.`, berakhir
-  dengan `/`, atau memuat karakter kontrol; jika ada `sha256` yang bukan `^[0-9a-f]{64}$`; atau jika ada
-  `mode`/`class`/`enc` yang tidak valid. Tidak ada field hostil yang mencapai shell, dan `cmd_check`
-  tidak membawa interpolasi `system()`.
-- **Penampungan path.** Setiap penulisan dan penghapusan dibatasi ke `MODULE_DIR` via
-  `contained()` - apply, delete, dan `stage_file` saat reboot semuanya melewati penjaga yang sama.
-  Symlink di dalam pohon dilewati oleh producer (tidak pernah membocorkan konten dari luarnya).
-- **Dua profile, fail-closed melalui inversi.** `trusted` (privat, sumber SSH-staged) adalah
-  **satu-satunya** opt-in ke verify best-effort; **nilai lain apa pun** - termasuk sebuah typo,
-  spasi/CR di akhir, atau huruf besar-kecil yang berbeda - diperlakukan sebagai `hardened`, di mana
-  sebuah tanda tangan yang valid bersifat **wajib** dan sebuah kegagalan membatalkan. `sha256` setiap
-  blob diperiksa di kedua profile.
-- **Tanda tangan + hash sebelum eksekusi tool apa pun.** `curl` statis yang diambil berjalan sebagai
-  root, jadi `install-tool` memverifikasi tanda tangan tools-manifest (ed25519-mini, wajib di **profile
-  apa pun**) dan hash curl **sebelum** ia diinstal dan dieksekusi - sig+hash sebelum exec menutup RCE.
-- **Transaksi yang dapat dilanjutkan dan aman-pin.** Manifest yang sedang berjalan dipatok di
-  `target.json`; sebuah crash, hilangnya jaringan, atau reboot dilanjutkan dari journal tanpa memutuskan
-  ulang plan. Downgrade diblokir (`version` monotonik), field `module` yang ditandatangani harus sama
-  dengan `MODID`, dan `delete[]` hanya berjalan pada `finalize_done` (sebuah `PENDING_REBOOT` tidak
-  menghapus apa pun). Tidak pernah ada yang "selesai" tanpa re-hash penuh; tidak ada yang ditimpa tanpa
-  backup `rollback/<v>/` terlebih dahulu.
-
-## Hardening (pertahanan berlapis)
-
-- **Batas ukuran.** Manifest, tools-manifest, dan jalur unduhan `wget`/`head -c` tanpa-curl semuanya
-  dibatasi sebelum dibaca (anti-OOM / anti-flood). Sebuah blob menggagalkan fasenya setelah 3 percobaan.
-- **Lock saat check.** `check` mengambil mkdir-lock sebelum membangun ulang direktori kerjanya,
-  sehingga sebuah run yang bersamaan tidak dapat berlomba dengannya.
-- **Penampungan staging.** `stage_file` memiliki penjaga `contained()` yang sama dengan primitif apply
-  live, sehingga sebuah path reboot-hard yang di-stage juga tidak dapat lolos dari `MODULE_DIR`.
-- **TLS adalah pertahanan berlapis, bukan akar kepercayaan.** curl statis menggunakan mbedTLS dengan
-  trust store Android (`--capath`, override `ca_path`); jaminan integritas adalah tanda tangan ed25519,
-  pemeriksaan sertifikat adalah lapisan kedua.
-
-## Lihat juga
-
-- [`INTERFACES.md`](INTERFACES.md) - kontrak jahitan yang tidak dapat diubah (§5 config, §6 tanda tangan, §11 toolchain).
-- [`ENGINE.md`](ENGINE.md) - engine sisi-perangkat dan mesin state-nya.
-- [`PRODUCER.md`](PRODUCER.md) - packing, penandatanganan, kanonikalisasi, dan rotasi kunci.
-- Wiki: **Security-and-Trust-Model**.
+- Pembaruan adalah blob content-addressed ditambah sebuah `manifest.json` yang ditandatangani
+  dengan ed25519. Perangkat memverifikasi tanda tangan dengan `ed25519-mini` yang tertanam
+  (tanpa openssl di perangkat), dan setiap blob diperiksa terhadap `sha256`-nya sebelum
+  digunakan.
+- Profil hardened (default publik) mewajibkan tanda tangan yang valid dan memblokir
+  downgrade. Versi "asal" dibatasi bawah oleh `versionCode` modul yang terpasang (dibaca
+  dari `module.prop`), sehingga sebuah modul tidak pernah dikembalikan ke belakang feed.
+- Akar kepercayaan (kunci publik ed25519 mentah di `keyring/` dan biner di `verify/`)
+  bersifat hanya-flash dan tidak pernah dirotasi melalui jaringan. Produsen mengecualikannya
+  dari feed dan engine mengabaikan setiap path `vdlu/` dalam rencana yang diunduh, sehingga
+  kunci penandatanganan yang bocor tidak dapat menukar verifier atau kunci dan mempertahankan
+  root.
+- Sebuah manifest yang ditandatangani secara valid untuk modul lain tidak dapat menulis ke
+  direktori modul yang berbeda. Field `module` yang ditandatangani harus sama dengan `MODID`
+  di perangkat (pemeriksaan ikatan antar-modul), dan setiap penulisan dan penghapusan tetap
+  terbatas pada direktori modul.
+- Engine berjalan dalam konteks root milik modul itu sendiri dan tidak pernah melemahkannya.
+  Ia tidak menambahkan privilese dan tidak menginterpolasi field manifest apa pun ke dalam
+  shell, setiap nilai `path`, `sha256`, `mode`, dan `delete[]` divalidasi sebagai masukan
+  bermusuhan sebelum digunakan.
+- Posturnya fail-closed. Nilai `profile` yang rusak atau tidak dikenal tidak pernah jatuh ke
+  menerima konten yang tidak ditandatangani (apa pun yang bukan persis `trusted` diperlakukan
+  sebagai `hardened`), dan sebuah cadangan ditulis sebelum berkas apa pun ditimpa, sehingga
+  apply yang gagal tidak pernah menghancurkan versi yang terpasang.
+- Lihat [TRUST-MODEL.md](TRUST-MODEL.md) untuk model kepercayaan lengkap, jaminan fail-closed,
+  dan detail hardening.
 
 <!-- doc-footer -->
 
 ---
 
-> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan; lihat [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan, lihat [CONTRIBUTING.md](CONTRIBUTING.md)._

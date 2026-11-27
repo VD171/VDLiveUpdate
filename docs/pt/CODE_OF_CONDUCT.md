@@ -1,0 +1,50 @@
+> **Languages:** [English](../../CODE_OF_CONDUCT.md) · [العربية](../ar/CODE_OF_CONDUCT.md) · [Čeština](../cs/CODE_OF_CONDUCT.md) · [Deutsch](../de/CODE_OF_CONDUCT.md) · [Español](../es/CODE_OF_CONDUCT.md) · [فارسی](../fa/CODE_OF_CONDUCT.md) · [Français](../fr/CODE_OF_CONDUCT.md) · [हिन्दी](../hi/CODE_OF_CONDUCT.md) · [Bahasa Indonesia](../id/CODE_OF_CONDUCT.md) · [Italiano](../it/CODE_OF_CONDUCT.md) · [日本語](../ja/CODE_OF_CONDUCT.md) · [한국어](../ko/CODE_OF_CONDUCT.md) · [Nederlands](../nl/CODE_OF_CONDUCT.md) · [Polski](../pl/CODE_OF_CONDUCT.md) · Português · [Русский](../ru/CODE_OF_CONDUCT.md) · [Svenska](../sv/CODE_OF_CONDUCT.md) · [ไทย](../th/CODE_OF_CONDUCT.md) · [Türkçe](../tr/CODE_OF_CONDUCT.md) · [Українська](../uk/CODE_OF_CONDUCT.md) · [Tiếng Việt](../vi/CODE_OF_CONDUCT.md) · [中文](../zh/CODE_OF_CONDUCT.md)
+
+---
+
+# Código de Conduta
+
+## Nosso compromisso
+
+Queremos que a participação neste projeto seja uma experiência livre de assédio para todos,
+independentemente de idade, corpo, deficiência, etnia, características sexuais, identidade e expressão
+de gênero, nível de experiência, escolaridade, condição socioeconômica, nacionalidade, aparência
+pessoal, raça, religião ou identidade e orientação sexual.
+
+## Nossos padrões
+
+Coisas que ajudam o projeto:
+
+- ser respeitoso e acolhedor;
+- aceitar críticas construtivas com elegância;
+- focar no que é melhor para a comunidade e para os usuários;
+- demonstrar empatia pelos outros.
+
+Coisas que não são aceitáveis:
+
+- assédio, insultos ou comentários depreciativos, públicos ou privados;
+- linguagem ou imagens de teor sexual, ou atenção sexual indesejada;
+- publicar informações privadas de terceiros sem permissão;
+- perturbação contínua de discussões, issues ou pull requests.
+
+## Escopo
+
+Este Código de Conduta se aplica a todos os espaços do projeto (o repositório, as issues, os pull
+requests e qualquer canal oficial listado no README) e quando alguém está representando o projeto em
+público.
+
+## Aplicação
+
+Denuncie comportamentos inaceitáveis para **vd.priv8@pm.me**. As denúncias são tratadas com discrição.
+Os mantenedores podem remover, editar ou rejeitar contribuições e comentários que violem este Código de
+Conduta, e podem banir colaboradores por comportamento que considerem inadequado, ameaçador ou nocivo.
+
+## Atribuição
+
+Adaptado do [Contributor Covenant](https://www.contributor-covenant.org), versão 2.1.
+
+<!-- doc-footer -->
+
+---
+
+> _Esta documentação foi gerada com o Claude (Anthropic) e é mantida por VD171. Correções e melhorias são bem-vindas, veja [CONTRIBUTING.md](CONTRIBUTING.md)._

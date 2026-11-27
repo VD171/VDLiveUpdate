@@ -34,7 +34,7 @@ Benimsemeden sonra modülün taşıdığı tam `vdlu/` ağacı budur:
 ```
 
 Engine'in değişken durumu (`config`, `current.json`, günlük, kilit), modül dizininin dışında, Tier-2'de,
-`/data/adb/<modid>/vdlu/`'da bulunur; `config.default` onu ilk çalıştırmada tohumlar.
+`/data/adb/<modid>/vdlu/`'da bulunur, `config.default` onu ilk çalıştırmada tohumlar.
 
 ## 1. Engine'i vendor edin
 
@@ -47,7 +47,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Yalnızca desteklediğiniz ABI'leri gönderin; `customize.sh`, kurulum sırasında `verify/`'ı cihazın ABI'sine
+Yalnızca desteklediğiniz ABI'leri gönderin, `customize.sh`, kurulum sırasında `verify/`'ı cihazın ABI'sine
 budayabilir.
 
 ## 2. Bir imzalama anahtarı üretin (tek seferlik)
@@ -83,9 +83,10 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
-`profile=trusted`'ı yalnızca özel bir `file://`/SSH kaynağı için kullanın (verify best-effort; her blob'un
+`profile=trusted`'ı yalnızca özel bir `file://`/SSH kaynağı için kullanın (verify best-effort, her blob'un
 sha256'sı yine de kontrol edilir). Tam `trusted` dışındaki herhangi bir değer `hardened` olarak ele alınır
 (fail-closed).
 
@@ -118,7 +119,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css`, `webui/`'dan vendor edilir; bir çeviri `i18n: window.VDLU_I18N_<LANG>` ile
+(`vdlu.js` / `vdlu.css`, `webui/`'dan vendor edilir, bir çeviri `i18n: window.VDLU_I18N_<LANG>` ile
 eklenebilir.)
 
 ## 6. Beslemeyi release iş akışınızda imzalayın
@@ -149,11 +150,11 @@ Yoksa ölümcül değildir (cihaz ilk güncellemede sadece `0`'dan başlar).
 
 ---
 
-Benimseme bundan ibaret. `sh -n <module>/vdlu/update.sh` geçmelidir; göndermeden önce üreticiyi ve engine'i
+Benimseme bundan ibaret. `sh -n <module>/vdlu/update.sh` geçmelidir, göndermeden önce üreticiyi ve engine'i
 [`PRODUCER.md`](PRODUCER.md) ve kök README'de gösterildiği gibi uçtan uca test edin.
 
 <!-- doc-footer -->
 
 ---
 
-> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır; bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır, bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._

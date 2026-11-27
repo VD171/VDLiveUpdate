@@ -10,6 +10,25 @@ Trang này là toàn bộ câu chuyện tin cậy. Xem [[Feed Format]] để bi�
 
 ---
 
+## Các phiên bản được hỗ trợ
+
+Các bản vá bảo mật đáp xuống `ENGINE_VERSION` mới nhất; một manifest đã ký khai báo engine tối thiểu mà nó cần
+qua `engine_min`, và engine trên thiết bị từ chối một manifest đòi hỏi nhiều hơn những gì nó hiện thực. Các
+engine được vendor cũ hơn được kỳ vọng phải **re-vendor** để lấy một bản vá, chứ không được back-patch tại
+chỗ.
+
+| ENGINE_VERSION | trạng thái |
+|---|---|
+| 7 (hiện tại) | được hỗ trợ - không bao giờ hoàn nguyên một module đi trước feed (`versionCode` được cài đặt trực tiếp làm sàn cho phiên bản "from"), tự phục hồi khi boot cho một plan downgrade cũ |
+| 6 | đã bị thay thế - tự phục hồi khi boot cho journal cũ với `target <= 0` (baseline 0 do một stub đã bị gỡ để lại không còn điều khiển bất kỳ UI hay hành động boot nào) |
+| 5 | đã bị thay thế - loại trừ neo tin cậy phía engine (thư mục `vdlu/` bị bỏ qua ngay cả khi một feed mang nó), giới hạn 128 MiB mỗi tệp / 2 MiB cho manifest |
+| 4 | đã bị thay thế - allowlist `key_id`, từ chối path có dot-segment/trailing-slash, giới hạn kích thước, check-time lock |
+| <= 3 | không hỗ trợ - re-vendor engine hiện tại |
+
+Bất kỳ thay đổi nào ở verify của engine hoặc logic apply đều tăng `ENGINE_VERSION`.
+
+---
+
 ## Ý tưởng cốt lõi: fail-closed, trước khi bất cứ điều gì xảy ra
 
 `validate_plan()` chạy bên trong pha `check`/diff, **trước** bất kỳ lần fetch nào và **trước** bất kỳ lần apply nào. Nó duyệt mọi mục trong cây tệp đã lập kế hoạch và mọi mục trong `delete[]`, và nếu bất kỳ mục đơn lẻ nào dị dạng thì nó **từ chối toàn bộ manifest** và giao dịch không bao giờ bắt đầu. Không có chấp nhận một phần, không có "bỏ qua cái xấu và áp dụng phần còn lại". Một trường xấu đầu độc cả lô, một cách có chủ đích.
@@ -124,6 +143,14 @@ Bản sửa ghim `key_id` cập nhật module được chấp nhận vào một 
 Vì lần kiểm tra chạy trước khi chọn pubkey, một manifest nêu tên một khóa có hiện diện nhưng không nằm trong danh sách cho phép sẽ bị từ chối mà bộ xác minh không bao giờ nạp khóa đó. Tập hợp đã phân giải được phản chiếu vào `vdlu-verify` thông qua `VDLU_KEYID_ALLOW`, nên bộ kiểm tra gọn nhẹ trên thiết bị thực thi cùng một lần ghim và hai bên không thể bất đồng. Điều này đúng ở **cả hai** profile: cả `hardened` lẫn `trusted` đều tham vấn danh sách cho phép, vì danh sách cho phép quyết định *khóa nào* là một gốc cập nhật module hợp lệ, chứ không phải *liệu* có cần một chữ ký hay không.
 
 Feed fingerprint giữ gốc tin cậy được ghim riêng của chính nó, `FEED_KEY_ID`. Đó là một gốc riêng biệt với một công việc riêng biệt, không bao giờ với tới được qua đường cập nhật module ở trên, nên việc ghim danh sách cho phép cập nhật module không chạm vào nó và một khóa feed bị rò rỉ vẫn không thể ký một cập nhật module. Thay đổi này đã nâng `ENGINE_VERSION` lên 4.
+
+---
+
+## Loại trừ neo tin cậy phía engine
+
+Danh sách cho phép ở trên quyết định *khóa nào* có thể ký một cập nhật module. Một thay đổi về sau (`ENGINE_VERSION` 5) đóng rủi ro liền kề từ phía bên kia: một feed được ký hợp lệ thậm chí được phép chạm vào những gì. Một feed đã phát hành mang toàn bộ cây module, và cây đó bao gồm thư mục `vdlu/` của chính module - engine, shim `vdlu-verify`, các nhị phân `verify/`, keyring và config. Đó là neo tin cậy. Nếu một cập nhật có thể viết lại chúng, một khóa ký bị rò rỉ duy nhất có thể gửi một bộ xác minh mới hay một keyring mới và duy trì root vô thời hạn.
+
+Nên engine **bỏ qua** mọi path `vdlu/` trong một kế hoạch được tải về. Nó không bao giờ tải, apply hay xóa chúng, ngay cả khi manifest liệt kê chúng, và nó cũng không từ chối manifest: phần còn lại của module vẫn cập nhật bình thường, và chỉ các path `vdlu/` bị lặng lẽ loại bỏ. Neo tin cậy chỉ có thể thay đổi **duy nhất** qua một lần re-flash có ký đầy đủ của zip module, không bao giờ qua mạng. Điều này bổ sung cho việc loại trừ phía producer trong `vdlu-pack` (vốn giữ các path đó khỏi feed ngay từ đầu) bằng một lớp bảo vệ thứ hai, độc lập trên thiết bị. Cùng thay đổi đó cũng hạ các giới hạn gia cố xuống **128 MiB mỗi tệp** và **2 MiB mỗi manifest**. Được báo cáo bởi Solomag (VD-Modules#1).
 
 ---
 

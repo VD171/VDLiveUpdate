@@ -22,11 +22,30 @@
   ======================================================================
 -->
 
-# VDLiveUpdate
+# VD Live Update
 
-> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · Русский · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
 
-**VDLU** - это инкрементальный движок самообновления без прошивки для модулей **KernelSU / APatch / Magisk**. Установленный модуль обновляет себя сам, скачивая **только изменившиеся файлы** (блобы с адресацией по содержимому + подписанный манифест), применяет обновляемые на лету **без перезагрузки**, а те немногие, которым перезагрузка действительно нужна (`.so`, оверлей `/system`, `sepolicy.rule`), подготавливает и помечает. Без менеджера root, без повторного скачивания всего `.zip`, без перезагрузки, кроме как ради этих подготовленных файлов.
+<p align="center">
+  <img src="images/logo-wordmark.png" alt="VD Live Update" width="320">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1a7f37" alt="License"></a>
+  <a href="https://github.com/VD171/VDLiveUpdate/stargazers"><img src="https://img.shields.io/github/stars/VD171/VDLiveUpdate?color=d29922" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="docs/QUICKSTART.md">Quickstart</a> ·
+  <a href="docs/ENGINE.md">Engine</a> ·
+  <a href="docs/PRODUCER.md">Producer</a> ·
+  <a href="docs/WEBUI.md">WebUI</a> ·
+  <a href="docs/INTERFACES.md">Interfaces</a> ·
+  <a href="docs/AI-AGENTS.md">AI agents</a> ·
+  <a href="docs/TRUST-MODEL.md">Trust model</a>
+</p>
+
+**VDLU** является инкрементальным движком самообновления без прошивки для модулей **KernelSU / APatch / Magisk**. Установленный модуль обновляет себя сам, скачивая **только изменившиеся файлы** (блобы с адресацией по содержимому + подписанный манифест), применяет обновляемые на лету **без перезагрузки**, а те немногие, которым перезагрузка действительно нужна (`.so`, оверлей `/system`, `sepolicy.rule`), подготавливает и помечает. Без менеджера root, без повторного скачивания всего `.zip`, без перезагрузки, кроме как ради этих подготовленных файлов.
 
 Он рассчитан на то, чтобы быть **встроенным (vendored)** в модуль (скопированным в `<module>/vdlu/`), а не запускаться как отдельный модуль.
 
@@ -36,7 +55,7 @@
 
 ## Как это работает
 
-- **Производитель (ПК / релиз):** `vdlu-pack` превращает дерево модуля в фид с адресацией по содержимому (`manifest.json` + `blobs/<sha256>`, gzip, дедупликация, `delete[]`); `vdlu-keygen` / `vdlu-sign` (ed25519); `vdlu-gc` удаляет осиротевшие блобы по ссылкам на последние N манифестов (fail-safe, по умолчанию dry-run).
+- **Производитель (ПК / релиз):** `vdlu-pack` превращает дерево модуля в фид с адресацией по содержимому (`manifest.json` + `blobs/<sha256>`, gzip, дедупликация, `delete[]`), `vdlu-keygen` / `vdlu-sign` (ed25519), `vdlu-gc` удаляет осиротевшие блобы по ссылкам на последние N манифестов (fail-safe, по умолчанию dry-run).
 - **Движок (устройство):** POSIX sh, без `jq`. `update.sh` (`check | run | resume | boot | status | cancel`) выполняет DIFF -> FETCH -> APPLY -> COMMIT как **возобновляемую транзакцию** (журнал), с откатом и блокировкой через `mkdir`. Подпись проверяется встроенным `ed25519-mini` (без `openssl` на устройстве).
 - **WebUI:** готовая к встраиванию панель Updates (тост прогресса, отмена, баннер перезагрузки), чистый JS.
 
@@ -47,14 +66,14 @@
 
 ## Внедрите его в свой модуль
 
-Встройте `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` в `<module>/vdlu/`, вложите свой **сырой 32-байтовый открытый ключ** как `vdlu/keyring/<id>.pub`, добавьте `config` (профиль + источник), подключите триггеры (`post-fs-data.sh` до zygote для автообновления при загрузке; триггер открытия WebUI) и добавьте `vdlu-pack` + `vdlu-sign` в свой релиз. Готовый шаблон смотрите в [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
+Встройте `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` в `<module>/vdlu/`, вложите свой **сырой 32-байтовый открытый ключ** как `vdlu/keyring/<id>.pub`, добавьте `config` (профиль + источник), подключите триггеры (`post-fs-data.sh` до zygote для автообновления при загрузке, триггер открытия WebUI) и добавьте `vdlu-pack` + `vdlu-sign` в свой релиз. Готовый шаблон смотрите в [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
 
 ## Безопасность
 
-- **Любое поле манифеста - враждебный ввод.** `validate_plan()` отклоняет весь манифест по принципу fail-closed при абсолютном пути или пути с `..`, при `sha256`, в котором не 64 hex-символа, либо при недопустимом mode / class / encoding, **до** любого fetch или apply.
-- **Приватный ключ для подписи никогда не касается CI или устройства**; встраивается только сырой открытый ключ, а проверка использует `ed25519-mini`, а не `openssl`.
+- **Любое поле манифеста является враждебным вводом.** `validate_plan()` отклоняет весь манифест по принципу fail-closed при абсолютном пути или пути с `..`, при `sha256`, в котором не 64 hex-символа, либо при недопустимом mode / class / encoding, **до** любого fetch или apply.
+- **Приватный ключ для подписи никогда не касается CI или устройства**, встраивается только сырой открытый ключ, а проверка использует `ed25519-mini`, а не `openssl`.
 - `hardened` работает по принципу fail-closed через инверсию: всё, что не является буквальным `trusted`, трактуется как `hardened`, поэтому повреждённое значение профиля никогда не сможет молча принять неподписанный манифест.
-- Файлы класса перезагрузки (`.so`, оверлей `/system`, `sepolicy.rule`) **подготавливаются, но никогда не записываются поверх живого inode**; всё остальное применяется на лету. Неудавшийся apply прерывается, а не перезаписывает без резервной копии.
+- Файлы класса перезагрузки (`.so`, оверлей `/system`, `sepolicy.rule`) **подготавливаются, но никогда не записываются поверх живого inode**, всё остальное применяется на лету. Неудавшийся apply прерывается, а не перезаписывает без резервной копии.
 
 ## Сборка / тестирование
 
@@ -69,9 +88,13 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # затем 
 
 `sh -n engine/*.sh`, `node --check webui/vdlu.js` и открытие `webui/demo.html` в браузере (он мокает мост с устройством).
 
+## ИИ-агенты
+
+Движок управляется целиком из оболочки (`sh engine/update.sh <check|run|resume|boot|status|cancel>` выводит машиночитаемый статус), поэтому ИИ-агент может проверить, применить и возобновить обновление без интерфейса. Контракт стыковки между компонентами описан в [`docs/INTERFACES.md`](docs/INTERFACES.md), а патчи от ИИ проходят тот же уровень проверки, что и любые другие.
+
 ## Документация
 
-- [`INTERFACES.md`](docs/INTERFACES.md): контракт стыка между компонентами (закон сходимости; считайте его неизменным).
+- [`INTERFACES.md`](docs/INTERFACES.md): контракт стыка между компонентами (закон сходимости, считайте его неизменным).
 - [`ENGINE.md`](docs/ENGINE.md): движок на стороне устройства (`update.sh`): возобновляемая транзакция DIFF -> FETCH -> APPLY -> COMMIT.
 - [`PRODUCER.md`](docs/PRODUCER.md): сторона ПК/релиза: сборка и подписание адресуемого по содержимому фида (`vdlu-pack`, `vdlu-sign`).
 - [`WEBUI.md`](docs/WEBUI.md): встраиваемый виджет панели Updates (всплывающее уведомление о прогрессе, отмена, баннер перезагрузки).
@@ -102,14 +125,14 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # затем 
 
 ## Лицензия
 
-Собственный код VDLiveUpdate распространяется под **Apache-2.0**; см. [LICENSE](LICENSE). Он встраивает небольшой
-верификатор `ed25519-mini` и статический `curl` для бутстрапа загрузки, каждый под своей лицензией; см.
+Собственный код VDLiveUpdate распространяется под **Apache-2.0**, см. [LICENSE](LICENSE). Он встраивает небольшой
+верификатор `ed25519-mini` и статический `curl` для бутстрапа загрузки, каждый под своей лицензией, см.
 [NOTICE.md](NOTICE.md) и файлы `PROVENANCE.json` рядом с включёнными бинарными файлами.
 
 ## Товарные знаки
 
-VDLiveUpdate - независимый, неофициальный проект, не связанный с какой-либо третьей стороной и не одобренный ею.
-"Android" - товарный знак Google LLC; "KernelSU", "Magisk" и "APatch" - знаки их
+VDLiveUpdate является независимым, неофициальным проектом, не связанным с какой-либо третьей стороной и не одобренным ею.
+"Android" является товарным знаком Google LLC, "KernelSU", "Magisk" и "APatch" являются знаками их
 соответствующих авторов. VDLU работает целиком на вашем устройстве и на вашем собственном хосте релизов.
 
 ## Tags
@@ -118,4 +141,4 @@ VDLiveUpdate - независимый, неофициальный проект, 
 
 ---
 
-📣 **Join the channel for updates:** @Priv8_VD https://t.me/Priv8_VD
+📣 **Подпишитесь на канал для обновлений:** @Priv8_VD https://t.me/Priv8_VD

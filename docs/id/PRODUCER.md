@@ -36,7 +36,7 @@ ditulis ulang, sehingga publikasi bersifat inkremental dan konten yang tidak ber
 
 ### Keputusan `enc` (vdlu-pack)
 
-`sha256` **selalu** dari konten asli (tidak terkompresi); `enc` hanya menamai bagaimana blob disimpan.
+`sha256` **selalu** dari konten asli (tidak terkompresi), `enc` hanya menamai bagaimana blob disimpan.
 
 - `gz` ketika `size >= 4096` **dan** gzip (`-9 -n`, deterministik) menghemat setidaknya 10% (`comp <= raw*0.90`).
 - `raw` jika tidak (teks kecil yang sudah dicakup gzip HTTP, atau data yang sudah tidak dapat dikompresi).
@@ -47,7 +47,7 @@ mendekompresi dengan toybox `gunzip` (selalu ada), jadi tidak ada zstd yang dibu
 
 ### Keputusan `class` (vdlu-pack) - taksonomi reboot
 
-Diturunkan dari path (INTERFACES §3, doc §4). Hanya default; sebuah aturan path tidak pernah men-downgrade `reboot`->`live`.
+Diturunkan dari path (INTERFACES §3, doc §4). Hanya default, sebuah aturan path tidak pernah men-downgrade `reboot`->`live`.
 
 | class | dicocokkan oleh | diterapkan |
 |---|---|---|
@@ -66,7 +66,7 @@ manifest yang reproducible.
 sehingga perangkat lahir "terkini" (tanpa from:0, tanpa re-fetch). Engine memperlakukannya sebagai **benih lokal yang dipercaya**
 (ia tiba dalam zip yang di-flash, yang merupakan batas kepercayaan instalasi) dan **TIDAK memverifikasi tanda tangannya** -
 hanya manifest yang DIAMBIL dari feed yang melewati `vdlu-verify`. Jadi baseline tidak membutuhkan **kunci apa pun**: ia
-hanyalah output `vdlu-pack` atas pohon yang dikirim (tidak ditandatangani; `sig`/`key_id` tetap kosong). Sebuah CI karena itu dapat
+hanyalah output `vdlu-pack` atas pohon yang dikirim (tidak ditandatangani, `sig`/`key_id` tetap kosong). Sebuah CI karena itu dapat
 menghasilkannya **tanpa kunci**, menjaga kunci penandatanganan 100% di luar CI - hanya FEED yang dipublikasikan yang ditandatangani (operator,
 secara lokal). `vdlu-pack` mengecualikan `baseline.json` dari manifest-nya sendiri (anti referensi-diri). Tidak fatal jika
 tidak ada: perangkat cukup mulai dari from:0 pada pembaruan pertama, tidak pernah rusak.
@@ -99,19 +99,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` adalah bagian dari bentuk kanonik (hanya `sig` yang dicabut); `vdlu-sign` mengatur `key_id` **sebelum**
+`key_id` adalah bagian dari bentuk kanonik (hanya `sig` yang dicabut), `vdlu-sign` mengatur `key_id` **sebelum**
 hashing. Placeholder nilai yang kosong (`"sig":""`, saat sign) atau terisi (saat verify) menghasilkan byte kanonik
 yang identik, jadi sign dan verify sepakat secara konstruksi.
 
 Python mereproduksinya sebagai `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` lalu sha256 - digunakan
-hanya untuk cross-check; produsen yang otoritatif adalah dua tool sh.
+hanya untuk cross-check, produsen yang otoritatif adalah dua tool sh.
 
 ## Tanda tangan (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   untuk penandatanganan/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (DER SPKI
   ed25519 adalah prefiks 12-byte + kunci 32-byte, jadi `tail -c 32` ADALAH kunci). Ia memancarkan KEDUANYA.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` atas sha256 heksadesimal kanonik; tanda tangan disimpan base64.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` atas sha256 heksadesimal kanonik, tanda tangan disimpan base64.
 - `vdlu-verify` (**perangkat, ramping**): `ed25519-mini <pubkey32> <msg> <sig64>` - membaca keyring sebagai pubkey **RAW 32B**,
   TANPA openssl di perangkat. `key_id` disanitasi sebagai path (tanpa `/`, `.`, `..`, `"`). 🚨 Keyring mengirim
   **`.pub.raw` (32B)**, tidak pernah `.pub` PEM (113B): PEM hanya untuk sisi-PC dan `ed25519-mini` tidak dapat membacanya.
@@ -137,4 +137,4 @@ menimpanya dengan `.pub` PEM sisi-PC.
 
 ---
 
-> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan; lihat [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan, lihat [CONTRIBUTING.md](CONTRIBUTING.md)._

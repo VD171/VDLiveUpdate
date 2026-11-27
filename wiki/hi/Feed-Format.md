@@ -24,7 +24,7 @@ manifest एक release का पूरा विवरण है: target tree 
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ feed **सिर्फ module का अपना content** ढोता है�
 
 | Excluded | क्यों |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (trust root: raw public keys + verifier binary) | **यही मूल सुरक्षा कारण है।** trust anchor **flash-only** है। अगर keyring या verifier feed-deliverable होते, तो एक manifest उसी चीज़ को overwrite कर सकता था जो उसे validate करती है। उन्हें wire से बाहर रखने का मतलब है एक manifest कभी on-device trust anchor को दोबारा नहीं लिख सकता। |
+| `vdlu/keyring/`, `vdlu/verify/` (trust root: raw public keys + verifier binary) | **यही मूल सुरक्षा कारण है।** trust anchor **flash-only** है। अगर keyring या verifier feed-deliverable होते, तो एक manifest उसी चीज़ को overwrite कर सकता था जो उसे validate करती है। उन्हें wire से बाहर रखने का मतलब है एक manifest कभी on-device trust anchor को दोबारा नहीं लिख सकता। एक दूसरे, स्वतंत्र guard के रूप में (`ENGINE_VERSION` 5), engine एक fetch किए गए plan में हर `vdlu/` path को भी **अनदेखा** करता है, तो एक feed जो उन्हें ढोता है वह भी anchor को छू नहीं सकता। |
 | `vdlu/baseline.json` | यह signed manifest की एक copy है (install seed); इसे pack करना एक self-reference loop होता। |
 | `.vd/` flash infrastructure | Flash-gate scaffolding जो zip में भेजी जाती है, कभी live लागू नहीं होती। |
 | `update.json`, `update-mmrl.json` | इनका size/sha CI द्वारा zips बनने के *बाद* भरा जाता है, तो भेजी गई copy किसी भी feed copy से अलग होती है। इन्हें feed करना हर install के पहले self-update पर एक phantom single-file fetch पैदा करता, और वे on-device वैसे भी vestigial हैं (manager remote raw update JSON पढ़ता है)। |

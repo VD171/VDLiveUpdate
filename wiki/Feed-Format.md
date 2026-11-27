@@ -24,7 +24,7 @@ The manifest is the complete description of one release: every file in the targe
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ The feed carries **only the module's own content**. A fixed set of paths is kept
 
 | Excluded | Why |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (the trust root: raw public keys + the verifier binary) | **This is the core security reason.** The trust anchor is **flash-only**. If the keyring or verifier were feed-deliverable, a manifest could overwrite the very thing that validates it. Keeping them off the wire means a manifest can never rewrite the on-device trust anchor. |
+| `vdlu/keyring/`, `vdlu/verify/` (the trust root: raw public keys + the verifier binary) | **This is the core security reason.** The trust anchor is **flash-only**. If the keyring or verifier were feed-deliverable, a manifest could overwrite the very thing that validates it. Keeping them off the wire means a manifest can never rewrite the on-device trust anchor. As a second, independent guard (`ENGINE_VERSION` 5), the engine also **ignores** every `vdlu/` path in a fetched plan, so even a feed that carries them cannot touch the anchor. |
 | `vdlu/baseline.json` | It is a copy of the signed manifest (the install seed); packing it would be a self-reference loop. |
 | `.vd/` flash infrastructure | Flash-gate scaffolding that ships in the zip, never applied live. |
 | `update.json`, `update-mmrl.json` | Their size/sha are filled in by CI *after* the zips are built, so the shipped copy differs from any feed copy. Feeding them would cause a phantom single-file fetch on every install's first self-update, and they are vestigial on-device anyway (the manager reads the remote raw update JSON). |

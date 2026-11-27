@@ -36,7 +36,7 @@ ghi lại, nên việc xuất bản là tăng tiến và nội dung không đổ
 
 ### Quyết định `enc` (vdlu-pack)
 
-`sha256` **luôn luôn** của nội dung gốc (chưa nén); `enc` chỉ đặt tên cho cách blob được lưu.
+`sha256` **luôn luôn** của nội dung gốc (chưa nén), `enc` chỉ đặt tên cho cách blob được lưu.
 
 - `gz` khi `size >= 4096` **và** gzip (`-9 -n`, xác định) tiết kiệm ít nhất 10% (`comp <= raw*0.90`).
 - `raw` nếu không (văn bản nhỏ mà HTTP gzip đã bao phủ, hoặc dữ liệu vốn-không-nén-được).
@@ -47,7 +47,7 @@ giải nén với toybox `gunzip` (luôn hiện diện), nên không đóng gói
 
 ### Quyết định `class` (vdlu-pack) - phân loại reboot
 
-Suy ra từ path (INTERFACES §3, doc §4). Chỉ là mặc định; một quy tắc path không bao giờ hạ cấp `reboot`->`live`.
+Suy ra từ path (INTERFACES §3, doc §4). Chỉ là mặc định, một quy tắc path không bao giờ hạ cấp `reboot`->`live`.
 
 | class | khớp bởi | áp dụng |
 |---|---|---|
@@ -66,7 +66,7 @@ các manifest tái lập được.
 để thiết bị sinh ra "đã cập nhật" (không from:0, không tải lại). Engine coi nó như một **hạt giống tin cậy cục bộ**
 (nó đến trong zip đã flash, vốn là ranh giới tin cậy của việc cài) và **KHÔNG xác minh chữ ký của nó** -
 chỉ manifest ĐƯỢC TẢI từ feed mới đi qua `vdlu-verify`. Vậy baseline không cần **khóa nào**: nó
-chỉ là đầu ra `vdlu-pack` trên cây phát hành (chưa ký; `sig`/`key_id` vẫn rỗng). Một CI do đó có thể
+chỉ là đầu ra `vdlu-pack` trên cây phát hành (chưa ký, `sig`/`key_id` vẫn rỗng). Một CI do đó có thể
 sinh nó **không khóa**, giữ khóa ký 100% ngoài CI - chỉ FEED đã xuất bản mới được ký (người vận hành,
 cục bộ). `vdlu-pack` loại trừ `baseline.json` khỏi manifest của chính nó (chống tự-tham-chiếu). Không nghiêm trọng nếu
 vắng mặt: thiết bị chỉ bắt đầu from:0 ở lần cập nhật đầu tiên, không bao giờ hỏng.
@@ -99,19 +99,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` là một phần của dạng chuẩn (chỉ `sig` bị tước); `vdlu-sign` đặt `key_id` **trước khi**
+`key_id` là một phần của dạng chuẩn (chỉ `sig` bị tước), `vdlu-sign` đặt `key_id` **trước khi**
 băm. Giá trị giữ chỗ là rỗng (`"sig":""`, lúc ký) hoặc đã điền (lúc xác minh) đều cho
 các byte chuẩn giống hệt nhau, nên sign và verify đồng thuận theo thiết kế.
 
 Python tái tạo nó như `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` rồi sha256 - chỉ dùng
-để kiểm tra chéo; hai công cụ sh mới là bên tạo có thẩm quyền.
+để kiểm tra chéo, hai công cụ sh mới là bên tạo có thẩm quyền.
 
 ## Chữ ký (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   cho ký/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (ed25519
   SPKI DER là một tiền tố 12 byte + khóa 32 byte, nên `tail -c 32` CHÍNH LÀ khóa). Nó phát ra CẢ HAI.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` trên sha256 hex chuẩn; chữ ký lưu base64.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` trên sha256 hex chuẩn, chữ ký lưu base64.
 - `vdlu-verify` (**thiết bị, slim**): `ed25519-mini <pubkey32> <msg> <sig64>` - đọc keyring như khóa công khai **RAW 32B**,
   KHÔNG openssl trên thiết bị. `key_id` được làm sạch theo path (không `/`, `.`, `..`, `"`). 🚨 Keyring phát hành
   **`.pub.raw` (32B)**, không bao giờ `.pub` PEM (113B): PEM chỉ dành cho PC và `ed25519-mini` không thể đọc nó.
@@ -137,4 +137,4 @@ ghi đè nó bằng `.pub` PEM phía PC.
 
 ---
 
-> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến; xem [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Tài liệu này được tạo bằng Claude (Anthropic) và được duy trì bởi VD171. Chúng tôi hoan nghênh các chỉnh sửa và cải tiến, xem [CONTRIBUTING.md](CONTRIBUTING.md)._

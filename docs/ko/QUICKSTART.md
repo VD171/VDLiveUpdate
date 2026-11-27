@@ -81,6 +81,7 @@ channel=stable
 profile=hardened        # 공개 피드: 서명 필수, 다운그레이드 차단
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # 옵트인: 이 경로가 존재하는 동안 APPLY 지연 (예: 실행 중인 백업)
 ```
 
 `profile=trusted`는 사설 `file://`/SSH 소스에만 사용하라 (검증은 best-effort. 모든 blob의 sha256은

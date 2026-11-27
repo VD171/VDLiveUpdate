@@ -35,7 +35,7 @@ Esta é a árvore `vdlu/` exata que o módulo carrega após a adoção:
 ```
 
 O estado mutável do engine (`config`, `current.json`, journal, lock) vive em
-Tier-2, `/data/adb/<modid>/vdlu/`, fora do dir do módulo; `config.default` o semeia
+Tier-2, `/data/adb/<modid>/vdlu/`, fora do dir do módulo, `config.default` o semeia
 na primeira execução.
 
 ## 1. Vendorize o engine
@@ -49,7 +49,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Entregue só as ABIs que você suporta; `customize.sh` pode podar `verify/` para a ABI do
+Entregue só as ABIs que você suporta, `customize.sh` pode podar `verify/` para a ABI do
 device no tempo de instalação.
 
 ## 2. Gere uma chave de assinatura (uma vez)
@@ -86,6 +86,7 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
 Use `profile=trusted` só para uma fonte privada `file://`/SSH (verify best-effort;
@@ -122,7 +123,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` são vendorizados de `webui/`; uma tradução pode ser adicionada com
+(`vdlu.js` / `vdlu.css` são vendorizados de `webui/`, uma tradução pode ser adicionada com
 `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Assine o feed no seu workflow de release
@@ -153,7 +154,7 @@ Não é fatal se ausente (o device só começa de `0` na primeira atualização)
 
 ---
 
-Essa é a adoção inteira. `sh -n <module>/vdlu/update.sh` deve passar; teste o
+Essa é a adoção inteira. `sh -n <module>/vdlu/update.sh` deve passar, teste o
 producer e o engine ponta a ponta como mostrado em [`PRODUCER.md`](PRODUCER.md) e no
 README raiz antes de entregar.
 
@@ -161,4 +162,4 @@ README raiz antes de entregar.
 
 ---
 
-> _Esta documentação foi gerada com o Claude (Anthropic) e é mantida por VD171. Correções e melhorias são bem-vindas; veja [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Esta documentação foi gerada com o Claude (Anthropic) e é mantida por VD171. Correções e melhorias são bem-vindas, veja [CONTRIBUTING.md](CONTRIBUTING.md)._

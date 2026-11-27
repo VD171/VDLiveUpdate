@@ -24,7 +24,7 @@ Le manifeste est la description complète d'une release : chaque fichier de l'ar
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Le feed porte **uniquement le contenu propre du module**. Un ensemble fixe de ch
 
 | Exclu | Pourquoi |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (la racine de confiance : clés publiques brutes + le binaire vérificateur) | **C'est la raison de sécurité centrale.** L'ancre de confiance est **flash-only**. Si le keyring ou le vérificateur étaient livrables par le feed, un manifeste pourrait écraser la chose même qui le valide. Les tenir hors du fil signifie qu'un manifeste ne peut jamais réécrire l'ancre de confiance sur l'appareil. |
+| `vdlu/keyring/`, `vdlu/verify/` (la racine de confiance : clés publiques brutes + le binaire vérificateur) | **C'est la raison de sécurité centrale.** L'ancre de confiance est **flash-only**. Si le keyring ou le vérificateur étaient livrables par le feed, un manifeste pourrait écraser la chose même qui le valide. Les tenir hors du fil signifie qu'un manifeste ne peut jamais réécrire l'ancre de confiance sur l'appareil. En seconde garde indépendante (`ENGINE_VERSION` 5), le moteur **ignore** aussi chaque chemin `vdlu/` dans un plan récupéré, de sorte que même un feed qui les porte ne peut pas toucher à l'ancre. |
 | `vdlu/baseline.json` | C'est une copie du manifeste signé (la semence d'installation) ; la packer serait une boucle d'auto-référence. |
 | `.vd/` infrastructure de flashage | Échafaudage de porte de flashage livré dans le zip, jamais appliqué en direct. |
 | `update.json`, `update-mmrl.json` | Leur size/sha sont remplis par la CI *après* la construction des zips, de sorte que la copie livrée diffère de toute copie du feed. Les alimenter causerait un fetch fantôme d'un seul fichier à la première mise à jour automatique de chaque installation, et ils sont de toute façon vestigiaux sur l'appareil (le gestionnaire lit le JSON de mise à jour brut distant). |

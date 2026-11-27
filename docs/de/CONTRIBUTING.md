@@ -12,9 +12,9 @@ Beiträge sind willkommen.
 - Teste Ende zu Ende vor einem PR: `producer/vdlu-keygen`, `vdlu-pack`, `vdlu-sign`, dann die Engine
   (`check` / `run` / `boot`). Auch `sh -n engine/*.sh` und `node --check webui/vdlu.js`.
 - Sicherheit ist nicht verhandelbar: jedes Manifestfeld ist feindlicher Input und `validate_plan()` bleibt
-  fail-closed; der private Signierschlüssel berührt nie CI oder ein Gerät.
-- POSIX sh auf dem Gerät (keine Bashismen über `local` hinaus, kein `jq`); halte Kommentare knapp.
-- Eine logische Änderung pro PR; sage, was sich geändert hat und warum.
+  fail-closed, der private Signierschlüssel berührt nie CI oder ein Gerät.
+- POSIX sh auf dem Gerät (keine Bashismen über `local` hinaus, kein `jq`), halte Kommentare knapp.
+- Eine logische Änderung pro PR, sage, was sich geändert hat und warum.
 
 ## Kontakte
 
@@ -26,4 +26,4 @@ Beiträge sind willkommen.
 
 ---
 
-> _Diese Dokumentation wurde mit Claude (Anthropic) erstellt und wird von VD171 gepflegt. Korrekturen und Verbesserungen sind willkommen; siehe [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Diese Dokumentation wurde mit Claude (Anthropic) erstellt und wird von VD171 gepflegt. Korrekturen und Verbesserungen sind willkommen, siehe [CONTRIBUTING.md](CONTRIBUTING.md)._

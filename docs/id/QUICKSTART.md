@@ -34,7 +34,7 @@ Ini adalah pohon `vdlu/` persis yang dibawa modul setelah adopsi:
 ```
 
 State yang mutable milik engine (`config`, `current.json`, journal, lock) berada di
-Tier-2, `/data/adb/<modid>/vdlu/`, di luar direktori modul; `config.default` menyemainya
+Tier-2, `/data/adb/<modid>/vdlu/`, di luar direktori modul, `config.default` menyemainya
 pada run pertama.
 
 ## 1. Vendor engine
@@ -48,7 +48,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Kirim hanya ABI yang Anda dukung; `customize.sh` dapat memangkas `verify/` ke ABI perangkat
+Kirim hanya ABI yang Anda dukung, `customize.sh` dapat memangkas `verify/` ke ABI perangkat
 saat instalasi.
 
 ## 2. Hasilkan kunci penandatanganan (sekali saja)
@@ -85,6 +85,7 @@ channel=stable
 profile=hardened        # feed publik: tanda tangan wajib, downgrade diblokir
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
 Gunakan `profile=trusted` hanya untuk sumber `file://`/SSH privat (verify best-effort;
@@ -121,7 +122,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` di-vendor dari `webui/`; sebuah terjemahan dapat ditambahkan dengan
+(`vdlu.js` / `vdlu.css` di-vendor dari `webui/`, sebuah terjemahan dapat ditambahkan dengan
 `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Tandatangani feed di workflow release Anda
@@ -152,7 +153,7 @@ Tidak fatal jika tidak ada (perangkat cukup mulai dari `0` pada pembaruan pertam
 
 ---
 
-Itulah keseluruhan adopsi. `sh -n <module>/vdlu/update.sh` harus lolos; uji producer dan engine
+Itulah keseluruhan adopsi. `sh -n <module>/vdlu/update.sh` harus lolos, uji producer dan engine
 ujung-ke-ujung seperti ditunjukkan di [`PRODUCER.md`](PRODUCER.md) dan README akar sebelum Anda
 mengirim.
 
@@ -160,4 +161,4 @@ mengirim.
 
 ---
 
-> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan; lihat [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Dokumentasi ini dibuat dengan Claude (Anthropic) dan dikelola oleh VD171. Koreksi dan perbaikan dipersilakan, lihat [CONTRIBUTING.md](CONTRIBUTING.md)._

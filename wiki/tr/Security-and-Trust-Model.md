@@ -10,6 +10,25 @@ Bu sayfa tam güven hikayesidir. Doğruladığı manifesto şeması için bkz. [
 
 ---
 
+## Desteklenen sürümler
+
+Güvenlik düzeltmeleri en son `ENGINE_VERSION`'a iner; imzalı bir manifest, ihtiyaç duyduğu minimum
+engine'i `engine_min` ile bildirir ve cihazdaki engine, uyguladığından fazlasını isteyen bir manifesti
+reddeder. Daha eski vendor edilmiş engine'lerin bir düzeltmeyi almak için yerinde back-patch edilmesi
+değil, **yeniden-vendor** edilmesi beklenir.
+
+| ENGINE_VERSION | durum |
+|---|---|
+| 7 (güncel) | destekleniyor - beslemenin önündeki bir modülü asla geri almama (canlı kurulu `versionCode`, "from" sürümüne taban oluşturur), eski bir downgrade planının önyüklemede kendini onarması |
+| 6 | yerini aldı - önyüklemede eski bir `target <= 0` journal'ının kendini onarması (kaldırılmış bir stub'ın bıraktığı baseline 0 artık hiçbir UI veya önyükleme eylemini tetiklemez) |
+| 5 | yerini aldı - engine tarafı güven çıpası hariç tutma (`vdlu/` dizini bir besleme onu taşısa bile yok sayılır), dosya başına 128 MiB / manifest başına 2 MiB tavanları |
+| 4 | yerini aldı - `key_id` allowlist'i, dot-segment/trailing-slash path reddi, boyut sınırları, check-time kilidi |
+| <= 3 | desteklenmiyor - güncel engine'i yeniden-vendor edin |
+
+Engine doğrulamasında veya apply mantığında herhangi bir değişiklik `ENGINE_VERSION`'ı artırır.
+
+---
+
 ## Temel fikir: herhangi bir şey olmadan önce hata durumunda kapalı
 
 `validate_plan()`, herhangi bir fetch'ten **önce** ve herhangi bir apply'dan **önce** `check`/fark aşaması içinde çalışır. Planlanan dosya ağacındaki her girdiyi ve `delete[]`'teki her girdiyi dolaşır ve tek bir girdi bile hatalı biçimlendirilmişse **tüm manifestoyu reddeder** ve işlem asla başlamaz. Kısmi kabul yoktur, "kötü olanı atla ve gerisini uygula" yoktur. Kötü bir alan tüm partiyi zehirler, bilerek.
@@ -124,6 +143,14 @@ Düzeltme, kabul edilen modül güncelleme `key_id`'sini, pubkey seçilmeden **�
 Denetim pubkey seçiminden önce çalıştığı için, keyring'de bulunan ama izin listesinde olmayan bir anahtarı adlandıran bir manifesto, doğrulayıcı o anahtarı hiç yüklemeden reddedilir. Çözülen küme `VDLU_KEYID_ALLOW` aracılığıyla `vdlu-verify`'a yansıtılır, böylece ince cihaz üstü denetleyici aynı sabitlemeyi uygular ve ikisi anlaşmazlığa düşemez. Bu, **her iki** profilde de geçerlidir: `hardened` ve `trusted` her ikisi de izin listesine danışır, çünkü izin listesi bir imzanın gerekli olup *olmadığına* değil, *hangi anahtarın* geçerli bir modül güncelleme kökü olduğuna karar verir.
 
 Parmak izi feed'i kendi ayrı sabitlenmiş güven kökünü, `FEED_KEY_ID`'yi korur. Bu, farklı bir işe sahip farklı bir köktür, yukarıdaki modül güncelleme yolu üzerinden asla erişilemez, bu yüzden modül güncelleme izin listesini sabitlemek ona dokunmaz ve sızdırılmış bir feed anahtarı hâlâ bir modül güncellemesi imzalayamaz. Bu değişiklik `ENGINE_VERSION`'ı 4'e yükseltti.
+
+---
+
+## Engine tarafı güven çıpası hariç tutma
+
+Yukarıdaki izin listesi, bir modül güncellemesini *hangi* anahtarın imzalayabileceğine karar verir. Daha sonraki bir değişiklik (`ENGINE_VERSION` 5), bitişik riski diğer taraftan kapatır: geçerli şekilde imzalanmış bir feed'in dokunmasına bile neyin izin verildiği. Yayınlanan bir feed tüm modül ağacını taşır ve o ağaç modülün kendi `vdlu/` dizinini içerir - motor, `vdlu-verify` shim'i, `verify/` ikilileri, keyring ve config. Bunlar güven çıpasıdır. Bir güncelleme onları yeniden yazabilseydi, sızmış tek bir imzalama anahtarı yeni bir doğrulayıcı veya yeni bir keyring gönderip root'u süresiz olarak kalıcı kılabilirdi.
+
+Bu yüzden motor, getirilen bir plandaki her `vdlu/` yolunu **yok sayar**. Manifesto onları listelese bile onları asla getirmez, uygulamaz veya silmez ve manifestoyu da reddetmez: modülün geri kalanı yine de normal şekilde güncellenir ve yalnızca `vdlu/` yolları sessizce düşürülür. Güven çıpası **yalnızca** modül zip'inin tam imzalı bir yeniden-flaş'ı ile değişebilir, asla ağ üzerinden değil. Bu, `vdlu-pack`'teki üretici tarafı hariç tutmayı (ki o yolları en baştan feed'den uzak tutar) cihaz üzerinde ikinci, bağımsız bir korumayla tamamlar. Aynı değişiklik ayrıca sertleştirme tavanlarını **dosya başına 128 MiB** ve **manifest başına 2 MiB**'ye düşürdü. Solomag tarafından bildirildi (VD-Modules#1).
 
 ---
 

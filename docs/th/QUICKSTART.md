@@ -34,7 +34,7 @@
 ```
 
 สถานะที่เปลี่ยนแปลงได้ของ engine (`config`, `current.json`, journal, lock) อยู่ใน Tier-2,
-`/data/adb/<modid>/vdlu/`, นอก module dir; `config.default` seed มันในการรันครั้งแรก
+`/data/adb/<modid>/vdlu/`, นอก module dir, `config.default` seed มันในการรันครั้งแรก
 
 ## 1. Vendor engine
 
@@ -47,7 +47,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Ship เฉพาะ ABI ที่คุณรองรับ; `customize.sh` สามารถ prune `verify/` ให้เหลือ ABI ของอุปกรณ์ตอนติดตั้ง
+Ship เฉพาะ ABI ที่คุณรองรับ, `customize.sh` สามารถ prune `verify/` ให้เหลือ ABI ของอุปกรณ์ตอนติดตั้ง
 
 ## 2. สร้างคีย์สำหรับเซ็น (ทำครั้งเดียว)
 
@@ -82,6 +82,7 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
 ใช้ `profile=trusted` เฉพาะกับ source แบบ `file://`/SSH ที่เป็นส่วนตัว (verify best-effort;
@@ -117,7 +118,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` ถูก vendor มาจาก `webui/`; สามารถเพิ่มการแปลได้ด้วย
+(`vdlu.js` / `vdlu.css` ถูก vendor มาจาก `webui/`, สามารถเพิ่มการแปลได้ด้วย
 `i18n: window.VDLU_I18N_<LANG>`)
 
 ## 6. เซ็นฟีดใน release workflow ของคุณ
@@ -147,7 +148,7 @@ cp ./seed/manifest.json <module>/vdlu/baseline.json
 
 ---
 
-นั่นคือการ adopt ทั้งหมด `sh -n <module>/vdlu/update.sh` ต้องผ่าน; ทดสอบ producer และ engine
+นั่นคือการ adopt ทั้งหมด `sh -n <module>/vdlu/update.sh` ต้องผ่าน, ทดสอบ producer และ engine
 แบบ end-to-end ตามที่แสดงใน [`PRODUCER.md`](PRODUCER.md) และ README ของรากก่อนที่คุณจะ ship
 
 <!-- doc-footer -->

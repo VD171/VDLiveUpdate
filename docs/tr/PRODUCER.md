@@ -36,7 +36,7 @@ yazılmaz, böylece yayınlama artımlıdır ve değişmemiş / geri alınmış 
 
 ### `enc` kararı (vdlu-pack)
 
-`sha256` **her zaman** orijinal (sıkıştırılmamış) içeriğindir; `enc` yalnızca blob'un nasıl depolandığını adlandırır.
+`sha256` **her zaman** orijinal (sıkıştırılmamış) içeriğindir, `enc` yalnızca blob'un nasıl depolandığını adlandırır.
 
 - `gz`, `size >= 4096` **ve** gzip (`-9 -n`, deterministik) en az %10 tasarruf ettiğinde (`comp <= raw*0.90`).
 - aksi halde `raw` (HTTP gzip'in zaten kapsadığı küçük metin, ya da zaten sıkıştırılamaz veri).
@@ -47,7 +47,7 @@ toybox `gunzip` ile açar (her zaman mevcuttur), bu yüzden hiç zstd paketlenme
 
 ### `class` kararı (vdlu-pack) - reboot taksonomisi
 
-Yoldan türetilir (INTERFACES §3, doc §4). Yalnızca varsayılanlar; bir yol kuralı asla `reboot`->`live` düşürmesi yapmaz.
+Yoldan türetilir (INTERFACES §3, doc §4). Yalnızca varsayılanlar, bir yol kuralı asla `reboot`->`live` düşürmesi yapmaz.
 
 | class | neyle eşleşir | uygulanışı |
 |---|---|---|
@@ -65,7 +65,7 @@ aygıtlar) atlanır. `built`, yeniden üretilebilir manifestler için `SOURCE_DA
 ki cihaz "güncel" doğsun (from:0 yok, yeniden getirme yok). Motor onu bir **yerel güvenilir tohum** olarak ele alır
 (flaşlanan zip içinde geldi, ki o da kurulum güven sınırıdır) ve **imzasını doğrulaMAZ** -
 yalnızca beslemeden GETİRİLEN manifest `vdlu-verify`'dan geçer. Yani baseline'ın **anahtara ihtiyacı yoktur**: o
-sadece gönderilen ağaç üzerinde `vdlu-pack` çıktısıdır (imzasız; `sig`/`key_id` boş kalır). Bir CI bu nedenle
+sadece gönderilen ağaç üzerinde `vdlu-pack` çıktısıdır (imzasız, `sig`/`key_id` boş kalır). Bir CI bu nedenle
 onu **anahtarsız** üretebilir, imzalama anahtarını CI'dan %100 uzak tutar - yalnızca yayınlanan BESLEME imzalanır (operatör,
 yerel olarak). `vdlu-pack`, `baseline.json`'u kendi manifestinden hariç tutar (kendine-referans önleme). Yoksa ölümcül değildir:
 cihaz ilk güncellemede sadece from:0'dan başlar, asla bozulmaz.
@@ -98,19 +98,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id`, kanonik formun bir parçasıdır (yalnızca `sig` soyulur); `vdlu-sign`, `key_id`'yi hash'lemeden **önce** ayarlar.
+`key_id`, kanonik formun bir parçasıdır (yalnızca `sig` soyulur), `vdlu-sign`, `key_id`'yi hash'lemeden **önce** ayarlar.
 Değer yer tutucusunun boş (`"sig":""`, imza zamanı) ya da dolu (doğrulama zamanı) olması aynı kanonik baytları verir,
 böylece imza ve doğrulama inşa gereği uyuşur.
 
 Python onu `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)` sonra sha256 olarak yeniden üretir - yalnızca
-çapraz kontrol için kullanılır; yetkili üreticiler iki sh aracıdır.
+çapraz kontrol için kullanılır, yetkili üreticiler iki sh aracıdır.
 
 ## İmza (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   imzalama/openssl için) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (ed25519
   SPKI DER, 12-baytlık bir önek + 32-baytlık anahtardır, bu yüzden `tail -c 32` anahtarın TA KENDİSİDİR). İKİSİNİ de yayar.
-- `vdlu-sign` (PC): kanonik sha256 hex üzerinde `openssl pkeyutl -sign -rawin`; imza base64 olarak depolanır.
+- `vdlu-sign` (PC): kanonik sha256 hex üzerinde `openssl pkeyutl -sign -rawin`, imza base64 olarak depolanır.
 - `vdlu-verify` (**cihaz, ince**): `ed25519-mini <pubkey32> <msg> <sig64>` - keyring'i **RAW 32B**
   pubkey olarak okur, cihazda openssl YOK. `key_id` yol-temizlenir (`/`, `.`, `..`, `"` yok). 🚨 Keyring
   **`.pub.raw`'u (32B)** gönderir, asla `.pub` PEM'ini (113B) değil: PEM yalnızca PC tarafıdır ve `ed25519-mini` onu okuyamaz.
@@ -128,7 +128,7 @@ Keyring, `<key_id>.pub` dosyalarından oluşan bir dizindir, her biri **RAW 32B*
 sürümler boyunca **kararlıdır** (yalnızca anahtar rotasyonu onu değiştirir): bir yeniden-vendor onu **kopyalamadan-doğrulamalı** ve asla
 onu PC tarafı `.pub` PEM ile üzerine yazmamalıdır.
 
-**Çok anahtarlı keyring'ler modül anahtarını sabitlemek ZORUNDADIR.** Engine, bir MODULE-UPDATE'i hangi `key_id`'nin imzalayabileceğini config'in `key_id` allowlist'iyle (INTERFACES §5/§6) sınırlar; bu, pubkey seçilmeden önce fail-closed kontrol edilir. Tek anahtarlı bir keyring varsayılan-güvenlidir (o tek anahtar kabul edilir). Ama keyring'i daha düşük güvenli bir anahtarı DA taşıyan bir modül - ör. release anahtarının yanında bir fingerprint-feed anahtarı - `config`'i modül anahtarını bildirene kadar reddedilir, ör. `key_id=vd-2026` (rotasyon için virgülle ayrılmış, ör. `key_id=vd-2026,vd-2027`). Bu, sızmış daha düşük güvenli bir anahtarın bir flashless root güncellemesi imzalamasını engeller.
+**Çok anahtarlı keyring'ler modül anahtarını sabitlemek ZORUNDADIR.** Engine, bir MODULE-UPDATE'i hangi `key_id`'nin imzalayabileceğini config'in `key_id` allowlist'iyle (INTERFACES §5/§6) sınırlar, bu, pubkey seçilmeden önce fail-closed kontrol edilir. Tek anahtarlı bir keyring varsayılan-güvenlidir (o tek anahtar kabul edilir). Ama keyring'i daha düşük güvenli bir anahtarı DA taşıyan bir modül - ör. release anahtarının yanında bir fingerprint-feed anahtarı - `config`'i modül anahtarını bildirene kadar reddedilir, ör. `key_id=vd-2026` (rotasyon için virgülle ayrılmış, ör. `key_id=vd-2026,vd-2027`). Bu, sızmış daha düşük güvenli bir anahtarın bir flashless root güncellemesi imzalamasını engeller.
 
 `vdlu-pack` **keyring'i ve `verify/` ikililerini beslemeden hariç tutar** (güven kökü yalnızca flaştadır, asla ağ üzerinden sunulmaz), `baseline.json`, yükleyici iskelesi (`META-INF/`, `customize.sh`), `.vd/` flaş geçidi, CI'ın doldurduğu `update.json`/`update-mmrl.json` ve dosya başına `.sha256` eşlikçileriyle birlikte. Yalnızca modülün kendi içeriği besleme ile güncellenebilir, bu yüzden bir manifest cihazdaki güven çıpasını asla yeniden yazamaz.
 
@@ -136,4 +136,4 @@ onu PC tarafı `.pub` PEM ile üzerine yazmamalıdır.
 
 ---
 
-> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır; bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır, bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._

@@ -10,6 +10,25 @@ Tato stránka je úplný příběh důvěry. Viz [[Feed Format]] pro schéma man
 
 ---
 
+## Podporované verze
+
+Bezpečnostní opravy přistávají v nejnovějším `ENGINE_VERSION`; podepsaný manifest deklaruje
+minimální engine, který potřebuje, přes `engine_min`, a engine na zařízení odmítne manifest,
+který žádá víc, než implementuje. Od starších vendorovaných enginů se očekává, že udělají
+**re-vendor**, aby pobraly opravu, ne že se budou patchovat na místě.
+
+| ENGINE_VERSION | stav |
+|---|---|
+| 7 (aktuální) | podporováno - nikdy nevracet modul, který je před feedem (živě nainstalovaný `versionCode` tvoří spodní hranici verze "from"), self-heal při bootu zastaralého downgrade plánu |
+| 6 | nahrazeno - self-heal při bootu pro zastaralý journal s `target <= 0` (baseline 0 po odstraněném stubu už neřídí žádné UI ani boot akci) |
+| 5 | nahrazeno - vyloučení kotvy důvěry na straně enginu (adresář `vdlu/` je ignorován, i když ho feed nese), stropy 128 MiB na soubor / 2 MiB na manifest |
+| 4 | nahrazeno - allowlist `key_id`, odmítnutí paths s dot-segmentem/trailing-slashem, stropy velikosti, lock v check-time |
+| <= 3 | nepodporováno - re-vendorovat aktuální engine |
+
+Jakákoli změna ověřování enginu nebo apply logiky zvyšuje `ENGINE_VERSION`.
+
+---
+
 ## Základní myšlenka: fail-closed, dříve než se cokoli stane
 
 `validate_plan()` běží uvnitř fáze `check`/diff, **dříve** než jakýkoli fetch a **dříve** než jakákoli aplikace. Prochází každý záznam v plánovaném stromu souborů a každý záznam v `delete[]`, a pokud je jediný záznam chybný, **zamítne celý manifest** a transakce nikdy nezačne. Není žádné částečné přijetí, žádné "přeskoč špatný a aplikuj zbytek". Jedno špatné pole otráví dávku, záměrně.
@@ -124,6 +143,14 @@ Oprava připíná přijímané `key_id` aktualizace modulu na fail-closed **allo
 Protože kontrola běží před výběrem pubkey, manifest pojmenující klíč, který je přítomen, ale není na allowlistu, je odmítnut, aniž by ověřovač ten klíč kdy načetl. Vyhodnocená množina se zrcadlí do `vdlu-verify` skrze `VDLU_KEYID_ALLOW`, takže štíhlý kontrolér na zařízení vynucuje totéž připnutí a oba se nemohou rozcházet. To platí v **obou** profilech: `hardened` i `trusted` oba konzultují allowlist, protože allowlist rozhoduje, *který klíč* je platným kořenem aktualizace modulu, nikoli *zda* je podpis vyžadován.
 
 Fingerprint feed si drží vlastní samostatný připnutý kořen důvěry, `FEED_KEY_ID`. Je to odlišný kořen s odlišným úkolem, nikdy nedosažitelný skrze výše uvedenou cestu aktualizace modulu, takže připnutí allowlistu aktualizace modulu se ho nedotkne a uniklý klíč feedu stále nemůže podepsat aktualizaci modulu. Tato změna zvýšila `ENGINE_VERSION` na 4.
+
+---
+
+## Vyloučení kotvy důvěry na straně enginu
+
+Výše uvedený allowlist rozhoduje, *který* klíč smí podepsat aktualizaci modulu. Pozdější změna (`ENGINE_VERSION` 5) uzavírá sousední riziko z druhé strany: čeho se platně podepsaný feed vůbec smí dotknout. Publikovaný feed nese celý strom modulu a tento strom zahrnuje modulův vlastní adresář `vdlu/` - engine, shim `vdlu-verify`, binárky `verify/`, keyring a config. To je kotva důvěry. Kdyby je aktualizace mohla přepsat, jediný uniklý podepisovací klíč by mohl dodat nový ověřovač nebo nový keyring a přetrvat root donekonečna.
+
+Engine proto **ignoruje** každou cestu `vdlu/` ve staženém plánu. Nikdy je nestahuje, neaplikuje ani nemaže, i když je manifest uvádí, a manifest ani neodmítne: zbytek modulu se přesto aktualizuje normálně a jen cesty `vdlu/` se tiše zahodí. Kotva důvěry se může změnit **jen** úplným podepsaným re-flashem zipu modulu, nikdy po síti. To doplňuje vyloučení na straně produceru v `vdlu-pack` (které tyto cesty vůbec drží mimo feed) o druhou, nezávislou pojistku na zařízení. Táž změna také snížila stropy zpevnění na **128 MiB na soubor** a **2 MiB na manifest**. Nahlásil Solomag (VD-Modules#1).
 
 ---
 

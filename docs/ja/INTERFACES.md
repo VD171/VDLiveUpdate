@@ -55,7 +55,7 @@ Blob/manifest のソース: config の `source`。`<source>` + `/manifest.json`�
 
 ```json
 { "schema":1, "module":"<id>", "version":<int>, "version_name":"<str>", "built":"<ISO8601>",
-  "engine_min":3, "key_id":"<str>", "channel":"stable",
+  "engine_min":5, "key_id":"<str>", "channel":"stable",
   "files":[ {"path":"webroot/index.html","sha256":"<hex64>","size":<int>,"mode":"0644","enc":"raw|gz","class":"live|soft|reboot"} ],
   "delete":["<path>"], "sig":"<base64>" }
 ```
@@ -66,6 +66,7 @@ Blob/manifest のソース: config の `source`。`<source>` + `/manifest.json`�
 - `enc`: `gz` (gzip `-9 -n`、決定論的。デバイス上では toybox gunzip) は圧縮がよく効き、**かつ**
   サイズが大きい場合のみ。`sha256` は**常に**オリジナルの内容に対するもの。
 - `sig`: `sig` フィールドを除いた正規 manifest の署名 (verify の §4)。
+- **信頼アンカー除外 (エンジン側、VDLU#2):** エンジンは plan から `vdlu/` 配下のあらゆる `files[]`/`delete[]` パス (自身の `update.sh`/`vdlu-verify`/`verify/*`/`keyring/*`/config) を**捨てる** - 署名されたフィードがそれらを運んでも、決して取得・適用・削除しない。デバイス上の信頼アンカーはワイヤ越しではなく、フルの署名付き再フラッシュによってのみ変わる。`vdlu-pack` はプロデューサ側でも `vdlu/` を除外するため、これは漏洩した署名鍵に対する 2 つめの、エンジン側のガードである。
 
 ## 4. journal.json (ENGINE が書き、WEBUI が読む - 進捗契約)
 
@@ -97,7 +98,11 @@ key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), 
                        # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
                        # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+ca_cert=               # empty = auto-build a CA bundle from the trust store; set a path to a bundle to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+apply_busy_file=       # OPT-IN: absolute path the host module touches during its own operations (e.g. a
+                       # backup). While it EXISTS, APPLY is deferred to the next trigger (blobs already
+                       # fetched, no re-download) so an update never swaps module files mid-operation. UNSET = off.
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
 boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
                        # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free

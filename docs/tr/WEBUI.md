@@ -58,7 +58,7 @@ Atlanırsa, widget kendininkini kullanır:
   tam olarak Demo `webroot/index.html`'inin `ex()`'inin imzası. Dahili geri çekilme, aynı sözleşmeyle
   `ksu.exec(cmd, '{}', cb)`'yi çağırır.
 - **`toast(msg)`** = kısa bir geçici bildirim (geri çekilme kendi mini-toast'unu enjekte eder).
-- **`confirm(title,msg,ok,danger,fn)`** = bir modal (bugün yalnızca ana makine tarafından kullanılıyor; widget
+- **`confirm(title,msg,ok,danger,fn)`** = bir modal (bugün yalnızca ana makine tarafından kullanılıyor, widget
   hiçbir akışta onay gerektirmez).
 
 Ana makinenin kendininkini geçmek, widget'ın WebUI'nin geri kalanıyla AYNI serileştirilmiş kuyruk ve görseller aracılığıyla
@@ -83,7 +83,7 @@ bir `<div>`).
 
 ### Toast'un yansıttığı durum akışı (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; her an `ERROR`. Toast
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, her an `ERROR`. Toast
 **bir çubuk + `phase done/total · current · bytes`** gösterir. Sonlandırıcılar:
 - **`DONE`** → yeşil toast "v&lt;target&gt; uygulandı".
 - **`PENDING_REBOOT`** (ya da `reboot_pending=true`) → yeşil toast + **kalıcı afiş** "⚠️ Yeni `.so`'yu (vX)
@@ -94,7 +94,7 @@ bir `<div>`).
 ## Demoyu çalıştırma
 
 `demo.html`'i bir tarayıcıda açın (`xdg-open webui/demo.html`). Sahte `ksu.exec`, `update.sh` ve
-`journal.json`'un evrilmesini simüle eder; düğmeler **LIVE→DONE**, **reboot_pending**, **error mid-way**
+`journal.json`'un evrilmesini simüle eder, düğmeler **LIVE→DONE**, **reboot_pending**, **error mid-way**
 ve **cancellable** senaryoları arasında geçiş yapar. Cihazdakiyle aynı `vdlu.js`/`vdlu.css`'tir.
 
 ## i18n (dil)
@@ -108,7 +108,7 @@ bir eşleme geçirerek herhangi bir anahtarı geçersiz kılar:
 ```
 
 - **Kısmi** bir birleştirme sorun değildir: eksik bir anahtar İngilizce varsayılana geri döner.
-- Faz/durum anahtarları `ph_<phase>` / `st_<STATE>`'tir; geri kalan düzdür (`cancel`, `updateNow`, …).
+- Faz/durum anahtarları `ph_<phase>` / `st_<STATE>`'tir, geri kalan düzdür (`cancel`, `updateNow`, …).
 - Tam anahtar eşlemesi = `vdlu.js`'teki `DEFAULT_I18N` nesnesidir (ayrıca `VDLU.i18n` olarak da açığa çıkarılır).
 - İşlenmiş bir örnek olarak hazır bir çeviri sağlanır: `i18n/pt-BR.js`. Yeni diller = aynı kalıpta bir
   `i18n/<lang>.js` dosyası, ya da ana makine eşlemeyi kendi i18n sisteminden oluşturur.
@@ -117,11 +117,11 @@ bir eşleme geçirerek herhangi bir anahtarı geçersiz kılar:
 
 Bu `vdlu.js`/`vdlu.css`, **kanonik kopyadır**. Widget'ı gömen her modül bu kopyayı
 `webroot/`'una bayt bayt **yeniden-vendor eder** - kendininkini asla yerinde düzenlemez. Yeni bir widget özelliği
-burada doğar ve yeniden-vendor ile aşağı akar; tersi sessiz sapma üretir (pratikte olmuştur: bir vendor edilmiş
+burada doğar ve yeniden-vendor ile aşağı akar, tersi sessiz sapma üretir (pratikte olmuştur: bir vendor edilmiş
 kopya geride kaldı ve `net_policy`, `DEFERRED` toast'u ve `boot_retry` alanları eksikti).
 
 Bekçi: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh), kaynak ağacındaki her kopyayı bulur ve
-kanonik olandan sapanları işaretler (yalnızca `vdlu.js`/`vdlu.css`; keyring "kopyalamadan doğrula"dır).
+kanonik olandan sapanları işaretler (yalnızca `vdlu.js`/`vdlu.css`, keyring "kopyalamadan doğrula"dır).
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -129,10 +129,10 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 ```
 
 > 🪤 Keyring (`keyring/<id>.pub` RAW 32B) ve motorun (`vdlu/update.sh`) kendi yeniden-vendor
-> ritmi vardır; bu bekçi **yalnızca** WebUI widget'ını kapsar.
+> ritmi vardır, bu bekçi **yalnızca** WebUI widget'ını kapsar.
 
 <!-- doc-footer -->
 
 ---
 
-> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır; bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Bu belgeler Claude (Anthropic) ile oluşturulmuş olup VD171 tarafından yürütülmektedir. Düzeltmeler ve iyileştirmeler memnuniyetle karşılanır, bkz. [CONTRIBUTING.md](CONTRIBUTING.md)._

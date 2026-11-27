@@ -1,0 +1,73 @@
+# ======================================================================
+#  VDLiveUpdate (VDLU)  ::  flashless, incremental module updates
+#  A self-update engine for KernelSU/APatch/Magisk modules.
+#
+#  Copyright (C) 2026  VD171
+#  SPDX-License-Identifier: Apache-2.0
+#
+#  Site           : https://vd171.ru
+#  Site           : https://vd.priv8.ru
+#  Source         : https://github.com/VD171/VDLiveUpdate
+#  GitHub         : @VD171 https://github.com/VD171
+#  XDA-Developers : @VD171 https://xdaforums.com/m/vd171.4699873/
+#  Telegram       : @VD_Priv8 https://t.me/VD_Priv8
+#  Channel        : @Priv8_VD https://t.me/Priv8_VD
+#  Discord        : @VD.Priv8 https://discord.com/users/1296831918989639721
+#  E-mail         : vd.priv8@pm.me
+# ======================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Shell lint
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          # dialect inferred per shebang (engine/tools are /system/bin/sh, build helpers are bash).
+          shellcheck -S error engine/update.sh
+          shellcheck -S error tools/*.sh
+          shellcheck -S error verify/*/build.sh
+          shellcheck -S error .github/scripts/*.sh
+
+      - name: Validate JSON
+        run: |
+          for f in $(git ls-files '*.json' | grep -i 'PROVENANCE'); do
+            python3 -c "import json,sys; json.load(open('$f'))" && echo "ok $f"
+          done
+
+      - name: Repo guards (provenance + doc/engine + i18n parity)
+        run: |
+          # Self-contained guards (check only this repo) - gate HERE. webui-parity and engine-parity
+          # scan the sibling fleet source tree (not fetched in CI), so they are enforced in the local
+          # pre-push ritual (no CI checkout of the siblings, by design).
+          sh .github/scripts/provenance-check.sh .
+          sh tools/doc-version-check.sh
+          sh tools/i18n-parity.sh
+          echo "webui-parity + engine-parity: enforced in the local pre-push ritual"
+
+      - name: i18n accent-fold guard (docs translations)
+        run: |
+          # Catch ASCII-folded accented-Latin translations (docs/, README.<code>.md, webui/i18n).
+          # Guards the docs on every push/PR that touches them; this is NOT a release gate.
+          sh .github/scripts/i18n-accents.sh .
+
+      - name: Prose guard (no em-dash / en-dash)
+        run: |
+          # HARD rule: the fleet never uses an em-dash (U+2014) nor en-dash (U+2013), only '-'.
+          if grep -rlP '\xe2\x80\x94|\xe2\x80\x93' \
+               engine tools verify producer integration webui .github \
+               --include='*.sh' --include='*.js' --include='*.css' \
+               --include='*.py' --include='*.yml' 2>/dev/null; then
+            echo "::error::em-dash or en-dash found in a source file (listed above); use '-'"
+            exit 1
+          fi
+          echo "no em/en-dash"

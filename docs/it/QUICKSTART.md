@@ -35,7 +35,7 @@ Questo è l'esatto albero `vdlu/` che il modulo porta dopo l'adozione:
 ```
 
 Lo stato mutabile dell'engine (`config`, `current.json`, journal, lock) risiede in
-Tier-2, `/data/adb/<modid>/vdlu/`, fuori dalla directory del modulo; `config.default` lo
+Tier-2, `/data/adb/<modid>/vdlu/`, fuori dalla directory del modulo, `config.default` lo
 semina alla prima esecuzione.
 
 ## 1. Vendorizza l'engine
@@ -49,7 +49,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-Spedisci solo le ABI che supporti; `customize.sh` può potare `verify/` all'ABI del
+Spedisci solo le ABI che supporti, `customize.sh` può potare `verify/` all'ABI del
 dispositivo al momento dell'installazione.
 
 ## 2. Genera una chiave di firma (una tantum)
@@ -88,9 +88,10 @@ channel=stable
 profile=hardened        # feed pubblico: firma obbligatoria, downgrade bloccato
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
-Usa `profile=trusted` solo per una sorgente privata `file://`/SSH (verify best-effort; lo
+Usa `profile=trusted` solo per una sorgente privata `file://`/SSH (verify best-effort, lo
 sha256 di ogni blob viene comunque controllato). Qualsiasi valore diverso dal letterale
 `trusted` viene trattato come `hardened` (fail-closed).
 
@@ -124,7 +125,7 @@ nel tuo `webroot/index.html`:
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` sono vendorizzati da `webui/`; una traduzione può essere aggiunta
+(`vdlu.js` / `vdlu.css` sono vendorizzati da `webui/`, una traduzione può essere aggiunta
 con `i18n: window.VDLU_I18N_<LANG>`.)
 
 ## 6. Firma il feed nel tuo workflow di release
@@ -155,7 +156,7 @@ Non è fatale se assente (il dispositivo parte semplicemente da `0` al primo agg
 
 ---
 
-Questa è l'intera adozione. `sh -n <module>/vdlu/update.sh` deve passare; testa il
+Questa è l'intera adozione. `sh -n <module>/vdlu/update.sh` deve passare, testa il
 producer e l'engine end-to-end come mostrato in [`PRODUCER.md`](PRODUCER.md) e nel README
 di root prima di spedire.
 
@@ -163,4 +164,4 @@ di root prima di spedire.
 
 ---
 
-> _Questa documentazione è stata generata con Claude (Anthropic) ed è gestita da VD171. Correzioni e miglioramenti sono benvenuti; vedi [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Questa documentazione è stata generata con Claude (Anthropic) ed è gestita da VD171. Correzioni e miglioramenti sono benvenuti, vedi [CONTRIBUTING.md](CONTRIBUTING.md)._

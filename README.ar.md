@@ -22,9 +22,28 @@
   ======================================================================
 -->
 
-# VDLiveUpdate
+# VD Live Update
 
-> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+> **Languages:** [English](README.md) · العربية · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+
+<p align="center">
+  <img src="images/logo-wordmark.png" alt="VD Live Update" width="320">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1a7f37" alt="License"></a>
+  <a href="https://github.com/VD171/VDLiveUpdate/stargazers"><img src="https://img.shields.io/github/stars/VD171/VDLiveUpdate?color=d29922" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="docs/QUICKSTART.md">Quickstart</a> ·
+  <a href="docs/ENGINE.md">Engine</a> ·
+  <a href="docs/PRODUCER.md">Producer</a> ·
+  <a href="docs/WEBUI.md">WebUI</a> ·
+  <a href="docs/INTERFACES.md">Interfaces</a> ·
+  <a href="docs/AI-AGENTS.md">AI agents</a> ·
+  <a href="docs/TRUST-MODEL.md">Trust model</a>
+</p>
 
 **VDLU** هو محرك تحديث ذاتي تزايدي بلا فلاش لوحدات **KernelSU / APatch / Magisk**. تُحدِّث الوحدة المثبّتة نفسها بجلب **الملفات التي تغيّرت فقط** (كتل معنونة بالمحتوى + ملف بيان موقَّع)، وتطبِّق الملفات الحية **دون إعادة تشغيل**، وتُنظِّم وتُؤشِّر القليل منها الذي يحتاج فعلًا إلى إعادة تشغيل (ملف `.so`، أو تراكب على `/system`، أو `sepolicy.rule`). بلا مدير جذر، وبلا إعادة تنزيل ملف `.zip` بالكامل، وبلا إعادة تشغيل إلا لتلك الملفات المُنظَّمة.
 
@@ -68,6 +87,10 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 ```
 
 `sh -n engine/*.sh`، و`node --check webui/vdlu.js`، وافتح `webui/demo.html` في متصفّح (يُحاكي جسر الجهاز).
+
+## وكلاء الذكاء الاصطناعي
+
+يُتحكَّم في المحرك بالكامل من الصدفة (`sh engine/update.sh <check|run|resume|boot|status|cancel>` يطبع حالة قابلة للقراءة آليًا)، لذا يمكن لوكيل ذكاء اصطناعي فحص التحديث وتطبيقه واستئنافه دون واجهة. عقد الوصل بين المكوّنات موثّق في [`docs/INTERFACES.md`](docs/INTERFACES.md)، وتخضع تصحيحات الذكاء الاصطناعي لنفس معايير المراجعة مثل غيرها.
 
 ## التوثيق
 
@@ -118,4 +141,4 @@ VDLiveUpdate مشروع مستقل وغير رسمي، غير مرتبط بأي 
 
 ---
 
-📣 **Join the channel for updates:** @Priv8_VD https://t.me/Priv8_VD
+📣 **انضم إلى القناة للتحديثات:** @Priv8_VD https://t.me/Priv8_VD

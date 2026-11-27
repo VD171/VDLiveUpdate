@@ -10,6 +10,25 @@ Ta strona to pełna historia zaufania. Zobacz [[Feed Format]], aby poznać schem
 
 ---
 
+## Wspierane wersje
+
+Poprawki bezpieczeństwa lądują w najnowszym `ENGINE_VERSION`; podpisany manifest deklaruje
+minimalny engine, którego potrzebuje, przez `engine_min`, a engine na urządzeniu odmawia
+manifestowi, który prosi o więcej, niż implementuje. Oczekuje się, że starsze wendorowane
+engine zostaną **ponownie wendorowane**, aby pobrać poprawkę, a nie załatane w miejscu.
+
+| ENGINE_VERSION | status |
+|---|---|
+| 7 (bieżący) | wspierany - nigdy nie cofać modułu wyprzedzającego feed (zainstalowany na żywo `versionCode` stanowi dolną granicę wersji "from"), self-heal przy boot nieaktualnego planu downgrade |
+| 6 | zastąpiony - self-heal przy boot dla nieaktualnego journala z `target <= 0` (baseline 0 po usuniętym stubie nie napędza już żadnego UI ani akcji boot) |
+| 5 | zastąpiony - wykluczenie kotwicy zaufania po stronie engine (katalog `vdlu/` jest ignorowany, nawet jeśli feed go niesie), limity 128 MiB na plik / 2 MiB na manifest |
+| 4 | zastąpiony - allowlista `key_id`, odrzucanie path z dot-segmentem/końcowym-slashem, limity rozmiaru, lock w czasie check |
+| <= 3 | niewspierany - ponownie wendoruj bieżący engine |
+
+Każda zmiana weryfikacji engine lub logiki apply podbija `ENGINE_VERSION`.
+
+---
+
 ## Idea przewodnia: fail-closed, zanim cokolwiek się stanie
 
 `validate_plan()` działa wewnątrz fazy `check`/diff, **przed** każdym pobraniem i **przed** każdym zastosowaniem. Przechodzi każdy wpis w planowanym drzewie plików i każdy wpis w `delete[]`, a jeśli jakikolwiek pojedynczy wpis jest zniekształcony, **odrzuca cały manifest** i transakcja nigdy się nie zaczyna. Nie ma częściowej akceptacji, nie ma "pomiń zły i zastosuj resztę". Jedno złe pole zatruwa całą partię, celowo.
@@ -124,6 +143,14 @@ Poprawka przypina akceptowany `key_id` aktualizacji modułu do fail-closed **lis
 Ponieważ sprawdzenie odbywa się przed wyborem pubkey, manifest wskazujący klucz, który jest obecny, ale nie na liście dozwolonych, jest odrzucany bez ładowania tego klucza przez weryfikator. Rozwiązany zestaw jest odzwierciedlany w `vdlu-verify` przez `VDLU_KEYID_ALLOW`, więc oszczędny kontroler na urządzeniu wymusza to samo przypięcie i oba nie mogą się różnić. Obowiązuje to w **obu** profilach: zarówno `hardened`, jak i `trusted` konsultują listę dozwolonych, ponieważ lista dozwolonych decyduje, *który klucz* jest prawidłowym korzeniem aktualizacji modułu, a nie *czy* podpis jest wymagany.
 
 Kanał fingerprint zachowuje własny, oddzielny przypięty korzeń zaufania, `FEED_KEY_ID`. To odrębny korzeń z odrębnym zadaniem, nigdy nieosiągalny przez powyższą ścieżkę aktualizacji modułu, więc przypięcie listy dozwolonych aktualizacji modułu go nie dotyka, a wyciekły klucz kanału wciąż nie może podpisać aktualizacji modułu. Ta zmiana podniosła `ENGINE_VERSION` do 4.
+
+---
+
+## Wykluczenie kotwicy zaufania po stronie silnika
+
+Lista dozwolonych powyżej decyduje, *który* klucz może podpisać aktualizację modułu. Późniejsza zmiana (`ENGINE_VERSION` 5) zamyka sąsiednie ryzyko z drugiej strony: czego poprawnie podpisany feed w ogóle może dotknąć. Opublikowany feed niesie całe drzewo modułu, a to drzewo zawiera własny katalog `vdlu/` modułu - silnik, shim `vdlu-verify`, binaria `verify/`, keyring i config. To jest kotwica zaufania. Gdyby aktualizacja mogła je przepisać, pojedynczy wyciekły klucz podpisujący mógłby dostarczyć nowy weryfikator lub nowy keyring i utrwalić roota w nieskończoność.
+
+Dlatego silnik **ignoruje** każdą ścieżkę `vdlu/` w pobranym planie. Nigdy ich nie pobiera, nie stosuje ani nie usuwa, nawet gdy manifest je wymienia, i nie odrzuca też manifestu: reszta modułu nadal aktualizuje się normalnie, a tylko ścieżki `vdlu/` są po cichu odrzucane. Kotwica zaufania może zmienić się **tylko** przez pełny podpisany re-flash zipa modułu, nigdy po kablu. To uzupełnia wykluczenie po stronie producera w `vdlu-pack` (które w pierwszej kolejności trzyma te ścieżki poza feedem) o drugą, niezależną straż na urządzeniu. Ta sama zmiana obniżyła też pułapy hardeningu do **128 MiB na plik** i **2 MiB na manifest**. Zgłoszone przez Solomag (VD-Modules#1).
 
 ---
 

@@ -10,6 +10,25 @@ VDLU एक module को जगह पर, network के ऊपर, root क�
 
 ---
 
+## समर्थित संस्करण
+
+सुरक्षा फ़िक्स नवीनतम `ENGINE_VERSION` में उतरते हैं; एक हस्ताक्षरित manifest `engine_min` के माध्यम से
+अपनी ज़रूरत के न्यूनतम engine की घोषणा करता है, और on-device engine एक ऐसे manifest को अस्वीकार करता है
+जो उससे अधिक माँगता है जितना वह लागू करता है। पुराने vendored engines से अपेक्षा है कि एक फ़िक्स उठाने के लिए
+वे **re-vendor** करें, न कि उन्हें यथास्थान back-patch किया जाए।
+
+| ENGINE_VERSION | स्थिति |
+|---|---|
+| 7 (वर्तमान) | समर्थित - feed से आगे वाले module को कभी revert न करें (live installed `versionCode` "from" version की न्यूनतम सीमा तय करता है), boot पर पुराने downgrade plan का self-heal |
+| 6 | प्रतिस्थापित - boot पर पुराने `target <= 0` journal का self-heal (हटाए गए stub का baseline 0 अब कोई UI या boot क्रिया नहीं चलाता) |
+| 5 | प्रतिस्थापित - engine-side trust-anchor exclusion (`vdlu/` dir को अनदेखा किया जाता है भले ही एक feed इसे ढोए), 128 MiB प्रति-file / 2 MiB manifest सीमाएँ |
+| 4 | प्रतिस्थापित - `key_id` allowlist, dot-segment/trailing-slash path अस्वीकृति, size caps, check-time lock |
+| <= 3 | असमर्थित - वर्तमान engine को re-vendor करें |
+
+engine verification या apply logic में कोई भी परिवर्तन `ENGINE_VERSION` को bump करता है।
+
+---
+
 ## मूल विचार: fail-closed, कुछ भी होने से पहले
 
 `validate_plan()` `check`/diff phase के अंदर चलता है, किसी भी fetch से **पहले** और किसी भी apply से **पहले**। यह planned file tree की हर entry और `delete[]` की हर entry को walk करता है, और अगर कोई एक भी entry malformed है तो यह **पूरे manifest को अस्वीकार कर देता है** और transaction शुरू ही नहीं होता। कोई partial accept नहीं, कोई "खराब वाले को skip करो और बाकी apply करो" नहीं। एक खराब field पूरे batch को ज़हर दे देता है, जानबूझकर।
@@ -124,6 +143,14 @@ Key rotation का पहले से ही मतलब है कि keyrin
 क्योंकि जाँच pubkey चुनाव से पहले चलती है, एक manifest जो ऐसी key नाम देता है जो मौजूद है पर allowlisted नहीं है, verifier द्वारा वह key कभी load किए बिना ही अस्वीकार हो जाता है। resolve किया गया set `VDLU_KEYID_ALLOW` के ज़रिए `vdlu-verify` में mirror होता है, तो पतला on-device checker वही pin लागू करता है और दोनों असहमत नहीं हो सकते। यह **दोनों** profiles में लागू होता है: `hardened` और `trusted` दोनों allowlist से परामर्श करते हैं, क्योंकि allowlist यह तय करती है कि *कौन सी key* एक वैध module-update root है, यह नहीं कि *क्या* एक signature आवश्यक है।
 
 fingerprint feed अपनी खुद की अलग pinned trust root, `FEED_KEY_ID`, बनाए रखता है। यह एक अलग काम वाली एक अलग root है, जो ऊपर के module-update path से कभी पहुँच में नहीं आती, तो module-update allowlist को pin करना उसे नहीं छूता और एक leak हुई feed key फिर भी एक module update sign नहीं कर सकती। इस बदलाव ने `ENGINE_VERSION` को 4 तक bump किया।
+
+---
+
+## engine-side trust-anchor exclusion
+
+ऊपर दी गई allowlist यह तय करती है कि *कौन सी* key एक module update sign कर सकती है। एक बाद का बदलाव (`ENGINE_VERSION` 5) आसपास के जोखिम को दूसरी ओर से बंद करता है: एक वैध रूप से signed feed को आख़िर छूने की अनुमति किस चीज़ की है। एक प्रकाशित feed पूरे module tree को ढोता है, और उस tree में module की अपनी `vdlu/` directory शामिल है - engine, `vdlu-verify` shim, `verify/` binaries, keyring और config। वही trust anchor हैं। अगर एक update उन्हें दोबारा लिख सकता, तो एक अकेली leak हुई signing key एक नया verifier या एक नया keyring भेज सकती और अनिश्चित काल तक root बनाए रख सकती।
+
+तो engine एक fetch किए गए plan में हर `vdlu/` path को **अनदेखा** करता है। यह उन्हें कभी fetch, apply, या delete नहीं करता, भले ही manifest उन्हें सूचीबद्ध करे, और यह manifest को अस्वीकार भी नहीं करता: module का बाकी हिस्सा फिर भी सामान्य रूप से update होता है, और सिर्फ `vdlu/` paths चुपचाप गिरा दिए जाते हैं। trust anchor **सिर्फ** module zip के एक पूर्ण signed re-flash से बदल सकता है, कभी wire पर नहीं। यह `vdlu-pack` में producer-side exclusion (जो उन paths को सबसे पहले feed से बाहर रखता है) को device पर एक दूसरे, स्वतंत्र guard से पूरा करता है। उसी बदलाव ने hardening सीमाओं को भी घटाकर **128 MiB प्रति file** और **2 MiB प्रति manifest** कर दिया। Solomag द्वारा रिपोर्ट किया गया (VD-Modules#1)।
 
 ---
 

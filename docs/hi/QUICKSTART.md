@@ -34,7 +34,7 @@
 ```
 
 engine की परिवर्तनीय state (`config`, `current.json`, journal, lock) Tier-2 में रहती है,
-`/data/adb/<modid>/vdlu/`, मॉड्यूल dir के बाहर; `config.default` पहले run पर इसे seed करता है।
+`/data/adb/<modid>/vdlu/`, मॉड्यूल dir के बाहर, `config.default` पहले run पर इसे seed करता है।
 
 ## 1. engine को vendor करें
 
@@ -47,7 +47,7 @@ cp engine/vdlu-verify    <module>/vdlu/vdlu-verify
 cp -r verify/<abi>       <module>/vdlu/verify/<abi>      # ed25519-mini per ABI
 ```
 
-केवल उन ABIs को भेजें जिनका आप समर्थन करते हैं; `customize.sh` इंस्टॉल समय पर `verify/` को डिवाइस के ABI तक
+केवल उन ABIs को भेजें जिनका आप समर्थन करते हैं, `customize.sh` इंस्टॉल समय पर `verify/` को डिवाइस के ABI तक
 prune कर सकता है।
 
 ## 2. एक signing key उत्पन्न करें (एक-बार)
@@ -83,9 +83,10 @@ channel=stable
 profile=hardened        # public feed: signature mandatory, downgrade blocked
 net_policy=any
 pubkey_dir=keyring
+# apply_busy_file=/data/adb/<modid>/.busy   # OPT-IN: defer APPLY while this path exists (e.g. a running backup)
 ```
 
-`profile=trusted` का उपयोग केवल एक निजी `file://`/SSH स्रोत के लिए करें (verify best-effort; हर blob का
+`profile=trusted` का उपयोग केवल एक निजी `file://`/SSH स्रोत के लिए करें (verify best-effort, हर blob का
 sha256 फिर भी जाँचा जाता है)। शाब्दिक `trusted` के अलावा कोई भी मान `hardened` (fail-closed) के रूप में माना
 जाता है।
 
@@ -117,7 +118,7 @@ sh "$MODDIR/vdlu/update.sh" boot
 </script>
 ```
 
-(`vdlu.js` / `vdlu.css` को `webui/` से vendor किया जाता है; `i18n: window.VDLU_I18N_<LANG>` के साथ एक अनुवाद
+(`vdlu.js` / `vdlu.css` को `webui/` से vendor किया जाता है, `i18n: window.VDLU_I18N_<LANG>` के साथ एक अनुवाद
 जोड़ा जा सकता है।)
 
 ## 6. अपने release workflow में feed को sign करें
@@ -147,11 +148,11 @@ cp ./seed/manifest.json <module>/vdlu/baseline.json
 
 ---
 
-यही पूरी अपनाने की प्रक्रिया है। `sh -n <module>/vdlu/update.sh` पास होना चाहिए; भेजने से पहले producer और
+यही पूरी अपनाने की प्रक्रिया है। `sh -n <module>/vdlu/update.sh` पास होना चाहिए, भेजने से पहले producer और
 engine को end-to-end परीक्षण करें जैसा [`PRODUCER.md`](PRODUCER.md) और root README में दिखाया गया है।
 
 <!-- doc-footer -->
 
 ---
 
-> _यह दस्तावेज़ Claude (Anthropic) से तैयार किया गया है और इसे VD171 द्वारा अनुरक्षित किया जाता है। सुधार और संशोधन का स्वागत है; देखें [CONTRIBUTING.md](CONTRIBUTING.md)।_
+> _यह दस्तावेज़ Claude (Anthropic) से तैयार किया गया है और इसे VD171 द्वारा अनुरक्षित किया जाता है। सुधार और संशोधन का स्वागत है, देखें [CONTRIBUTING.md](CONTRIBUTING.md)।_

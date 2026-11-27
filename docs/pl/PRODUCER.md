@@ -36,7 +36,7 @@ przepisywany, więc publikacja jest inkrementalna, a niezmieniona / cofnięta tr
 
 ### Decyzja `enc` (vdlu-pack)
 
-`sha256` jest **zawsze** z treści oryginalnej (nieskompresowanej); `enc` tylko nazywa, jak blob jest przechowywany.
+`sha256` jest **zawsze** z treści oryginalnej (nieskompresowanej), `enc` tylko nazywa, jak blob jest przechowywany.
 
 - `gz` gdy `size >= 4096` **oraz** gzip (`-9 -n`, deterministyczny) oszczędza co najmniej 10% (`comp <= raw*0.90`).
 - `raw` w przeciwnym razie (mały tekst, który HTTP gzip już pokrywa, lub już-nieściśliwe dane).
@@ -47,7 +47,7 @@ rozpakowuje przez toybox `gunzip` (zawsze obecny), więc żaden zstd nie jest do
 
 ### Decyzja `class` (vdlu-pack) - taksonomia reboot
 
-Wywiedziona z path (INTERFACES §3, doc §4). Tylko domyślne; reguła path nigdy nie obniża `reboot`->`live`.
+Wywiedziona z path (INTERFACES §3, doc §4). Tylko domyślne, reguła path nigdy nie obniża `reboot`->`live`.
 
 | class | dopasowane przez | stosowane |
 |---|---|---|
@@ -66,7 +66,7 @@ odtwarzalnych manifestów.
 aby urządzenie rodziło się "aktualne" (bez from:0, bez ponownego fetcha). Engine traktuje go jak **lokalne zaufane ziarno**
 (przybył we flashowanym zipie, który jest granicą zaufania instalacji) i **NIE weryfikuje jego podpisu** -
 tylko manifest POBRANY z feedu przechodzi przez `vdlu-verify`. Więc baseline nie potrzebuje **klucza**: to
-po prostu wynik `vdlu-pack` nad dostarczanym drzewem (niepodpisany; `sig`/`key_id` pozostają puste). CI może zatem
+po prostu wynik `vdlu-pack` nad dostarczanym drzewem (niepodpisany, `sig`/`key_id` pozostają puste). CI może zatem
 generować go **bez klucza**, trzymając klucz podpisujący w 100% poza CI - tylko opublikowany FEED jest podpisywany (operator,
 lokalnie). `vdlu-pack` wyklucza `baseline.json` ze swojego własnego manifestu (anty samoodwołanie). Niekrytyczne jeśli
 nieobecny: urządzenie po prostu startuje od from:0 przy pierwszej aktualizacji, nigdy zepsute.
@@ -99,19 +99,19 @@ _tail=${_rest#*\",}          # after <value>",  ->  "version":...
 printf '%s%s' "$_pre" "$_tail" | sha256sum | cut -d' ' -f1
 ```
 
-`key_id` jest częścią formy kanonicznej (usuwany jest tylko `sig`); `vdlu-sign` ustawia `key_id` **przed**
+`key_id` jest częścią formy kanonicznej (usuwany jest tylko `sig`), `vdlu-sign` ustawia `key_id` **przed**
 hashowaniem. Placeholder wartości będący pusty (`"sig":""`, czas podpisu) lub wypełniony (czas weryfikacji) daje
 identyczne bajty kanoniczne, więc sign i verify zgadzają się z konstrukcji.
 
 Python odtwarza to jako `re.sub(r'"sig":"[^"]*",', '', text.rstrip("\\n"), count=1)`, następnie sha256 - używane
-tylko do kontroli krzyżowej; autorytatywni producenci to dwa narzędzia sh.
+tylko do kontroli krzyżowej, autorytatywni producenci to dwa narzędzia sh.
 
 ## Podpis (ed25519)
 
 - `vdlu-keygen` (PC): `openssl genpkey -algorithm ed25519` (priv `0600`) + `openssl pkey -pubout` (pub **PEM**,
   do podpisu/openssl) + `openssl pkey -pubout -outform DER | tail -c 32` -> **`.pub.raw` (RAW 32B)** (ed25519
   SPKI DER to 12-bajtowy prefiks + 32-bajtowy klucz, więc `tail -c 32` JEST kluczem). Emituje OBA.
-- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` nad kanonicznym sha256 hex; podpis przechowywany base64.
+- `vdlu-sign` (PC): `openssl pkeyutl -sign -rawin` nad kanonicznym sha256 hex, podpis przechowywany base64.
 - `vdlu-verify` (**urządzenie, oszczędny**): `ed25519-mini <pubkey32> <msg> <sig64>` - czyta keyring jako pubkey **RAW 32B**,
   BEZ openssl na urządzeniu. `key_id` jest sanityzowany wg path (bez `/`, `.`, `..`, `"`). 🚨 Keyring dostarcza
   **`.pub.raw` (32B)**, nigdy `.pub` PEM (113B): PEM jest tylko po stronie PC, a `ed25519-mini` nie potrafi go odczytać.
@@ -137,4 +137,4 @@ nie nadpisywać go PEM-em `.pub` po stronie PC.
 
 ---
 
-> _Ta dokumentacja została wygenerowana za pomocą Claude (Anthropic) i jest utrzymywana przez VD171. Poprawki i ulepszenia są mile widziane; zobacz [CONTRIBUTING.md](CONTRIBUTING.md)._
+> _Ta dokumentacja została wygenerowana za pomocą Claude (Anthropic) i jest utrzymywana przez VD171. Poprawki i ulepszenia są mile widziane, zobacz [CONTRIBUTING.md](CONTRIBUTING.md)._

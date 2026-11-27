@@ -58,7 +58,7 @@ Widget engine कमांड को असेंबल करता है ज�
   (rc≠0) - ठीक Demo के `webroot/index.html` के `ex()` का हस्ताक्षर। आंतरिक fallback उसी अनुबंध के साथ
   `ksu.exec(cmd, '{}', cb)` को कॉल करता है।
 - **`toast(msg)`** = एक छोटी क्षणिक अधिसूचना (fallback अपना स्वयं का mini-toast इंजेक्ट करता है)।
-- **`confirm(title,msg,ok,danger,fn)`** = एक modal (आज केवल host द्वारा उपयोग किया जाता है; widget को किसी भी flow में
+- **`confirm(title,msg,ok,danger,fn)`** = एक modal (आज केवल host द्वारा उपयोग किया जाता है, widget को किसी भी flow में
   किसी पुष्टि की आवश्यकता नहीं)।
 
 host के अपने को पास करने से widget शेष WebUI के समान ही serialized queue और visuals के माध्यम से बात करता है।
@@ -82,7 +82,7 @@ host को उनके लिए किसी HTML की आवश्यक�
 
 ### वह state प्रवाह जिसे toast दर्शाता है (journal.json, §4)
 
-`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`; किसी भी क्षण `ERROR`।
+`PLANNED → FETCHING → FETCHED → APPLYING → APPLIED_LIVE → (PENDING_REBOOT | DONE)`, किसी भी क्षण `ERROR`।
 toast **एक बार + `phase done/total · current · bytes`** दिखाता है। Terminals:
 - **`DONE`** → हरा toast "v&lt;target&gt; applied"।
 - **`PENDING_REBOOT`** (या `reboot_pending=true`) → हरा toast + **स्थायी banner** "⚠️ Reboot to
@@ -93,7 +93,7 @@ toast **एक बार + `phase done/total · current · bytes`** दिखा
 ## डेमो चलाना
 
 `demo.html` को एक browser में खोलें (`xdg-open webui/demo.html`)। mocked `ksu.exec` `update.sh` और
-विकसित होते `journal.json` का अनुकरण करता है; बटन **LIVE→DONE**, **reboot_pending**, **error mid-way**
+विकसित होते `journal.json` का अनुकरण करता है, बटन **LIVE→DONE**, **reboot_pending**, **error mid-way**
 और **cancellable** परिदृश्यों के बीच स्विच करते हैं। यह डिवाइस पर जैसा वही `vdlu.js`/`vdlu.css` है।
 
 ## i18n (भाषा)
@@ -107,7 +107,7 @@ Widget स्ट्रिंग्स डिफ़ॉल्ट रूप से 
 ```
 
 - एक **आंशिक** merge ठीक है: एक गायब कुंजी अंग्रेज़ी डिफ़ॉल्ट पर वापस आती है।
-- Phase/state कुंजियाँ `ph_<phase>` / `st_<STATE>` हैं; बाकी सपाट हैं (`cancel`, `updateNow`, …)।
+- Phase/state कुंजियाँ `ph_<phase>` / `st_<STATE>` हैं, बाकी सपाट हैं (`cancel`, `updateNow`, …)।
 - पूर्ण कुंजी map = `vdlu.js` में `DEFAULT_I18N` ऑब्जेक्ट (`VDLU.i18n` के रूप में भी उजागर)।
 - एक तैयार अनुवाद एक काम किए गए उदाहरण के रूप में प्रदान किया गया है: `i18n/pt-BR.js`। नई भाषाएँ = उसी साँचे में
   एक `i18n/<lang>.js` फ़ाइल, या host अपने स्वयं के i18n सिस्टम से map बनाता है।
@@ -116,12 +116,12 @@ Widget स्ट्रिंग्स डिफ़ॉल्ट रूप से 
 
 ये `vdlu.js`/`vdlu.css` **कैनोनिकल प्रति** हैं। widget को एम्बेड करने वाला हर मॉड्यूल इस प्रति को
 अपने `webroot/` में byte-for-byte **पुनः-vendor** करता है - यह अपनी स्वयं की प्रति को कभी in place
-**संपादित नहीं करता**। एक नई widget सुविधा यहाँ पैदा होती है और पुनः-vendor द्वारा नीचे प्रवाहित होती है; विपरीत मूक
+**संपादित नहीं करता**। एक नई widget सुविधा यहाँ पैदा होती है और पुनः-vendor द्वारा नीचे प्रवाहित होती है, विपरीत मूक
 drift उत्पन्न करता है (यह व्यवहार में हुआ है: एक vendor की गई प्रति पीछे रह गई और `net_policy`, `DEFERRED`
 toast और `boot_retry` fields गायब थे)।
 
 Guardian: [`../tools/webui-parity.sh`](../../tools/webui-parity.sh) स्रोत वृक्ष में हर प्रति ढूँढता है और उन्हें
-चिह्नित करता है जो कैनोनिकल से विचलित होती हैं (केवल `vdlu.js`/`vdlu.css`; keyring "verify, not copy" है)।
+चिह्नित करता है जो कैनोनिकल से विचलित होती हैं (केवल `vdlu.js`/`vdlu.css`, keyring "verify, not copy" है)।
 
 ```sh
 tools/webui-parity.sh         # report; exits 1 if there is drift
@@ -135,4 +135,4 @@ tools/webui-parity.sh --fix   # re-vendors the divergent ones from the canonical
 
 ---
 
-> _यह दस्तावेज़ Claude (Anthropic) से तैयार किया गया है और इसे VD171 द्वारा अनुरक्षित किया जाता है। सुधार और संशोधन का स्वागत है; देखें [CONTRIBUTING.md](CONTRIBUTING.md)।_
+> _यह दस्तावेज़ Claude (Anthropic) से तैयार किया गया है और इसे VD171 द्वारा अनुरक्षित किया जाता है। सुधार और संशोधन का स्वागत है, देखें [CONTRIBUTING.md](CONTRIBUTING.md)।_

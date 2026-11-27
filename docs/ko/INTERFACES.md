@@ -55,7 +55,7 @@ Blob/manifest 소스: config의 `source`. `<source>` + `/manifest.json`, `/blobs
 
 ```json
 { "schema":1, "module":"<id>", "version":<int>, "version_name":"<str>", "built":"<ISO8601>",
-  "engine_min":3, "key_id":"<str>", "channel":"stable",
+  "engine_min":5, "key_id":"<str>", "channel":"stable",
   "files":[ {"path":"webroot/index.html","sha256":"<hex64>","size":<int>,"mode":"0644","enc":"raw|gz","class":"live|soft|reboot"} ],
   "delete":["<path>"], "sig":"<base64>" }
 ```
@@ -66,6 +66,7 @@ Blob/manifest 소스: config의 `source`. `<source>` + `/manifest.json`, `/blobs
 - `enc`: `gz` (gzip `-9 -n`, 결정론적. 기기에서는 toybox gunzip)는 압축이 잘 되고 **또한**
   크기가 유의미할 때만. `sha256`은 **항상** 원본 내용에 대한 것.
 - `sig`: `sig` 필드를 제외한 정규 manifest의 서명 (verify의 §4).
+- **신뢰 앵커 제외 (엔진 측, VDLU#2):** 엔진은 plan에서 `vdlu/` 아래의 모든 `files[]`/`delete[]` 경로 (자신의 `update.sh`/`vdlu-verify`/`verify/*`/`keyring/*`/config)를 **버린다** - 서명된 피드가 그것들을 담고 있어도 결코 가져오거나, 적용하거나, 삭제하지 않는다. 기기 상의 신뢰 앵커는 유선이 아니라 완전한 서명된 재플래시로만 바뀐다. `vdlu-pack`도 프로듀서 측에서 `vdlu/`를 제외하므로, 이것은 유출된 서명 키에 대한 두 번째, 엔진 측 가드다.
 
 ## 4. journal.json (ENGINE이 기록, WEBUI가 읽음 - 진행 계약)
 
@@ -97,7 +98,11 @@ key_id=                # ALLOWLIST of accepted MODULE-UPDATE signing key id(s), 
                        # UNSET = default-safe: a single-key keyring accepts only that one key; a MULTI-key
                        # keyring (one that also ships a fingerprint-feed key) MUST pin its module key here.
 ca_path=               # empty = auto-detect of the Android trust store; set a path to override
+ca_cert=               # empty = auto-build a CA bundle from the trust store; set a path to a bundle to override
 tools_source=          # empty = derived from source (.../vdlu-tools); feed of the static curl
+apply_busy_file=       # OPT-IN: absolute path the host module touches during its own operations (e.g. a
+                       # backup). While it EXISTS, APPLY is deferred to the next trigger (blobs already
+                       # fetched, no re-download) so an update never swaps module files mid-operation. UNSET = off.
 boot_retry_interval=30 # seconds between probes when BOOT finds the device offline (floor 5s)
 boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot; 0 = off. Battery-safe (no wakelock,
                        # no held lock, route probe never wakes the radio) -> a generous ceiling is ~free
@@ -138,7 +143,7 @@ boot_retry_minutes=0   # ceiling of the PATIENT retry (AWAKE-time) only at boot;
   `ed25519-mini` 바이너리 (CLI `ed25519-mini <pub32> <msg> <sig64>`, rc 0=유효/1=무효/2=사용법).
   rc!=0 = 거부. **`profile=hardened` ⇒ 검증 필수. 실패 = 중단.**
   `profile=trusted` ⇒ 검증은 best-effort (소스는 SSH를 통해 이미 신뢰됨)이지만, 모든 blob의 해시는 **항상** 검사된다.
-- **module-update 키 allowlist (fail-closed, pubkey 선택 전):** manifest의 `key_id`는 `<key_id>.pub`가 선택되기 전에 허용된 MODULE-UPDATE 키여야 한다 - config의 `key_id` (§5)가 그 allowlist다. keyring은 신뢰도가 낮은 키도 담을 수 있다 (예: fingerprint-feed 키, 자동화됨, 다른 계정). allowlist가 없으면 그 키로 서명된 manifest는 유출될 경우 검증을 통과하고 완전한 flashless root 업데이트를 적용하게 된다. `verify_manifest`는 두 profiles 모두에서 이를 강제하며, 해결된 집합을 env `VDLU_KEYID_ALLOW`를 통해 `vdlu-verify`에 전달한다 (독립 verifier도 동의하도록). 미설정은 기본 안전 (단일 키 keyring: 그 키만; 다중 키 keyring: `key_id`가 고정될 때까지 거부). fingerprint-feed 신뢰 루트는 자체 고정 키를 가진 별도 경로이며 영향을 받지 않는다.
+- **module-update 키 allowlist (fail-closed, pubkey 선택 전):** manifest의 `key_id`는 `<key_id>.pub`가 선택되기 전에 허용된 MODULE-UPDATE 키여야 한다 - config의 `key_id` (§5)가 그 allowlist다. keyring은 신뢰도가 낮은 키도 담을 수 있다 (예: fingerprint-feed 키, 자동화됨, 다른 계정). allowlist가 없으면 그 키로 서명된 manifest는 유출될 경우 검증을 통과하고 완전한 flashless root 업데이트를 적용하게 된다. `verify_manifest`는 두 profiles 모두에서 이를 강제하며, 해결된 집합을 env `VDLU_KEYID_ALLOW`를 통해 `vdlu-verify`에 전달한다 (독립 verifier도 동의하도록). 미설정은 기본 안전 (단일 키 keyring: 그 키만, 다중 키 keyring: `key_id`가 고정될 때까지 거부). fingerprint-feed 신뢰 루트는 자체 고정 키를 가진 별도 경로이며 영향을 받지 않는다.
 - `producer/vdlu-keygen <id> <out>` → `<id>.pem` (개인) + `<id>.pub` (PEM, PC의 툴링용) +
   `<id>.pub.raw` (**RAW 32B** = 기기의 슬림 keyring의 `<id>.pub`)을 생성한다. openssl `genpkey -algorithm ed25519`.
 

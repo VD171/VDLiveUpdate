@@ -24,7 +24,7 @@ Manifest je úplný popis jednoho vydání: každý soubor v cílovém stromu, c
   "version": 106,
   "version_name": "v106",
   "built": "2026-11-19T12:00:00Z",
-  "engine_min": 3,
+  "engine_min": 5,
   "channel": "stable",
   "key_id": "release-2026",
   "files": [
@@ -130,7 +130,7 @@ Feed nese **jen vlastní obsah modulu**. Pevná sada cest je záměrně držena 
 
 | Vyloučeno | Proč |
 |---|---|
-| `vdlu/keyring/`, `vdlu/verify/` (kořen důvěry: syrové veřejné klíče + binární soubor ověřovače) | **Toto je základní bezpečnostní důvod.** Kotva důvěry je **flash-only**. Pokud by keyring nebo ověřovač byly dodatelné feedem, manifest by mohl přepsat právě tu věc, která ho ověřuje. Držení jich mimo drát znamená, že manifest nikdy nemůže přepsat kotvu důvěry na zařízení. |
+| `vdlu/keyring/`, `vdlu/verify/` (kořen důvěry: syrové veřejné klíče + binární soubor ověřovače) | **Toto je základní bezpečnostní důvod.** Kotva důvěry je **flash-only**. Pokud by keyring nebo ověřovač byly dodatelné feedem, manifest by mohl přepsat právě tu věc, která ho ověřuje. Držení jich mimo drát znamená, že manifest nikdy nemůže přepsat kotvu důvěry na zařízení. Jako druhá, nezávislá pojistka (`ENGINE_VERSION` 5) engine navíc **ignoruje** každou cestu `vdlu/` ve staženém plánu, takže ani feed, který je nese, se nemůže kotvy dotknout. |
 | `vdlu/baseline.json` | Je to kopie podepsaného manifestu (semínko instalace); jeho balení by byla smyčka sebe-reference. |
 | `.vd/` flash infrastruktura | Lešení flash-gate, které se dodává v zipu, nikdy aplikované naostro. |
 | `update.json`, `update-mmrl.json` | Jejich velikost/sha vyplňuje CI *poté*, co jsou zipy sestaveny, takže dodaná kopie se liší od jakékoli feed kopie. Jejich feedování by způsobilo fantomové stažení jednoho souboru při první samoaktualizaci každé instalace a na zařízení jsou stejně zbytkové (manager čte vzdálený syrový update JSON). |

@@ -22,9 +22,28 @@
   ======================================================================
 -->
 
-# VDLiveUpdate
+# VD Live Update
 
-> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+> **Languages:** [English](README.md) · [العربية](README.ar.md) · [Čeština](README.cs.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [فارسی](README.fa.md) · [Français](README.fr.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · Nederlands · [Polski](README.pl.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [Tiếng Việt](README.vi.md) · [中文](README.zh.md)
+
+<p align="center">
+  <img src="images/logo-wordmark.png" alt="VD Live Update" width="320">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1a7f37" alt="License"></a>
+  <a href="https://github.com/VD171/VDLiveUpdate/stargazers"><img src="https://img.shields.io/github/stars/VD171/VDLiveUpdate?color=d29922" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="docs/QUICKSTART.md">Quickstart</a> ·
+  <a href="docs/ENGINE.md">Engine</a> ·
+  <a href="docs/PRODUCER.md">Producer</a> ·
+  <a href="docs/WEBUI.md">WebUI</a> ·
+  <a href="docs/INTERFACES.md">Interfaces</a> ·
+  <a href="docs/AI-AGENTS.md">AI agents</a> ·
+  <a href="docs/TRUST-MODEL.md">Trust model</a>
+</p>
 
 **VDLU** is een flashloze, incrementele zelf-updateengine voor **KernelSU- / APatch- / Magisk**-modules. Een geinstalleerde module werkt zichzelf bij door **alleen de bestanden die zijn gewijzigd** op te halen (content-geadresseerde blobs + een ondertekend manifest), past de live bestanden toe **zonder herstart**, en zet de paar bestanden die er wel een vereisen (een `.so`, een `/system`-overlay, een `sepolicy.rule`) klaar en markeert ze. Geen root-manager, geen volledige `.zip` opnieuw downloaden, geen herstart behalve voor die klaargezette bestanden.
 
@@ -36,25 +55,25 @@ Een normale module-update levert de hele `.zip` opnieuw. Voor een grote module b
 
 ## Hoe het werkt
 
-- **Producer (pc / release):** `vdlu-pack` zet een moduleboom om in een content-geadresseerde feed (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`); `vdlu-keygen` / `vdlu-sign` (ed25519); `vdlu-gc` snoeit verweesde blobs weg op basis van verwijzing naar de laatste N manifesten (fail-safe, standaard dry-run).
+- **Producer (pc / release):** `vdlu-pack` zet een moduleboom om in een content-geadresseerde feed (`manifest.json` + `blobs/<sha256>`, gzip, dedup, `delete[]`), `vdlu-keygen` / `vdlu-sign` (ed25519), `vdlu-gc` snoeit verweesde blobs weg op basis van verwijzing naar de laatste N manifesten (fail-safe, standaard dry-run).
 - **Engine (apparaat):** POSIX sh, geen `jq`. `update.sh` (`check | run | resume | boot | status | cancel`) draait DIFF -> FETCH -> APPLY -> COMMIT als een **hervatbare transactie** (journaal), met rollback en een `mkdir`-slot. De handtekening wordt geverifieerd door de ingebedde `ed25519-mini` (geen `openssl` op het apparaat).
 - **WebUI:** een kant-en-klaar Updates-paneel (voortgangstoast, annuleren, herstartbanner), vanilla JS.
 
 ## Profielen
 
-- `trusted`: prive gebruik, `file://`- of SSH-bron, best-effort verificatie (hash altijd).
+- `trusted`: prive gebruik, `file://` of SSH-bron, best-effort verificatie (hash altijd).
 - `hardened`: openbaar gebruik, **handtekening verplicht**, downgrade geblokkeerd. Het manifest is **gebonden aan de module-id**, en elk veld wordt fail-closed gevalideerd voordat er iets wordt gedownload.
 
 ## Neem het op in je module
 
-Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` in `<module>/vdlu/`, neem je **ruwe 32-byte publieke sleutel** mee als `vdlu/keyring/<id>.pub`, voeg een `config` toe (profiel + bron), bedraad de triggers (`post-fs-data.sh` pre-zygote voor automatische update bij het opstarten; een WebUI-open-trigger), en voeg `vdlu-pack` + `vdlu-sign` toe aan je release. Zie [`docs/QUICKSTART.md`](docs/QUICKSTART.md) voor een uitgewerkte sjabloon.
+Vendor `engine/update.sh` + `vdlu-verify` + `verify/<abi>/ed25519-mini` in `<module>/vdlu/`, neem je **ruwe 32-byte publieke sleutel** mee als `vdlu/keyring/<id>.pub`, voeg een `config` toe (profiel + bron), bedraad de triggers (`post-fs-data.sh` pre-zygote voor automatische update bij het opstarten, een WebUI-open-trigger), en voeg `vdlu-pack` + `vdlu-sign` toe aan je release. Zie [`docs/QUICKSTART.md`](docs/QUICKSTART.md) voor een uitgewerkte sjabloon.
 
 ## Beveiliging
 
 - **Elk manifestveld is vijandige invoer.** `validate_plan()` weigert het hele manifest fail-closed bij een absoluut pad of een `..`-pad, een `sha256` die geen 64 hex-tekens is, of een ongeldige mode / class / encoding, **voordat** er wordt opgehaald of toegepast.
-- De **private ondertekeningssleutel raakt nooit CI of een apparaat**; alleen de ruwe publieke sleutel wordt ingebed, en de verificatie gebruikt `ed25519-mini`, niet `openssl`.
+- De **private ondertekeningssleutel raakt nooit CI of een apparaat**, alleen de ruwe publieke sleutel wordt ingebed, en de verificatie gebruikt `ed25519-mini`, niet `openssl`.
 - `hardened` is fail-closed door inversie: alles behalve het letterlijke `trusted` wordt als `hardened` behandeld, zodat een beschadigde profielwaarde nooit stilletjes een niet-ondertekend manifest kan accepteren.
-- Bestanden van de herstartklasse (`.so`, `/system`-overlay, `sepolicy.rule`) worden **klaargezet, nooit over een live inode geschreven**; al het andere wordt live toegepast. Een mislukte toepassing breekt af in plaats van zonder back-up te overschrijven.
+- Bestanden van de herstartklasse (`.so`, `/system`-overlay, `sepolicy.rule`) worden **klaargezet, nooit over een live inode geschreven**, al het andere wordt live toegepast. Een mislukte toepassing breekt af in plaats van zonder back-up te overschrijven.
 
 ## Bouwen / testen
 
@@ -69,9 +88,13 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 `sh -n engine/*.sh`, `node --check webui/vdlu.js`, en open `webui/demo.html` in een browser (het bootst de apparaatbrug na).
 
+## AI-agents
+
+De engine wordt volledig vanuit de shell aangestuurd (`sh engine/update.sh <check|run|resume|boot|status|cancel>` drukt een machineleesbare status af), zodat een AI-agent een update kan controleren, toepassen en hervatten zonder interface. Het naadcontract tussen de componenten staat in [`docs/INTERFACES.md`](docs/INTERFACES.md), en patches van AI voldoen aan dezelfde reviewlat als alle andere.
+
 ## Documentatie
 
-- [`INTERFACES.md`](docs/INTERFACES.md): het naadcontract tussen de componenten (de wet van convergentie; behandel het als onveranderlijk).
+- [`INTERFACES.md`](docs/INTERFACES.md): het naadcontract tussen de componenten (de wet van convergentie, behandel het als onveranderlijk).
 - [`ENGINE.md`](docs/ENGINE.md): de engine aan de apparaatzijde (`update.sh`): de hervatbare transactie DIFF -> FETCH -> APPLY -> COMMIT.
 - [`PRODUCER.md`](docs/PRODUCER.md): de PC-/releasekant: het content-geadresseerde feed bouwen en ondertekenen (`vdlu-pack`, `vdlu-sign`).
 - [`WEBUI.md`](docs/WEBUI.md): de kant-en-klare Updates-paneelwidget (voortgangstoast, annuleren, herstartbanner).
@@ -102,14 +125,14 @@ VDLU_DIR=... MODULE_DIR=... MODID=demo sh engine/update.sh check   # then run / 
 
 ## Licentie
 
-De eigen code van VDLiveUpdate is **Apache-2.0**; zie [LICENSE](LICENSE). Het vendort een kleine `ed25519-mini`-
-verifier en een statische `curl` voor de ophaalbootstrap, elk onder zijn eigen licentie; zie
+De eigen code van VDLiveUpdate is **Apache-2.0**, zie [LICENSE](LICENSE). Het vendort een kleine `ed25519-mini`-
+verifier en een statische `curl` voor de ophaalbootstrap, elk onder zijn eigen licentie, zie
 [NOTICE.md](NOTICE.md) en de `PROVENANCE.json`-bestanden naast de meegeleverde binaries.
 
 ## Handelsmerken
 
 VDLiveUpdate is een onafhankelijk, onofficieel project, niet gelieerd aan of onderschreven door een derde partij.
-"Android" is een handelsmerk van Google LLC; "KernelSU", "Magisk" en "APatch" zijn de merken van hun
+"Android" is een handelsmerk van Google LLC, "KernelSU", "Magisk" en "APatch" zijn de merken van hun
 respectieve auteurs. VDLU draait volledig op je eigen apparaat en op je eigen releasehost.
 
 ## Tags
@@ -118,4 +141,4 @@ respectieve auteurs. VDLU draait volledig op je eigen apparaat en op je eigen re
 
 ---
 
-📣 **Join the channel for updates:** @Priv8_VD https://t.me/Priv8_VD
+📣 **Word lid van het kanaal voor updates:** @Priv8_VD https://t.me/Priv8_VD
